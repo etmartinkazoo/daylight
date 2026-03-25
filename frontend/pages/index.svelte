@@ -4,6 +4,7 @@
   import Badge from "@/components/ui/Badge.svelte";
   import Button from "@/components/ui/Button.svelte";
   import Table from "@/components/ui/Table.svelte";
+  import SortableHeader from "@/components/ui/SortableHeader.svelte";
   import EwSheet from "./EwSheet.svelte";
 
   let { errors = [], counts = {}, status = "open", query = "" } = $props();
@@ -116,10 +117,10 @@
       <div class="ew-table">
         <div class="ew-thead">
           <div class="ew-th ew-col-check"><input type="checkbox" checked={allSelected} onchange={() => allSelected ? selectedIds = [] : selectAll()} /></div>
-          <div class="ew-th" style="flex:2">Error</div>
-          <div class="ew-th" style="width:4rem;text-align:center">Count</div>
+          <div class="ew-th" style="flex:2"><SortableHeader column="error_class" label="Error" /></div>
+          <div class="ew-th" style="width:4rem;text-align:center"><SortableHeader column="occurrences_count" label="Count" /></div>
           <div class="ew-th" style="width:5.5rem">Status</div>
-          <div class="ew-th" style="width:7rem">Last Seen</div>
+          <div class="ew-th" style="width:7rem"><SortableHeader column="last_seen_at" label="Last Seen" /></div>
           <div class="ew-th" style="width:5rem"></div>
         </div>
         {#each errors as error (error.id)}

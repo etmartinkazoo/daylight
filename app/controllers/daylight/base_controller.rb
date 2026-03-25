@@ -3,6 +3,7 @@
 module Daylight
   class BaseController < ActionController::Base
     include InertiaRails::Controller
+    include Daylight::Sortable
 
     layout "daylight/application"
 

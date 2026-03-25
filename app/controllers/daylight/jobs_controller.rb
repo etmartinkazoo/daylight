@@ -18,7 +18,17 @@ module Daylight
         "SUM(CASE WHEN status = 'queued' THEN 1 ELSE 0 END) as queued_count",
         "ROUND(AVG(CASE WHEN status = 'completed' THEN duration_ms END), 1) as avg_duration",
         "ROUND(MAX(duration_ms), 1) as max_duration"
-      ).order("total DESC").limit(50)
+      ).order(Arel.sql(sort_order_sql(
+        default: "total",
+        allowed: {
+          "total" => "total",
+          "completed_count" => "completed_count",
+          "failed_count" => "failed_count",
+          "avg_duration" => "avg_duration",
+          "max_duration" => "max_duration"
+        },
+        direction: "desc"
+      ))).limit(50)
 
       job_classes = grouped.map do |row|
         {
@@ -103,7 +113,8 @@ module Daylight
           completed: scope.where(status: "completed").count,
           failed: scope.where(status: "failed").count
         },
-        solid_queue: sq_stats
+        solid_queue: sq_stats,
+        **sort_props
       }
     end
 

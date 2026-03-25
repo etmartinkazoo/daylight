@@ -5,7 +5,7 @@ module Daylight
     before_action :ensure_connected
 
     def index
-      scope = Database::ErrorRecord.order(last_seen_at: :desc)
+      scope = Database::ErrorRecord.all
 
       status = params[:status].presence || "open"
       scope = scope.where(status: status) unless status == "all"
@@ -14,6 +14,8 @@ module Daylight
         term = "%#{params[:q]}%"
         scope = scope.where("error_class LIKE ? OR message LIKE ?", term, term)
       end
+
+      scope = apply_sort(scope, default: "last_seen_at", allowed: %w[error_class occurrences_count last_seen_at first_seen_at], direction: "desc")
 
       errors = scope.limit(100).map { |e| serialize_error(e) }
       counts = {
@@ -27,7 +29,8 @@ module Daylight
         errors: errors,
         counts: counts,
         status: status,
-        query: params[:q]
+        query: params[:q],
+        **sort_props
       }
     end
 

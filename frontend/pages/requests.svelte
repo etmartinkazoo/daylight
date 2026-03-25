@@ -4,6 +4,7 @@
   import Badge from "@/components/ui/Badge.svelte";
   import Button from "@/components/ui/Button.svelte";
   import Table from "@/components/ui/Table.svelte";
+  import SortableHeader from "@/components/ui/SortableHeader.svelte";
   import PeriodSelect from "./PeriodSelect.svelte";
   import EwSheet from "./EwSheet.svelte";
 
@@ -113,13 +114,13 @@
       <div class="ew-table">
         <div class="ew-thead">
           <div class="ew-th" style="flex:2.5">Route</div>
-          <div class="ew-th r" style="width:3.5rem">Reqs</div>
-          <div class="ew-th r" style="width:4.5rem">Avg</div>
+          <div class="ew-th r" style="width:3.5rem"><SortableHeader column="total" label="Reqs" /></div>
+          <div class="ew-th r" style="width:4.5rem"><SortableHeader column="avg_duration" label="Avg" /></div>
           <div class="ew-th r" style="width:4.5rem">P95</div>
-          <div class="ew-th r" style="width:4.5rem">Max</div>
-          <div class="ew-th c" style="width:3rem">2xx</div>
-          <div class="ew-th c" style="width:2.5rem">4xx</div>
-          <div class="ew-th c" style="width:2.5rem">5xx</div>
+          <div class="ew-th r" style="width:4.5rem"><SortableHeader column="max_duration" label="Max" /></div>
+          <div class="ew-th c" style="width:3rem"><SortableHeader column="ok_count" label="2xx" /></div>
+          <div class="ew-th c" style="width:2.5rem"><SortableHeader column="client_error_count" label="4xx" /></div>
+          <div class="ew-th c" style="width:2.5rem"><SortableHeader column="server_error_count" label="5xx" /></div>
         </div>
         {#each endpoints as ep (ep.route)}
           <button class="ew-row ew-row-btn" onclick={() => selectEndpoint(ep)}>

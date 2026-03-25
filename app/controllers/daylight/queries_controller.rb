@@ -15,7 +15,15 @@ module Daylight
         "ROUND(AVG(duration_ms), 1) as avg_duration",
         "ROUND(MAX(duration_ms), 1) as max_duration",
         "MIN(source_location) as source_location"
-      ).order("avg_duration DESC").limit(50)
+      ).order(Arel.sql(sort_order_sql(
+        default: "avg_duration",
+        allowed: {
+          "total" => "total",
+          "avg_duration" => "avg_duration",
+          "max_duration" => "max_duration"
+        },
+        direction: "desc"
+      ))).limit(50)
 
       queries = grouped.map do |row|
         {
@@ -44,7 +52,8 @@ module Daylight
         queries: queries,
         slowest: slowest,
         period: period,
-        total_queries: scope.count
+        total_queries: scope.count,
+        **sort_props
       }
     end
 

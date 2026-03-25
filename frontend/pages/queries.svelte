@@ -4,6 +4,7 @@
   import Badge from "@/components/ui/Badge.svelte";
   import Button from "@/components/ui/Button.svelte";
   import Table from "@/components/ui/Table.svelte";
+  import SortableHeader from "@/components/ui/SortableHeader.svelte";
   import PeriodSelect from "./PeriodSelect.svelte";
   import EwSheet from "./EwSheet.svelte";
 
@@ -31,9 +32,9 @@
     <div class="ew-table">
       <div class="ew-thead">
         <div class="ew-th" style="flex:3">Query</div>
-        <div class="ew-th r" style="width:3.5rem">Count</div>
-        <div class="ew-th r" style="width:4.5rem">Avg</div>
-        <div class="ew-th r" style="width:4.5rem">Max</div>
+        <div class="ew-th r" style="width:3.5rem"><SortableHeader column="total" label="Count" /></div>
+        <div class="ew-th r" style="width:4.5rem"><SortableHeader column="avg_duration" label="Avg" /></div>
+        <div class="ew-th r" style="width:4.5rem"><SortableHeader column="max_duration" label="Max" /></div>
         <div class="ew-th" style="flex:1">Source</div>
       </div>
       {#each queries as q (q.normalized_sql)}

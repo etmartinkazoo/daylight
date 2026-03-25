@@ -23,7 +23,18 @@ module Daylight
         "SUM(CASE WHEN status_code >= 500 THEN 1 ELSE 0 END) as server_error_count",
         "ROUND(AVG(db_duration_ms), 1) as avg_db_duration",
         "ROUND(AVG(query_count), 1) as avg_query_count"
-      ).group(group_col).order("total DESC").limit(100)
+      ).group(group_col).order(Arel.sql(sort_order_sql(
+        default: "total",
+        allowed: {
+          "total" => "total",
+          "avg_duration" => "avg_duration",
+          "max_duration" => "max_duration",
+          "ok_count" => "ok_count",
+          "client_error_count" => "client_error_count",
+          "server_error_count" => "server_error_count"
+        },
+        direction: "desc"
+      ))).limit(100)
 
       endpoints = grouped.map do |row|
         # P95: fetch from individual records for this route
@@ -72,7 +83,8 @@ module Daylight
         selected_request: selected_request,
         selected_route: params[:route],
         period: period,
-        total_requests: scope.count
+        total_requests: scope.count,
+        **sort_props
       }
     end
 
