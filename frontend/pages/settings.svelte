@@ -1,6 +1,7 @@
 <script>
   import { useForm } from "@inertiajs/svelte";
   import DaylightLayout from "./DaylightLayout.svelte";
+  import Button from "@/components/ui/Button.svelte";
 
   let { settings = {} } = $props();
 
@@ -119,9 +120,9 @@
       </fieldset>
 
       <div class="ew-actions">
-        <button type="submit" class="ew-save" disabled={$form.processing}>
+        <Button type="submit" disabled={$form.processing}>
           {$form.processing ? "Saving..." : "Save Settings"}
-        </button>
+        </Button>
         {#if $form.recentlySuccessful}
           <span class="ew-saved">Saved</span>
         {/if}

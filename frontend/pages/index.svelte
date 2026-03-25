@@ -1,6 +1,9 @@
 <script>
   import { router } from "@inertiajs/svelte";
   import DaylightLayout from "./DaylightLayout.svelte";
+  import Badge from "@/components/ui/Badge.svelte";
+  import Button from "@/components/ui/Button.svelte";
+  import Table from "@/components/ui/Table.svelte";
   import EwSheet from "./EwSheet.svelte";
 
   let { errors = [], counts = {}, status = "open", query = "" } = $props();
@@ -99,11 +102,11 @@
     {#if selectedIds.length > 0}
       <div class="ew-bulk">
         <span class="ew-bulk-count">{selectedIds.length} selected</span>
-        {#if status !== "resolved"}<button class="ew-btn" onclick={() => batchAction("resolve")}>Resolve</button>{/if}
-        {#if status !== "ignored"}<button class="ew-btn" onclick={() => batchAction("ignore")}>Ignore</button>{/if}
-        {#if status !== "open"}<button class="ew-btn" onclick={() => batchAction("reopen")}>Reopen</button>{/if}
-        <button class="ew-btn ew-btn-danger" onclick={() => batchAction("delete")}>Delete</button>
-        <button class="ew-btn" onclick={() => { selectedIds = []; }}>Cancel</button>
+        {#if status !== "resolved"}<Button variant="outline" onclick={() => batchAction("resolve")}>Resolve</Button>{/if}
+        {#if status !== "ignored"}<Button variant="outline" onclick={() => batchAction("ignore")}>Ignore</Button>{/if}
+        {#if status !== "open"}<Button variant="outline" onclick={() => batchAction("reopen")}>Reopen</Button>{/if}
+        <Button variant="danger" onclick={() => batchAction("delete")}>Delete</Button>
+        <Button variant="outline" onclick={() => { selectedIds = []; }}>Cancel</Button>
       </div>
     {/if}
 
@@ -137,9 +140,9 @@
             </div>
             <div class="ew-cell" style="width:5rem;text-align:right" onclick={(e) => e.stopPropagation()}>
               {#if error.status === "open"}
-                <button class="ew-btn-sm" onclick={() => resolve(error.id)}>Resolve</button>
+                <Button variant="outline" size="sm" onclick={() => resolve(error.id)}>Resolve</Button>
               {:else}
-                <button class="ew-btn-sm" onclick={() => reopen(error.id)}>Reopen</button>
+                <Button variant="outline" size="sm" onclick={() => reopen(error.id)}>Reopen</Button>
               {/if}
             </div>
           </div>

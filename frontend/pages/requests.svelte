@@ -1,6 +1,9 @@
 <script>
   import { router } from "@inertiajs/svelte";
   import DaylightLayout from "./DaylightLayout.svelte";
+  import Badge from "@/components/ui/Badge.svelte";
+  import Button from "@/components/ui/Button.svelte";
+  import Table from "@/components/ui/Table.svelte";
   import PeriodSelect from "./PeriodSelect.svelte";
   import EwSheet from "./EwSheet.svelte";
 

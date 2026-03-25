@@ -1,6 +1,9 @@
 <script>
   import { router } from "@inertiajs/svelte";
   import DaylightLayout from "./DaylightLayout.svelte";
+  import Badge from "@/components/ui/Badge.svelte";
+  import Button from "@/components/ui/Button.svelte";
+  import Table from "@/components/ui/Table.svelte";
 
   let { error = {}, occurrences = [] } = $props();
 
@@ -71,12 +74,12 @@
 
       <div class="ew-actions">
         {#if error.status === "open"}
-          <button class="ew-btn" onclick={() => updateStatus("resolved")}>Resolve</button>
-          <button class="ew-btn" onclick={() => updateStatus("ignored")}>Ignore</button>
+          <Button variant="outline" onclick={() => updateStatus("resolved")}>Resolve</Button>
+          <Button variant="outline" onclick={() => updateStatus("ignored")}>Ignore</Button>
         {:else}
-          <button class="ew-btn" onclick={() => updateStatus("open")}>Reopen</button>
+          <Button variant="outline" onclick={() => updateStatus("open")}>Reopen</Button>
         {/if}
-        <button class="ew-btn ew-btn-danger" onclick={deleteError}>Delete</button>
+        <Button variant="danger" onclick={deleteError}>Delete</Button>
       </div>
     </div>
 
