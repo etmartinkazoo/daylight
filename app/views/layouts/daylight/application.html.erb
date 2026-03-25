@@ -8,19 +8,12 @@
   <%= csp_meta_tag %>
   <%= action_cable_meta_tag if respond_to?(:action_cable_meta_tag) %>
 
-  <% if defined?(ViteRuby) && ViteRuby.instance.dev_server_running? %>
-    <%# Development: use host app's Vite dev server %>
-    <%= vite_client_tag %>
-    <%= vite_javascript_tag "daylight" %>
-  <% else %>
-    <%# Production: use gem's pre-built bundle %>
-    <% bundle_path = Daylight::Engine.root.join("app", "assets", "builds") %>
-    <% if (css = Dir.glob(bundle_path.join("daylight-*.css")).first) %>
-      <link rel="stylesheet" href="<%= "/daylight/assets/#{File.basename(css)}" %>">
-    <% end %>
-    <% if (js = Dir.glob(bundle_path.join("daylight-*.js")).first) %>
-      <script type="module" src="<%= "/daylight/assets/#{File.basename(js)}" %>"></script>
-    <% end %>
+  <% bundle_path = Daylight::Engine.root.join("app", "assets", "builds") %>
+  <% if (css = Dir.glob(bundle_path.join("daylight-*.css")).first) %>
+    <link rel="stylesheet" href="<%= "/daylight/assets/#{File.basename(css)}" %>">
+  <% end %>
+  <% if (js = Dir.glob(bundle_path.join("daylight-*.js")).first) %>
+    <script type="module" src="<%= "/daylight/assets/#{File.basename(js)}" %>"></script>
   <% end %>
 </head>
 <body>
