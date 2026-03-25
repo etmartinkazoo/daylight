@@ -4,7 +4,7 @@ module Daylight
   class BaseController < ActionController::Base
     include InertiaRails::Controller
 
-    layout "application"
+    layout "daylight/application"
 
     inertia_share do
       ew_settings = begin

@@ -2,8 +2,8 @@
   import { usePage } from "@inertiajs/svelte";
   import { consumer } from "@/utils/cable";
   import { onDestroy } from "svelte";
-  import AiChatMessages from "@/components/common/ai-chat/AiChatMessages.svelte";
-  import AiChatInput from "@/components/common/ai-chat/AiChatInput.svelte";
+  import AiChatMessages from "@/components/ai-chat/AiChatMessages.svelte";
+  import AiChatInput from "@/components/ai-chat/AiChatInput.svelte";
 
   let { context = "", appContext = "" } = $props();
 

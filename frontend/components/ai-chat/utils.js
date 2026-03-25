@@ -1,4 +1,4 @@
-import { markdownToHtml } from "../lib/markdown";
+import { markdownToHtml } from "@/lib/markdown";
 
 export function typeIcon(type) {
   switch (type) {

@@ -8,6 +8,20 @@ module Daylight
   class Engine < ::Rails::Engine
     isolate_namespace Daylight
 
+    # Serve pre-built frontend assets from the gem at /daylight/assets/
+    initializer "daylight.static_assets" do |app|
+      builds_path = root.join("app", "assets", "builds")
+      if builds_path.exist? && Dir.glob(builds_path.join("daylight-*")).any?
+        app.routes.prepend do
+          mount(
+            Rack::Files.new(builds_path.to_s),
+            at: "/daylight/assets",
+            as: :daylight_assets
+          )
+        end
+      end
+    end
+
     initializer "daylight.middleware" do |app|
       if Daylight.configuration.auto_capture
         app.middleware.insert_before(0, Daylight::Middleware::Catcher)
