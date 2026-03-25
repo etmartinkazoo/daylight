@@ -1,9 +1,11 @@
 <script>
-  import { useForm } from "@inertiajs/svelte";
+  import { useForm, usePage } from "@inertiajs/svelte";
   import DaylightLayout from "./DaylightLayout.svelte";
   import Button from "@/components/ui/Button.svelte";
 
   let { settings = {} } = $props();
+  const pageStore = usePage();
+  let base = $derived($pageStore.props?.base_path || "/daylight");
 
   let form = useForm({
     "settings[github_repo_url]": settings.github_repo_url || "",
@@ -19,112 +21,127 @@
 
   function handleSubmit(e) {
     e.preventDefault();
-    $form.patch("/daylight/settings", { preserveScroll: true });
+    $form.patch(`${base}/settings`, { preserveScroll: true });
   }
 </script>
 
 <svelte:head><title>Settings — Daylight</title></svelte:head>
 
 <DaylightLayout>
-  <div class="ew-page">
-    <h1 class="ew-page-title">Settings</h1>
+  <div class="page">
+    <div class="page-header">
+      <h1 class="page-title">Settings</h1>
+      <p class="page-subtitle">Configure Daylight monitoring and notifications</p>
+    </div>
 
-    <form class="ew-form" onsubmit={handleSubmit}>
+    <form class="form" onsubmit={handleSubmit}>
 
       <!-- Source Code -->
-      <fieldset class="ew-fieldset">
-        <legend class="ew-legend">Source Code</legend>
-        <p class="ew-legend-desc">Connect a GitHub repo so AI can reference your code when diagnosing errors.</p>
-
-        <div class="ew-field">
-          <label class="ew-label" for="github_repo_url">GitHub Repo URL</label>
-          <input id="github_repo_url" type="url" class="ew-input" placeholder="https://github.com/org/repo" bind:value={$form["settings[github_repo_url]"]} />
-          <p class="ew-hint">Full URL to your GitHub repository.</p>
+      <div class="section-card">
+        <div class="section-header">
+          <h2 class="section-title">Source Code</h2>
+          <p class="section-desc">Connect a GitHub repo so AI can reference your code when diagnosing errors.</p>
         </div>
+        <div class="section-body">
+          <div class="form-field">
+            <label class="form-label" for="github_repo_url">GitHub Repo URL</label>
+            <input id="github_repo_url" type="url" class="form-input" placeholder="https://github.com/org/repo" bind:value={$form["settings[github_repo_url]"]} />
+            <p class="form-hint">Full URL to your GitHub repository.</p>
+          </div>
 
-        <div class="ew-field">
-          <label class="ew-label" for="github_default_branch">Default Branch</label>
-          <input id="github_default_branch" type="text" class="ew-input ew-input-sm" placeholder="main" bind:value={$form["settings[github_default_branch]"]} />
+          <div class="form-field">
+            <label class="form-label" for="github_default_branch">Default Branch</label>
+            <input id="github_default_branch" type="text" class="form-input form-input-sm" placeholder="main" bind:value={$form["settings[github_default_branch]"]} />
+          </div>
         </div>
-      </fieldset>
+      </div>
 
       <!-- Notifications -->
-      <fieldset class="ew-fieldset">
-        <legend class="ew-legend">Notifications</legend>
-        <p class="ew-legend-desc">Get notified when new errors occur or existing ones recur.</p>
-
-        <div class="ew-field">
-          <label class="ew-label" for="notification_emails">Email Recipients</label>
-          <input id="notification_emails" type="text" class="ew-input" placeholder="dev@example.com, ops@example.com" bind:value={$form["settings[notification_emails]"]} />
-          <p class="ew-hint">Comma-separated email addresses to notify on new/recurring errors.</p>
+      <div class="section-card">
+        <div class="section-header">
+          <h2 class="section-title">Notifications</h2>
+          <p class="section-desc">Get notified when new errors occur or existing ones recur.</p>
         </div>
+        <div class="section-body">
+          <div class="form-field">
+            <label class="form-label" for="notification_emails">Email Recipients</label>
+            <input id="notification_emails" type="text" class="form-input" placeholder="dev@example.com, ops@example.com" bind:value={$form["settings[notification_emails]"]} />
+            <p class="form-hint">Comma-separated email addresses to notify on new/recurring errors.</p>
+          </div>
 
-        <div class="ew-field">
-          <label class="ew-label" for="slack_webhook_url">Slack Webhook URL</label>
-          <input id="slack_webhook_url" type="url" class="ew-input" placeholder="https://hooks.slack.com/services/..." bind:value={$form["settings[slack_webhook_url]"]} />
-          <p class="ew-hint">Incoming webhook URL for Slack notifications.</p>
+          <div class="form-field">
+            <label class="form-label" for="slack_webhook_url">Slack Webhook URL</label>
+            <input id="slack_webhook_url" type="url" class="form-input" placeholder="https://hooks.slack.com/services/..." bind:value={$form["settings[slack_webhook_url]"]} />
+            <p class="form-hint">Incoming webhook URL for Slack notifications.</p>
+          </div>
         </div>
-      </fieldset>
+      </div>
 
       <!-- Thresholds -->
-      <fieldset class="ew-fieldset">
-        <legend class="ew-legend">Thresholds</legend>
-        <p class="ew-legend-desc">Control what gets tracked.</p>
-
-        <div class="ew-field-row">
-          <div class="ew-field">
-            <label class="ew-label" for="slow_request_threshold_ms">Slow Request Threshold</label>
-            <div class="ew-input-group">
-              <input id="slow_request_threshold_ms" type="number" class="ew-input ew-input-sm" bind:value={$form["settings[slow_request_threshold_ms]"]} />
-              <span class="ew-input-suffix">ms</span>
+      <div class="section-card">
+        <div class="section-header">
+          <h2 class="section-title">Thresholds</h2>
+          <p class="section-desc">Control what gets tracked.</p>
+        </div>
+        <div class="section-body">
+          <div class="field-row">
+            <div class="form-field">
+              <label class="form-label" for="slow_request_threshold_ms">Slow Request Threshold</label>
+              <div class="input-group">
+                <input id="slow_request_threshold_ms" type="number" class="form-input input-group-input" bind:value={$form["settings[slow_request_threshold_ms]"]} />
+                <span class="input-suffix">ms</span>
+              </div>
+              <p class="form-hint">Requests slower than this appear on the Requests page.</p>
             </div>
-            <p class="ew-hint">Requests slower than this appear on the Requests page.</p>
+
+            <div class="form-field">
+              <label class="form-label" for="slow_query_threshold_ms">Slow Query Threshold</label>
+              <div class="input-group">
+                <input id="slow_query_threshold_ms" type="number" class="form-input input-group-input" bind:value={$form["settings[slow_query_threshold_ms]"]} />
+                <span class="input-suffix">ms</span>
+              </div>
+              <p class="form-hint">SQL queries slower than this are recorded.</p>
+            </div>
           </div>
 
-          <div class="ew-field">
-            <label class="ew-label" for="slow_query_threshold_ms">Slow Query Threshold</label>
-            <div class="ew-input-group">
-              <input id="slow_query_threshold_ms" type="number" class="ew-input ew-input-sm" bind:value={$form["settings[slow_query_threshold_ms]"]} />
-              <span class="ew-input-suffix">ms</span>
+          <div class="form-field">
+            <label class="form-label" for="retention_days">Data Retention</label>
+            <div class="input-group">
+              <input id="retention_days" type="number" class="form-input input-group-input" bind:value={$form["settings[retention_days]"]} />
+              <span class="input-suffix">days</span>
             </div>
-            <p class="ew-hint">SQL queries slower than this are recorded.</p>
+            <p class="form-hint">Occurrences, requests, queries, and job records older than this are purged.</p>
           </div>
         </div>
-
-        <div class="ew-field">
-          <label class="ew-label" for="retention_days">Data Retention</label>
-          <div class="ew-input-group">
-            <input id="retention_days" type="number" class="ew-input ew-input-sm" bind:value={$form["settings[retention_days]"]} />
-            <span class="ew-input-suffix">days</span>
-          </div>
-          <p class="ew-hint">Occurrences, requests, queries, and job records older than this are purged.</p>
-        </div>
-      </fieldset>
+      </div>
 
       <!-- AI -->
-      <fieldset class="ew-fieldset">
-        <legend class="ew-legend">AI</legend>
-        <p class="ew-legend-desc">Configure the AI assistant for the sheet AI tab.</p>
-
-        <div class="ew-field">
-          <label class="ew-label" for="gemini_api_key">Gemini API Key</label>
-          <input id="gemini_api_key" type="password" class="ew-input" placeholder={settings.gemini_api_key ? "Key saved — leave blank to keep" : "Enter API key"} bind:value={$form["settings[gemini_api_key]"]} autocomplete="off" />
-          <p class="ew-hint">Used by the AI tab to analyze errors, queries, and requests. Get a key at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>.</p>
+      <div class="section-card">
+        <div class="section-header">
+          <h2 class="section-title">AI</h2>
+          <p class="section-desc">Configure the AI assistant for the sheet AI tab.</p>
         </div>
+        <div class="section-body">
+          <div class="form-field">
+            <label class="form-label" for="gemini_api_key">Gemini API Key</label>
+            <input id="gemini_api_key" type="password" class="form-input" placeholder={settings.gemini_api_key ? "Key saved — leave blank to keep" : "Enter API key"} bind:value={$form["settings[gemini_api_key]"]} autocomplete="off" />
+            <p class="form-hint">Used by the AI tab to analyze errors, queries, and requests. Get a key at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>.</p>
+          </div>
 
-        <div class="ew-field">
-          <label class="ew-label" for="ai_context_notes">Context Notes</label>
-          <textarea id="ai_context_notes" class="ew-textarea" rows="5" placeholder="e.g. This app uses multi-tenant SQLite via activerecord-tenanted. The main models are Partner, Project, Todo, Service..." bind:value={$form["settings[ai_context_notes]"]}></textarea>
-          <p class="ew-hint">Describe your app's architecture, key patterns, or common pitfalls. This is prepended to every AI conversation in errorwatch.</p>
+          <div class="form-field">
+            <label class="form-label" for="ai_context_notes">Context Notes</label>
+            <textarea id="ai_context_notes" class="form-textarea" rows="5" placeholder="e.g. This app uses multi-tenant SQLite via activerecord-tenanted. The main models are Partner, Project, Todo, Service..." bind:value={$form["settings[ai_context_notes]"]}></textarea>
+            <p class="form-hint">Describe your app's architecture, key patterns, or common pitfalls. This is prepended to every AI conversation in errorwatch.</p>
+          </div>
         </div>
-      </fieldset>
+      </div>
 
-      <div class="ew-actions">
+      <div class="form-actions">
         <Button type="submit" disabled={$form.processing}>
           {$form.processing ? "Saving..." : "Save Settings"}
         </Button>
         {#if $form.recentlySuccessful}
-          <span class="ew-saved">Saved</span>
+          <span class="saved-badge">Saved</span>
         {/if}
       </div>
     </form>
@@ -132,136 +149,213 @@
 </DaylightLayout>
 
 <style>
-  .ew-page { display: flex; flex-direction: column; gap: 1.5rem; }
-  .ew-page-title { font-size: 1.25rem; font-weight: 700; color: #1e293b; margin: 0; }
-
-  .ew-form { display: flex; flex-direction: column; gap: 1.5rem; }
-
-  .ew-fieldset {
-    border: 1px solid #e5e7eb;
-    padding: 1.25rem;
-    margin: 0;
+  .page {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 1.75rem;
   }
 
-  .ew-legend {
-    font-size: 0.875rem;
-    font-weight: 700;
-    color: #1e293b;
-    padding: 0 0.25rem;
-  }
-
-  .ew-legend-desc {
-    font-size: 0.8125rem;
-    color: #6b7280;
-    margin: -0.5rem 0 0;
-  }
-
-  .ew-field {
+  .page-header {
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
   }
 
-  .ew-field-row {
-    display: flex;
-    gap: 1rem;
-    .ew-field { flex: 1; }
-
-    @media (max-width: 640px) { flex-direction: column; }
+  .page-title {
+    font-size: 1.375rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+    letter-spacing: -0.01em;
   }
 
-  .ew-label {
-    font-size: 0.8125rem;
-    font-weight: 600;
-    color: #374151;
-  }
-
-  .ew-input {
-    width: 100%;
-    padding: 0.5rem 0.75rem;
-    font-size: 0.8125rem;
-    font-family: inherit;
-    border: 1px solid #e5e7eb;
-    background: #fff;
-    color: #1e293b;
-    outline: none;
-
-    &:focus { border-color: #213258; box-shadow: 0 0 0 2px rgba(33,50,88,0.1); }
-    &::placeholder { color: #9ca3af; }
-  }
-
-  .ew-input-sm { max-width: 160px; }
-
-  .ew-input-group {
-    display: flex;
-    align-items: center;
-    gap: 0;
-  }
-
-  .ew-input-group .ew-input {
-    border-right: none;
-  }
-
-  .ew-input-suffix {
-    padding: 0.5rem 0.625rem;
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: #6b7280;
-    background: #f9fafb;
-    border: 1px solid #e5e7eb;
-    border-left: none;
-    white-space: nowrap;
-  }
-
-  .ew-textarea {
-    width: 100%;
-    padding: 0.5rem 0.75rem;
-    font-size: 0.8125rem;
-    font-family: inherit;
-    line-height: 1.5;
-    border: 1px solid #e5e7eb;
-    background: #fff;
-    color: #1e293b;
-    outline: none;
-    resize: vertical;
-    min-height: 80px;
-
-    &:focus { border-color: #213258; box-shadow: 0 0 0 2px rgba(33,50,88,0.1); }
-    &::placeholder { color: #9ca3af; }
-  }
-
-  .ew-hint {
-    font-size: 0.6875rem;
-    color: #9ca3af;
+  .page-subtitle {
+    font-size: 0.875rem;
+    color: #64748b;
     margin: 0;
   }
 
-  .ew-actions {
+  .form {
     display: flex;
-    align-items: center;
-    gap: 0.75rem;
+    flex-direction: column;
+    gap: 1.5rem;
   }
 
-  .ew-save {
-    padding: 0.5rem 1.25rem;
+  /* Section cards */
+  .section-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    overflow: hidden;
+  }
+
+  .section-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  .section-title {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #0f172a;
+    margin: 0;
+  }
+
+  .section-desc {
+    font-size: 0.8125rem;
+    color: #64748b;
+    margin: 0.25rem 0 0;
+  }
+
+  .section-body {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  /* Form fields */
+  .form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+  }
+
+  .field-row {
+    display: flex;
+    gap: 1.25rem;
+  }
+
+  .field-row .form-field {
+    flex: 1;
+  }
+
+  @media (max-width: 640px) {
+    .field-row {
+      flex-direction: column;
+    }
+  }
+
+  .form-label {
     font-size: 0.8125rem;
     font-weight: 600;
-    font-family: inherit;
-    border: none;
-    background: #213258;
-    color: #fff;
-    cursor: pointer;
-
-    &:hover:not(:disabled) { background: #1a2847; }
-    &:disabled { opacity: 0.5; cursor: not-allowed; }
+    color: #0f172a;
   }
 
-  .ew-saved {
+  .form-input {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    font-family: inherit;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    background: #fff;
+    color: #0f172a;
+    outline: none;
+    transition: all 0.15s ease;
+    box-sizing: border-box;
+  }
+
+  .form-input:focus {
+    border-color: #0f172a;
+    box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
+  }
+
+  .form-input::placeholder {
+    color: #94a3b8;
+  }
+
+  .form-input-sm {
+    max-width: 180px;
+  }
+
+  .form-textarea {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    font-family: inherit;
+    line-height: 1.6;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    background: #fff;
+    color: #0f172a;
+    outline: none;
+    resize: vertical;
+    min-height: 100px;
+    transition: all 0.15s ease;
+    box-sizing: border-box;
+  }
+
+  .form-textarea:focus {
+    border-color: #0f172a;
+    box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
+  }
+
+  .form-textarea::placeholder {
+    color: #94a3b8;
+  }
+
+  .input-group {
+    display: flex;
+    align-items: stretch;
+    max-width: 180px;
+  }
+
+  .input-group-input {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    border-right: none;
+  }
+
+  .input-suffix {
+    display: flex;
+    align-items: center;
+    padding: 0 0.75rem;
     font-size: 0.8125rem;
     font-weight: 500;
+    color: #64748b;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-left: none;
+    border-radius: 0 0.5rem 0.5rem 0;
+    white-space: nowrap;
+  }
+
+  .form-hint {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin: 0;
+    line-height: 1.4;
+  }
+
+  .form-hint a {
+    color: #0f172a;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .form-hint a:hover {
+    color: #334155;
+  }
+
+  /* Actions */
+  .form-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    padding-top: 0.25rem;
+  }
+
+  .saved-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
     color: #16a34a;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 9999px;
   }
 </style>

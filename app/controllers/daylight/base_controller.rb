@@ -16,6 +16,7 @@ module Daylight
       end
 
       {
+        base_path: daylight.root_path.chomp("/"),
         ew_settings: {
           github_repo_url: ew_settings["github_repo_url"],
           github_default_branch: ew_settings["github_default_branch"] || "main",

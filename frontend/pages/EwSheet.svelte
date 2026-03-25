@@ -68,9 +68,10 @@
   .ew-sheet-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.25);
+    background: rgba(0,0,0,0.4);
+    backdrop-filter: blur(2px);
     z-index: 100;
-    animation: ew-fade 0.15s ease;
+    animation: ew-fade 0.2s ease;
   }
 
   @keyframes ew-fade { from { opacity: 0; } to { opacity: 1; } }
@@ -80,14 +81,15 @@
     top: 0;
     right: 0;
     bottom: 0;
-    width: 520px;
+    width: 540px;
     max-width: 90vw;
     background: #fff;
-    border-left: 1px solid #e5e7eb;
+    border-left: 1px solid #e2e8f0;
+    box-shadow: -8px 0 30px rgba(0, 0, 0, 0.08);
     z-index: 101;
     display: flex;
     flex-direction: column;
-    animation: ew-slide 0.2s ease;
+    animation: ew-slide 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   @keyframes ew-slide { from { transform: translateX(100%); } to { transform: translateX(0); } }
@@ -96,15 +98,15 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0.875rem 1.25rem;
-    border-bottom: 1px solid #e5e7eb;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #e2e8f0;
     flex-shrink: 0;
   }
 
   .ew-sheet-title {
-    font-size: 0.875rem;
+    font-size: 0.9375rem;
     font-weight: 700;
-    color: #1e293b;
+    color: #0f172a;
     margin: 0;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -112,49 +114,52 @@
   }
 
   .ew-sheet-close {
-    width: 1.75rem;
-    height: 1.75rem;
+    width: 2rem;
+    height: 2rem;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1.25rem;
     border: none;
     background: none;
-    color: #9ca3af;
+    color: #94a3b8;
     cursor: pointer;
     flex-shrink: 0;
-    &:hover { background: #f3f4f6; color: #1e293b; }
+    border-radius: 0.375rem;
+    transition: all 0.15s ease;
+    &:hover { background: #f1f5f9; color: #0f172a; }
   }
 
   .ew-sheet-tabs {
     display: flex;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid #e2e8f0;
     flex-shrink: 0;
+    padding: 0 1.5rem;
+    gap: 0.5rem;
   }
 
   .ew-sheet-tab {
-    flex: 1;
-    padding: 0.5rem 0.75rem;
+    padding: 0.625rem 0.75rem;
     font-size: 0.8125rem;
     font-weight: 500;
     font-family: inherit;
     border: none;
     background: none;
-    color: #6b7280;
+    color: #64748b;
     cursor: pointer;
     text-align: center;
     border-bottom: 2px solid transparent;
     margin-bottom: -1px;
-    transition: color 0.1s;
+    transition: all 0.15s ease;
 
-    &:hover { color: #1e293b; }
-    &.active { color: #213258; border-bottom-color: #213258; font-weight: 600; }
+    &:hover { color: #0f172a; }
+    &.active { color: #0f172a; border-bottom-color: #0f172a; font-weight: 600; }
   }
 
   .ew-sheet-body {
     flex: 1;
     overflow-y: auto;
-    padding: 1.25rem;
+    padding: 1.5rem;
     display: flex;
     flex-direction: column;
   }

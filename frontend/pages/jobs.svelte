@@ -1,5 +1,5 @@
 <script>
-  import { router } from "@inertiajs/svelte";
+  import { router, usePage } from "@inertiajs/svelte";
   import DaylightLayout from "./DaylightLayout.svelte";
   import Badge from "@/components/ui/Badge.svelte";
   import Button from "@/components/ui/Button.svelte";
@@ -7,14 +7,17 @@
   import SortableHeader from "@/components/ui/SortableHeader.svelte";
   import PeriodSelect from "./PeriodSelect.svelte";
   import EwSheet from "./EwSheet.svelte";
+  import DonutChart from "@/components/charts/DonutChart.svelte";
 
   let { job_classes = [], failures = [], period = "24h", totals = {}, solid_queue = null } = $props();
+  const pageStore = usePage();
+  let base = $derived($pageStore.props?.base_path || "/daylight");
 
   let sheetOpen = $state(false);
   let sheetItem = $state(null);
   let sheetType = $state("class");
 
-  function changePeriod(p) { router.get("/daylight/jobs", { period: p }, { preserveState: true }); }
+  function changePeriod(p) { router.get(`${base}/jobs`, { period: p }, { preserveState: true }); }
   function fmt(ms) { if (ms == null) return "—"; return ms >= 1000 ? `${(ms / 1000).toFixed(1)}s` : `${Math.round(ms)}ms`; }
   function timeAgo(d) { if (!d) return ""; const m = Math.floor((Date.now() - new Date(d).getTime()) / 60000); if (m < 1) return "now"; if (m < 60) return `${m}m`; const h = Math.floor(m / 60); return h < 24 ? `${h}h` : `${Math.floor(h / 24)}d`; }
   function formatTime(d) { if (!d) return ""; return new Date(d).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit" }); }
@@ -40,97 +43,165 @@
     if (sheetType === "failure") return `Failed Job: ${sheetItem.job_class}\nQueue: ${sheetItem.queue || "default"}\nError: ${sheetItem.error_class}\nMessage: ${sheetItem.error_message}\nFailed at: ${sheetItem.occurred_at}`;
     return `${sheetItem.label}: ${sheetItem.items?.length || 0} items`;
   });
+
+  let avgDuration = $derived(job_classes.length > 0 ? job_classes.reduce((s, j) => s + (j.avg_duration || 0), 0) / job_classes.length : 0);
+
+  let donutSegments = $derived([
+    { value: totals.completed || 0, color: "#22c55e", label: "Completed" },
+    { value: totals.failed || 0, color: "#ef4444", label: "Failed" },
+    { value: (totals.total || 0) - (totals.completed || 0) - (totals.failed || 0), color: "#3b82f6", label: "Other" },
+  ].filter(s => s.value > 0));
+
+  let completionPct = $derived(totals.total > 0 ? Math.round(((totals.completed || 0) / totals.total) * 100) : 0);
 </script>
 
 <svelte:head><title>Jobs — Daylight</title></svelte:head>
 
 <DaylightLayout>
-  <div class="ew-page">
-    <div class="ew-page-header">
-      <div><h1 class="ew-page-title">Jobs</h1><p class="ew-page-sub">{totals.total || 0} tracked — {totals.completed || 0} completed, {totals.failed || 0} failed</p></div>
+  <div class="jobs-page">
+    <!-- Header -->
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Jobs</h1>
+        <p class="page-subtitle">Background job monitoring and performance</p>
+      </div>
       <PeriodSelect value={period} onchange={changePeriod} />
     </div>
 
+    <!-- Stat Cards + Donut Chart -->
+    <div class="stats-row">
+      <div class="stat-cards">
+        <div class="stat-card">
+          <span class="stat-card-label">Total Jobs</span>
+          <span class="stat-card-value">{totals.total || 0}</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-card-label">Completed</span>
+          <span class="stat-card-value" style="color: #22c55e">{totals.completed || 0}</span>
+        </div>
+        <div class="stat-card {totals.failed > 0 ? 'stat-card-danger' : ''}">
+          <span class="stat-card-label">Failed</span>
+          <span class="stat-card-value">{totals.failed || 0}</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-card-label">Avg Duration</span>
+          <span class="stat-card-value">{fmt(avgDuration)}</span>
+        </div>
+      </div>
+      {#if (totals.total || 0) > 0}
+        <div class="chart-card">
+          <DonutChart
+            segments={donutSegments}
+            size={110}
+            strokeWidth={12}
+            centerValue="{completionPct}%"
+            centerLabel="complete"
+          />
+        </div>
+      {/if}
+    </div>
+
+    <!-- Solid Queue Status -->
     {#if solid_queue}
-      <div class="sq-stats">
-        <button class="sq-stat" onclick={() => openSqStat("Ready Jobs", solid_queue.ready_jobs)}>
-          <span class="sq-val">{solid_queue.ready}</span>
-          <span class="sq-label">Ready</span>
-        </button>
-        <button class="sq-stat" onclick={() => openSqStat("Scheduled Jobs", solid_queue.scheduled_jobs)}>
-          <span class="sq-val">{solid_queue.scheduled}</span>
-          <span class="sq-label">Scheduled</span>
-        </button>
-        <button class="sq-stat" onclick={() => openSqStat("Running Jobs", solid_queue.claimed_jobs)}>
-          <span class="sq-val">{solid_queue.claimed}</span>
-          <span class="sq-label">Running</span>
-        </button>
-        <button class="sq-stat" class:sq-stat-err={solid_queue.failed > 0} onclick={() => { /* failures already shown below */ }}>
-          <span class="sq-val">{solid_queue.failed}</span>
-          <span class="sq-label">Failed</span>
-        </button>
-        <button class="sq-stat" onclick={() => openSqStat("Worker Processes", solid_queue.worker_processes)}>
-          <span class="sq-val">{solid_queue.processes}</span>
-          <span class="sq-label">Workers</span>
-        </button>
+      <div class="section">
+        <h2 class="section-title">Solid Queue</h2>
+        <div class="sq-cards">
+          <button class="sq-card" onclick={() => openSqStat("Ready Jobs", solid_queue.ready_jobs)}>
+            <span class="sq-card-value">{solid_queue.ready}</span>
+            <span class="sq-card-label">Ready</span>
+          </button>
+          <button class="sq-card" onclick={() => openSqStat("Scheduled Jobs", solid_queue.scheduled_jobs)}>
+            <span class="sq-card-value">{solid_queue.scheduled}</span>
+            <span class="sq-card-label">Scheduled</span>
+          </button>
+          <button class="sq-card" onclick={() => openSqStat("Running Jobs", solid_queue.claimed_jobs)}>
+            <span class="sq-card-value">{solid_queue.claimed}</span>
+            <span class="sq-card-label">Running</span>
+          </button>
+          <button class="sq-card {solid_queue.failed > 0 ? 'sq-card-danger' : ''}" onclick={() => { /* failures shown below */ }}>
+            <span class="sq-card-value">{solid_queue.failed}</span>
+            <span class="sq-card-label">Failed</span>
+          </button>
+          <button class="sq-card" onclick={() => openSqStat("Worker Processes", solid_queue.worker_processes)}>
+            <span class="sq-card-value">{solid_queue.processes}</span>
+            <span class="sq-card-label">Workers</span>
+          </button>
+        </div>
       </div>
     {/if}
 
-    <!-- Job classes (from errorwatch tracking) -->
+    <!-- Job Classes Table -->
     {#if job_classes.length > 0}
-      <div class="ew-table">
-        <div class="ew-thead">
-          <div class="ew-th" style="flex:2">Job Class</div>
-          <div class="ew-th r" style="width:3.5rem"><SortableHeader column="total" label="Total" /></div>
-          <div class="ew-th r" style="width:4rem"><SortableHeader column="completed_count" label="Done" /></div>
-          <div class="ew-th r" style="width:3.5rem"><SortableHeader column="failed_count" label="Failed" /></div>
-          <div class="ew-th r" style="width:4rem">Queued</div>
-          <div class="ew-th r" style="width:4.5rem"><SortableHeader column="avg_duration" label="Avg" /></div>
-          <div class="ew-th r" style="width:4.5rem"><SortableHeader column="max_duration" label="Max" /></div>
+      <div class="section">
+        <h2 class="section-title">Job Classes</h2>
+        <div class="table-container">
+          <div class="table-header">
+            <div class="th" style="flex:2">Job Class</div>
+            <div class="th r" style="width:4rem"><SortableHeader column="total" label="Total" /></div>
+            <div class="th r" style="width:4.5rem"><SortableHeader column="completed_count" label="Done" /></div>
+            <div class="th r" style="width:4rem"><SortableHeader column="failed_count" label="Failed" /></div>
+            <div class="th r" style="width:4.5rem">Queued</div>
+            <div class="th r" style="width:5rem"><SortableHeader column="avg_duration" label="Avg" /></div>
+            <div class="th r" style="width:5rem"><SortableHeader column="max_duration" label="Max" /></div>
+          </div>
+          {#each job_classes as jc (jc.job_class)}
+            <button class="table-row" onclick={() => openClass(jc)}>
+              <div class="td" style="flex:2"><span class="job-name">{jc.job_class}</span></div>
+              <div class="td num" style="width:4rem">{jc.total}</div>
+              <div class="td num completed" style="width:4.5rem">{jc.completed_count}</div>
+              <div class="td num" style="width:4rem" class:failed-val={jc.failed_count > 0}>{jc.failed_count}</div>
+              <div class="td num" style="width:4.5rem">{jc.queued_count}</div>
+              <div class="td num" style="width:5rem">{fmt(jc.avg_duration)}</div>
+              <div class="td num" style="width:5rem" class:slow-val={jc.max_duration > 10000}>{fmt(jc.max_duration)}</div>
+            </button>
+          {/each}
         </div>
-        {#each job_classes as jc (jc.job_class)}
-          <button class="ew-row ew-row-btn" onclick={() => openClass(jc)}>
-            <div class="ew-cell" style="flex:2"><span class="job-name">{jc.job_class}</span></div>
-            <div class="ew-cell num" style="width:3.5rem">{jc.total}</div>
-            <div class="ew-cell num ok" style="width:4rem">{jc.completed_count}</div>
-            <div class="ew-cell num" style="width:3.5rem" class:err={jc.failed_count > 0}>{jc.failed_count}</div>
-            <div class="ew-cell num" style="width:4rem">{jc.queued_count}</div>
-            <div class="ew-cell num" style="width:4.5rem">{fmt(jc.avg_duration)}</div>
-            <div class="ew-cell num" style="width:4.5rem" class:slow={jc.max_duration > 10000}>{fmt(jc.max_duration)}</div>
-          </button>
-        {/each}
       </div>
     {/if}
 
-    <!-- Failures (merged from Solid Queue + errorwatch) -->
+    <!-- Failures -->
     {#if failures.length > 0}
-      <h2 class="ew-section-title">Failures ({failures.length})</h2>
-      <div class="ew-table">
-        <div class="ew-thead">
-          <div class="ew-th" style="flex:1.5">Job</div>
-          <div class="ew-th" style="flex:1">Error</div>
-          <div class="ew-th" style="width:4.5rem">Queue</div>
-          <div class="ew-th r" style="width:5rem">When</div>
+      <div class="section">
+        <div class="section-title-row">
+          <h2 class="section-title">Recent Failures</h2>
+          <span class="failure-count">{failures.length}</span>
         </div>
-        {#each failures as f (f.id)}
-          <button class="ew-row ew-row-btn" onclick={() => openFailure(f)}>
-            <div class="ew-cell" style="flex:1.5">
-              <span class="fail-job">{f.job_class || "Unknown"}</span>
-            </div>
-            <div class="ew-cell" style="flex:1">
-              <span class="fail-err-class">{f.error_class || "—"}</span>
-            </div>
-            <div class="ew-cell" style="width:4.5rem">
-              <span class="fail-queue">{f.queue || "—"}</span>
-            </div>
-            <div class="ew-cell r" style="width:5rem">
-              <span class="fail-time">{timeAgo(f.occurred_at)}</span>
-            </div>
-          </button>
-        {/each}
+        <div class="table-container">
+          <div class="table-header">
+            <div class="th" style="flex:1.5">Job</div>
+            <div class="th" style="flex:1">Error</div>
+            <div class="th" style="width:5rem">Queue</div>
+            <div class="th r" style="width:5.5rem">When</div>
+          </div>
+          {#each failures as f (f.id)}
+            <button class="table-row failure-row" onclick={() => openFailure(f)}>
+              <div class="td" style="flex:1.5">
+                <span class="fail-job">{f.job_class || "Unknown"}</span>
+              </div>
+              <div class="td" style="flex:1">
+                <span class="fail-error">{f.error_class || "—"}</span>
+              </div>
+              <div class="td" style="width:5rem">
+                <span class="fail-queue-badge">{f.queue || "—"}</span>
+              </div>
+              <div class="td r" style="width:5.5rem">
+                <span class="fail-time">{timeAgo(f.occurred_at)}</span>
+              </div>
+            </button>
+          {/each}
+        </div>
       </div>
     {:else if job_classes.length === 0}
-      <div class="ew-empty"><p>No job data yet.</p></div>
+      <div class="empty-state">
+        <div class="empty-icon">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+          </svg>
+        </div>
+        <p class="empty-title">No job data yet</p>
+        <p class="empty-sub">Jobs will appear here once they start running.</p>
+      </div>
     {/if}
   </div>
 </DaylightLayout>
@@ -189,54 +260,187 @@
 </EwSheet>
 
 <style>
-  .ew-page { display: flex; flex-direction: column; gap: 1.25rem; }
-  .ew-page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
-  .ew-page-title { font-size: 1.25rem; font-weight: 700; color: #1e293b; margin: 0; }
-  .ew-page-sub { font-size: 0.8125rem; color: #6b7280; margin: 0.125rem 0 0; }
-  .ew-section-title { font-size: 0.875rem; font-weight: 600; color: #374151; margin: 0; }
+  /* Page layout */
+  .jobs-page { display: flex; flex-direction: column; gap: 1.5rem; }
 
-  /* Solid Queue stats strip */
-  .sq-stats { display: flex; gap: 0; border: 1px solid #e5e7eb; overflow: hidden; }
-  .sq-stat { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 0.0625rem; padding: 0.625rem 0.5rem; border: none; border-right: 1px solid #e5e7eb; background: none; font-family: inherit; cursor: pointer; transition: background 0.1s; &:last-child { border-right: none; } &:hover { background: #f3f4f6; } }
-  .sq-stat-err .sq-val { color: #dc2626; }
-  .sq-val { font-size: 1.125rem; font-weight: 700; color: #1e293b; font-variant-numeric: tabular-nums; }
-  .sq-label { font-size: 0.5625rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: #9ca3af; }
+  .page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+  .page-title { font-size: 1.375rem; font-weight: 700; color: #0f172a; margin: 0; letter-spacing: -0.02em; }
+  .page-subtitle { font-size: 0.8125rem; color: #64748b; margin: 0.25rem 0 0; }
 
-  .ew-table { background: #fff; border: 1px solid #e5e7eb; overflow: hidden; }
-  .ew-thead { display: flex; align-items: center; padding: 0 0.75rem; background: #f9fafb; border-bottom: 1px solid #e5e7eb; }
-  .ew-th { padding: 0.5rem 0.375rem; font-size: 0.5625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #9ca3af; }
+  .section { display: flex; flex-direction: column; gap: 0.75rem; }
+  .section-title { font-size: 0.875rem; font-weight: 600; color: #0f172a; margin: 0; }
+  .section-title-row { display: flex; align-items: center; gap: 0.5rem; }
+  .failure-count {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: #ef4444;
+    background: #fef2f2;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Stat Cards */
+  .stats-row { display: flex; gap: 1rem; align-items: flex-start; }
+  .stat-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; flex: 1; }
+  .stat-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  .stat-card-label { font-size: 0.8125rem; font-weight: 500; color: #64748b; }
+  .stat-card-value { font-size: 1.75rem; font-weight: 700; color: #0f172a; letter-spacing: -0.02em; line-height: 1; font-variant-numeric: tabular-nums; }
+  .stat-card-danger { border-color: #fecaca; background: #fff5f5; }
+  .stat-card-danger .stat-card-value { color: #ef4444; }
+
+  .chart-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  /* Solid Queue Cards */
+  .sq-cards { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.75rem; }
+  .sq-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-family: inherit;
+  }
+  .sq-card:hover { border-color: #cbd5e1; box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1); }
+  .sq-card-value { font-size: 1.25rem; font-weight: 700; color: #0f172a; font-variant-numeric: tabular-nums; line-height: 1; }
+  .sq-card-label { font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: #64748b; }
+  .sq-card-danger { border-color: #fecaca; background: #fff5f5; }
+  .sq-card-danger .sq-card-value { color: #ef4444; }
+
+  /* Tables */
+  .table-container {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    overflow: hidden;
+  }
+  .table-header {
+    display: flex;
+    align-items: center;
+    padding: 0 1rem;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .th {
+    padding: 0.625rem 0.5rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748b;
+  }
   .r { text-align: right; }
-  .ew-row { display: flex; align-items: center; padding: 0 0.75rem; border-bottom: 1px solid #f3f4f6; &:last-child { border-bottom: none; } &:hover { background: #f9fafb; } }
-  .ew-row-btn { width: 100%; border: none; background: none; font-family: inherit; cursor: pointer; text-align: left; }
-  .ew-cell { padding: 0.4375rem 0.375rem; font-size: 0.8125rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .ew-empty { text-align: center; padding: 2rem 1rem; color: #9ca3af; border: 1px solid #e5e7eb; background: #fff; }
-
+  .table-row {
+    display: flex;
+    align-items: center;
+    padding: 0 1rem;
+    border-bottom: 1px solid #f1f5f9;
+    width: 100%;
+    border-left: none;
+    border-right: none;
+    border-top: none;
+    background: none;
+    font-family: inherit;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.1s ease;
+  }
+  .table-row:last-child { border-bottom: none; }
+  .table-row:hover { background: #f8fafc; }
+  .td {
+    padding: 0.5625rem 0.5rem;
+    font-size: 0.8125rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #334155;
+  }
   .num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 500; }
-  .ok { color: #16a34a; }
-  .err { color: #dc2626; font-weight: 600; }
-  .slow { color: #dc2626; font-weight: 600; }
-  .job-name { font-size: 0.75rem; font-weight: 600; color: #213258; }
+  .completed { color: #22c55e; }
+  .failed-val { color: #ef4444; font-weight: 600; }
+  .slow-val { color: #ef4444; font-weight: 600; }
+  .job-name { font-size: 0.8125rem; font-weight: 600; color: #0f172a; }
 
-  .fail-job { font-size: 0.8125rem; font-weight: 600; color: #213258; }
-  .fail-err-class { font-size: 0.75rem; color: #dc2626; }
-  .fail-queue { font-size: 0.6875rem; color: #6b7280; }
-  .fail-time { font-size: 0.6875rem; color: #9ca3af; }
+  /* Failure rows */
+  .failure-row { border-left: 2px solid transparent; }
+  .failure-row:hover { border-left-color: #ef4444; }
+  .fail-job { font-size: 0.8125rem; font-weight: 600; color: #0f172a; }
+  .fail-error { font-size: 0.75rem; color: #ef4444; font-weight: 500; }
+  .fail-queue-badge {
+    font-size: 0.6875rem;
+    color: #64748b;
+    background: #f1f5f9;
+    padding: 0.125rem 0.5rem;
+    border-radius: 0.25rem;
+  }
+  .fail-time { font-size: 0.75rem; color: #94a3b8; font-variant-numeric: tabular-nums; }
 
+  /* Empty state */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    text-align: center;
+  }
+  .empty-icon { margin-bottom: 1rem; }
+  .empty-title { font-size: 0.9375rem; font-weight: 600; color: #0f172a; margin: 0; }
+  .empty-sub { font-size: 0.8125rem; color: #94a3b8; margin: 0.25rem 0 0; }
+
+  /* Sheet styles */
   .sheet-detail { display: flex; flex-direction: column; gap: 1rem; }
   .dl { display: flex; flex-direction: column; margin: 0; }
-  .dl-row { display: flex; justify-content: space-between; padding: 0.4375rem 0; border-bottom: 1px solid #f3f4f6; font-size: 0.8125rem; &:last-child { border-bottom: none; } }
-  .dl-row dt { color: #6b7280; font-weight: 500; }
-  .dl-row dd { color: #1e293b; font-weight: 500; margin: 0; }
-  .source-badge { font-size: 0.6875rem; padding: 0.0625rem 0.375rem; background: #f3f4f6; color: #6b7280; }
-  .sheet-sub { font-size: 0.6875rem; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.04em; margin: 0; }
-  .sheet-pre { font-size: 0.6875rem; font-family: "SF Mono", Monaco, Menlo, monospace; background: #f9fafb; padding: 0.75rem; border: 1px solid #e5e7eb; overflow-x: auto; white-space: pre-wrap; word-break: break-all; margin: 0; color: #dc2626; line-height: 1.6; }
-  .sheet-count { font-size: 0.8125rem; color: #6b7280; margin: 0; }
-  .sheet-empty { font-size: 0.8125rem; color: #9ca3af; margin: 0; }
+  .dl-row { display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #f1f5f9; font-size: 0.8125rem; }
+  .dl-row:last-child { border-bottom: none; }
+  .dl-row dt { color: #64748b; font-weight: 500; }
+  .dl-row dd { color: #0f172a; font-weight: 500; margin: 0; }
+  .ok { color: #22c55e; }
+  .err { color: #ef4444; font-weight: 600; }
+  .slow { color: #ef4444; font-weight: 600; }
+  .source-badge { font-size: 0.6875rem; padding: 0.125rem 0.5rem; background: #f1f5f9; color: #64748b; border-radius: 0.25rem; }
+  .sheet-sub { font-size: 0.6875rem; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.04em; margin: 0; }
+  .sheet-pre { font-size: 0.6875rem; font-family: "SF Mono", Monaco, Menlo, monospace; background: #fef2f2; padding: 0.75rem; border: 1px solid #fecaca; border-radius: 0.5rem; overflow-x: auto; white-space: pre-wrap; word-break: break-all; margin: 0; color: #ef4444; line-height: 1.6; }
+  .sheet-count { font-size: 0.8125rem; color: #64748b; margin: 0; }
+  .sheet-empty { font-size: 0.8125rem; color: #94a3b8; margin: 0; }
 
-  .sq-list { display: flex; flex-direction: column; border: 1px solid #e5e7eb; }
-  .sq-list-row { display: flex; align-items: center; gap: 0.5rem; padding: 0.4375rem 0.625rem; border-bottom: 1px solid #f3f4f6; font-size: 0.8125rem; flex-wrap: wrap; &:last-child { border-bottom: none; } }
-  .sq-list-class { font-weight: 600; color: #213258; }
-  .sq-list-queue { font-size: 0.6875rem; color: #6b7280; padding: 0.0625rem 0.375rem; background: #f3f4f6; }
-  .sq-list-host { font-size: 0.6875rem; color: #6b7280; font-family: monospace; }
-  .sq-list-time { font-size: 0.6875rem; color: #9ca3af; margin-left: auto; }
+  .sq-list { display: flex; flex-direction: column; border: 1px solid #e2e8f0; border-radius: 0.5rem; overflow: hidden; }
+  .sq-list-row { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem; border-bottom: 1px solid #f1f5f9; font-size: 0.8125rem; flex-wrap: wrap; }
+  .sq-list-row:last-child { border-bottom: none; }
+  .sq-list-class { font-weight: 600; color: #0f172a; }
+  .sq-list-queue { font-size: 0.6875rem; color: #64748b; padding: 0.125rem 0.5rem; background: #f1f5f9; border-radius: 0.25rem; }
+  .sq-list-host { font-size: 0.6875rem; color: #64748b; font-family: monospace; }
+  .sq-list-time { font-size: 0.6875rem; color: #94a3b8; margin-left: auto; }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .stat-cards { grid-template-columns: repeat(2, 1fr); }
+    .stats-row { flex-direction: column; }
+    .sq-cards { grid-template-columns: repeat(3, 1fr); }
+  }
 </style>

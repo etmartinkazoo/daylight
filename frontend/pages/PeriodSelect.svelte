@@ -19,21 +19,31 @@
 </div>
 
 <style>
-  .period-select { display: flex; gap: 1px; }
+  .period-select {
+    display: flex;
+    background: #f1f5f9;
+    border-radius: 0.5rem;
+    padding: 0.1875rem;
+    gap: 0.125rem;
+  }
 
   .period-btn {
-    padding: 0.3125rem 0.625rem;
-    font-size: 0.6875rem;
+    padding: 0.3125rem 0.75rem;
+    font-size: 0.75rem;
     font-weight: 600;
     font-family: inherit;
-    border: 1px solid #d1d5db;
-    border-radius: 0;
-    background: #fff;
-    color: #6b7280;
+    border: none;
+    border-radius: 0.375rem;
+    background: transparent;
+    color: #64748b;
     cursor: pointer;
-    transition: all 0.1s;
+    transition: all 0.15s ease;
 
-    &:hover { background: #f3f4f6; }
-    &.active { background: #213258; color: #fff; border-color: #213258; }
+    &:hover { color: #0f172a; }
+    &.active {
+      background: #fff;
+      color: #0f172a;
+      box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+    }
   }
 </style>

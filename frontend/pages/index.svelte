@@ -1,13 +1,16 @@
 <script>
-  import { router } from "@inertiajs/svelte";
+  import { router, usePage } from "@inertiajs/svelte";
   import DaylightLayout from "./DaylightLayout.svelte";
   import Badge from "@/components/ui/Badge.svelte";
   import Button from "@/components/ui/Button.svelte";
   import Table from "@/components/ui/Table.svelte";
   import SortableHeader from "@/components/ui/SortableHeader.svelte";
   import EwSheet from "./EwSheet.svelte";
+  import DonutChart from "@/components/charts/DonutChart.svelte";
 
   let { errors = [], counts = {}, status = "open", query = "" } = $props();
+  const pageStore = usePage();
+  let base = $derived($pageStore.props?.base_path || "/daylight");
 
   let searchVal = $state(query || "");
   let selectedIds = $state([]);
@@ -15,12 +18,12 @@
   let sheetError = $state(null);
 
   function navigate(s, q) {
-    router.get("/daylight/errors", { status: s, q: q || undefined }, { preserveState: true });
+    router.get(`${base}/errors`, { status: s, q: q || undefined }, { preserveState: true });
   }
 
-  function resolve(id) { router.patch(`/daylight/errors/${id}`, { status: "resolved", filter_status: status }); }
-  function reopen(id) { router.patch(`/daylight/errors/${id}`, { status: "open", filter_status: status }); }
-  function ignore(id) { router.patch(`/daylight/errors/${id}`, { status: "ignored", filter_status: status }); }
+  function resolve(id) { router.patch(`${base}/errors/${id}`, { status: "resolved", filter_status: status }); }
+  function reopen(id) { router.patch(`${base}/errors/${id}`, { status: "open", filter_status: status }); }
+  function ignore(id) { router.patch(`${base}/errors/${id}`, { status: "ignored", filter_status: status }); }
 
   function toggleSelect(id) {
     selectedIds = selectedIds.includes(id) ? selectedIds.filter(i => i !== id) : [...selectedIds, id];
@@ -29,7 +32,7 @@
   function selectAll() { selectedIds = errors.map(e => e.id); }
 
   function batchAction(action) {
-    router.post("/daylight/errors/batch", { ids: selectedIds, action_type: action, filter_status: status }, {
+    router.post(`${base}/errors/batch`, { ids: selectedIds, action_type: action, filter_status: status }, {
       onSuccess: () => { selectedIds = []; }
     });
   }
@@ -81,12 +84,61 @@
     { key: "ignored", label: "Ignored" },
     { key: "all", label: "All" },
   ];
+
+  let last24hCount = $derived(
+    counts.last_24h ?? errors.filter(e => {
+      if (!e.last_seen_at) return false;
+      return Date.now() - new Date(e.last_seen_at).getTime() < 86400000;
+    }).length
+  );
+
+  let donutSegments = $derived([
+    { value: counts.open || 0, color: "#ef4444", label: "Open" },
+    { value: counts.resolved || 0, color: "#22c55e", label: "Resolved" },
+    { value: counts.ignored || 0, color: "#94a3b8", label: "Ignored" },
+  ]);
+
+  let totalErrors = $derived((counts.open || 0) + (counts.resolved || 0) + (counts.ignored || 0));
 </script>
 
 <svelte:head><title>Daylight</title></svelte:head>
 
 <DaylightLayout>
   <div class="ew-page">
+    <!-- Stat cards + donut -->
+    <div class="stats-row">
+      <div class="stats-cards">
+        <div class="stat-card" class:stat-card-danger={counts.open > 0}>
+          <span class="stat-card-label">Open</span>
+          <span class="stat-card-value" class:stat-value-danger={counts.open > 0}>{counts.open || 0}</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-card-label">Last 24h</span>
+          <span class="stat-card-value">{last24hCount}</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-card-label">Resolved</span>
+          <span class="stat-card-value stat-value-success">{counts.resolved || 0}</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-card-label">Ignored</span>
+          <span class="stat-card-value stat-value-muted">{counts.ignored || 0}</span>
+        </div>
+      </div>
+      {#if totalErrors > 0}
+        <div class="stats-donut">
+          <DonutChart
+            segments={donutSegments}
+            size={100}
+            strokeWidth={12}
+            centerValue={String(totalErrors)}
+            centerLabel="total"
+          />
+        </div>
+      {/if}
+    </div>
+
+    <!-- Tabs -->
     <div class="ew-tabs">
       {#each tabs as tab (tab.key)}
         <button class="ew-tab" class:active={status === tab.key} onclick={() => navigate(tab.key, searchVal)}>
@@ -96,25 +148,40 @@
       {/each}
     </div>
 
+    <!-- Search -->
     <form class="ew-search" onsubmit={handleSearch}>
-      <input type="text" class="ew-search-input" placeholder="Search errors..." bind:value={searchVal} />
+      <div class="search-wrapper">
+        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" class="ew-search-input" placeholder="Search errors..." bind:value={searchVal} />
+      </div>
     </form>
 
+    <!-- Bulk actions -->
     {#if selectedIds.length > 0}
       <div class="ew-bulk">
+        <div class="bulk-indicator"></div>
         <span class="ew-bulk-count">{selectedIds.length} selected</span>
-        {#if status !== "resolved"}<Button variant="outline" onclick={() => batchAction("resolve")}>Resolve</Button>{/if}
-        {#if status !== "ignored"}<Button variant="outline" onclick={() => batchAction("ignore")}>Ignore</Button>{/if}
-        {#if status !== "open"}<Button variant="outline" onclick={() => batchAction("reopen")}>Reopen</Button>{/if}
-        <Button variant="danger" onclick={() => batchAction("delete")}>Delete</Button>
-        <Button variant="outline" onclick={() => { selectedIds = []; }}>Cancel</Button>
+        <div class="bulk-actions">
+          {#if status !== "resolved"}<Button variant="outline" onclick={() => batchAction("resolve")}>Resolve</Button>{/if}
+          {#if status !== "ignored"}<Button variant="outline" onclick={() => batchAction("ignore")}>Ignore</Button>{/if}
+          {#if status !== "open"}<Button variant="outline" onclick={() => batchAction("reopen")}>Reopen</Button>{/if}
+          <Button variant="danger" onclick={() => batchAction("delete")}>Delete</Button>
+          <Button variant="outline" onclick={() => { selectedIds = []; }}>Cancel</Button>
+        </div>
       </div>
     {/if}
 
+    <!-- Table or empty state -->
     {#if errors.length === 0}
-      <div class="ew-empty"><p class="ew-empty-title">No errors</p></div>
+      <div class="ew-empty">
+        <svg class="empty-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
+        <p class="ew-empty-title">No errors found</p>
+        <p class="ew-empty-desc">
+          {#if query}No errors matching "{query}"{:else}Nothing to show for this filter{/if}
+        </p>
+      </div>
     {:else}
-      <div class="ew-table">
+      <div class="data-table">
         <div class="ew-thead">
           <div class="ew-th ew-col-check"><input type="checkbox" checked={allSelected} onchange={() => allSelected ? selectedIds = [] : selectAll()} /></div>
           <div class="ew-th" style="flex:2"><SortableHeader column="error_class" label="Error" /></div>
@@ -243,76 +310,321 @@
         {:else}
           <button class="ew-action-btn" onclick={() => { reopen(sheetError.id); sheetOpen = false; }}>Reopen</button>
         {/if}
-        <a href={`/daylight/errors/${sheetError.id}`} class="ew-action-link">View full detail &rarr;</a>
+        <a href={`${base}/errors/${sheetError.id}`} class="ew-action-link">View full detail &rarr;</a>
       </div>
     </div>
   {/if}
 </EwSheet>
 
 <style>
-  .ew-page { display: flex; flex-direction: column; gap: 1rem; }
+  .ew-page { display: flex; flex-direction: column; gap: 1.25rem; }
 
-  .ew-tabs { display: flex; gap: 0; border-bottom: 1px solid #e5e7eb; }
-  .ew-tab {
-    padding: 0.5rem 0.875rem; font-size: 0.8125rem; font-weight: 500; font-family: inherit;
-    border: none; background: none; color: #6b7280; cursor: pointer;
-    border-bottom: 2px solid transparent; margin-bottom: -1px;
-    &:hover { color: #1e293b; } &.active { color: #213258; border-bottom-color: #213258; font-weight: 600; }
+  /* Stat cards row */
+  .stats-row {
+    display: flex;
+    align-items: stretch;
+    gap: 1.25rem;
   }
-  .ew-tab-count { font-size: 0.6875rem; font-weight: 700; margin-left: 0.25rem; opacity: 0.7; }
+  .stats-cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem;
+    flex: 1;
+  }
+  .stat-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .stat-card:hover {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  }
+  .stat-card-danger {
+    border-color: #fecaca;
+  }
+  .stat-card-label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: #64748b;
+  }
+  .stat-card-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #0f172a;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-value-danger { color: #ef4444; }
+  .stat-value-success { color: #22c55e; }
+  .stat-value-muted { color: #64748b; }
+  .stats-donut {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    padding: 1rem 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
 
+  /* Tabs */
+  .ew-tabs {
+    display: flex;
+    gap: 0.25rem;
+    background: #f1f5f9;
+    border-radius: 0.5rem;
+    padding: 0.25rem;
+    width: fit-content;
+  }
+  .ew-tab {
+    padding: 0.4375rem 0.875rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    font-family: inherit;
+    border: none;
+    background: none;
+    color: #64748b;
+    cursor: pointer;
+    border-radius: 0.375rem;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .ew-tab:hover { color: #0f172a; background: rgba(255, 255, 255, 0.5); }
+  .ew-tab.active {
+    color: #0f172a;
+    background: #fff;
+    font-weight: 600;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  }
+  .ew-tab-count {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    margin-left: 0.25rem;
+    opacity: 0.6;
+  }
+
+  /* Search */
   .ew-search { display: flex; }
-  .ew-search-input { flex: 1; padding: 0.5rem 0.75rem; font-size: 0.8125rem; font-family: inherit; border: 1px solid #e5e7eb; border-radius: 0; background: #fff; color: #1e293b; outline: none; &:focus { border-color: #213258; box-shadow: 0 0 0 2px rgba(33,50,88,0.1); } &::placeholder { color: #9ca3af; } }
+  .search-wrapper {
+    position: relative;
+    flex: 1;
+  }
+  .search-icon {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    pointer-events: none;
+  }
+  .ew-search-input {
+    width: 100%;
+    padding: 0.5625rem 0.75rem 0.5625rem 2.25rem;
+    font-size: 0.8125rem;
+    font-family: inherit;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    background: #fff;
+    color: #0f172a;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    box-sizing: border-box;
+  }
+  .ew-search-input:focus {
+    border-color: #94a3b8;
+    box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.15);
+  }
+  .ew-search-input::placeholder { color: #94a3b8; }
 
-  .ew-bulk { display: flex; align-items: center; gap: 0.375rem; padding: 0.5rem 0.75rem; background: #213258; color: #fff; }
-  .ew-bulk-count { font-size: 0.8125rem; font-weight: 600; margin-right: 0.5rem; }
-  .ew-btn { padding: 0.3125rem 0.625rem; font-size: 0.75rem; font-weight: 500; font-family: inherit; border: 1px solid rgba(255,255,255,0.3); border-radius: 0; background: transparent; color: #fff; cursor: pointer; &:hover { background: rgba(255,255,255,0.1); } }
-  .ew-btn-danger { border-color: #fca5a5; color: #fca5a5; &:hover { background: rgba(239,68,68,0.15); } }
+  /* Bulk actions */
+  .ew-bulk {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.625rem 1rem;
+    background: #0f172a;
+    color: #fff;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+  }
+  .bulk-indicator {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: #38bdf8;
+    flex-shrink: 0;
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  .ew-bulk-count {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    margin-right: 0.25rem;
+  }
+  .bulk-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    margin-left: auto;
+  }
 
-  .ew-table { background: #fff; border: 1px solid #e5e7eb; overflow: hidden; }
-  .ew-thead { display: flex; align-items: center; padding: 0 0.75rem; background: #f9fafb; border-bottom: 1px solid #e5e7eb; }
-  .ew-th { padding: 0.5rem 0.375rem; font-size: 0.5625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #9ca3af; }
-  .ew-row { display: flex; align-items: center; padding: 0 0.75rem; border-bottom: 1px solid #f3f4f6; &:last-child { border-bottom: none; } &:hover { background: #f9fafb; } &.ew-row-selected { background: rgba(33,50,88,0.04); } }
-  .ew-cell { padding: 0.5rem 0.375rem; font-size: 0.8125rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .ew-cell-btn { border: none; background: none; font-family: inherit; text-align: left; cursor: pointer; display: flex; flex-direction: column; gap: 0.0625rem; min-width: 0; }
+  /* Data table */
+  .data-table {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    overflow: hidden;
+  }
+  .ew-thead {
+    display: flex;
+    align-items: center;
+    padding: 0 0.75rem;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .ew-th {
+    padding: 0.625rem 0.375rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748b;
+  }
+  .ew-row {
+    display: flex;
+    align-items: center;
+    padding: 0 0.75rem;
+    border-bottom: 1px solid #f1f5f9;
+    transition: background-color 0.1s;
+  }
+  .ew-row:last-child { border-bottom: none; }
+  .ew-row:hover { background: #f8fafc; }
+  .ew-row.ew-row-selected { background: #eff6ff; }
+  .ew-cell {
+    padding: 0.625rem 0.375rem;
+    font-size: 0.8125rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ew-cell-btn {
+    border: none;
+    background: none;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    min-width: 0;
+  }
   .ew-col-check { width: 2rem; flex-shrink: 0; }
-  .ew-col-check input { accent-color: #213258; cursor: pointer; }
-  .ew-empty { text-align: center; padding: 3rem 1rem; background: #fff; border: 1px solid #e5e7eb; }
-  .ew-empty-title { font-size: 1rem; font-weight: 500; color: #6b7280; }
+  .ew-col-check input { accent-color: #0f172a; cursor: pointer; }
+  .ew-error-class { font-size: 0.8125rem; font-weight: 600; color: #0f172a; }
+  .ew-error-msg { font-size: 0.6875rem; color: #64748b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+  .ew-count-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.5rem;
+    height: 1.375rem;
+    padding: 0 0.375rem;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    background: #f1f5f9;
+    color: #334155;
+    border-radius: 999px;
+    font-variant-numeric: tabular-nums;
+  }
+  .ew-status {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: capitalize;
+    letter-spacing: 0.01em;
+    padding: 0.1875rem 0.5rem;
+    border-radius: 999px;
+  }
+  .ew-status.ew-status-open { background: #fef2f2; color: #dc2626; }
+  .ew-status.ew-status-resolved { background: #f0fdf4; color: #16a34a; }
+  .ew-status.ew-status-ignored { background: #f1f5f9; color: #94a3b8; }
+  .ew-time { font-size: 0.75rem; color: #64748b; }
 
-  .ew-error-class { font-size: 0.8125rem; font-weight: 600; color: #213258; }
-  .ew-error-msg { font-size: 0.6875rem; color: #6b7280; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
-  .ew-count-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 1.5rem; height: 1.25rem; padding: 0 0.375rem; font-size: 0.6875rem; font-weight: 700; background: #f3f4f6; color: #374151; }
-  .ew-status { font-size: 0.625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; padding: 0.125rem 0.375rem; &.ew-status-open { background: #fef2f2; color: #dc2626; } &.ew-status-resolved { background: #f0fdf4; color: #16a34a; } &.ew-status-ignored { background: #f3f4f6; color: #9ca3af; } }
-  .ew-time { font-size: 0.75rem; color: #6b7280; }
-  .ew-btn-sm { padding: 0.1875rem 0.5rem; font-size: 0.6875rem; font-weight: 500; font-family: inherit; border: 1px solid #e5e7eb; border-radius: 0; background: #fff; color: #6b7280; cursor: pointer; &:hover { background: #f3f4f6; } }
+  /* Empty state */
+  .ew-empty {
+    text-align: center;
+    padding: 4rem 1rem;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .empty-icon { opacity: 0.6; }
+  .ew-empty-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #0f172a;
+    margin: 0;
+  }
+  .ew-empty-desc {
+    font-size: 0.8125rem;
+    color: #64748b;
+    margin: 0;
+  }
 
   /* Sheet */
   .sheet-detail { display: flex; flex-direction: column; gap: 1rem; }
   .sheet-status-row { display: flex; align-items: center; gap: 0.75rem; }
-  .sheet-count { font-size: 0.8125rem; color: #6b7280; }
-  .sheet-sub { font-size: 0.6875rem; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.04em; margin: 0; }
+  .sheet-count { font-size: 0.8125rem; color: #64748b; }
+  .sheet-sub { font-size: 0.6875rem; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.04em; margin: 0; }
   .sheet-msg { font-size: 0.875rem; color: #1e293b; margin: 0; word-break: break-word; line-height: 1.5; }
   .sheet-meta { display: flex; flex-direction: column; gap: 0.375rem; }
   .sheet-meta div { display: flex; justify-content: space-between; font-size: 0.8125rem; }
-  .sheet-meta-label { color: #6b7280; }
-  .sheet-pre { font-size: 0.6875rem; font-family: "SF Mono", Monaco, Menlo, monospace; background: #f9fafb; padding: 0.75rem; border: 1px solid #e5e7eb; overflow-x: auto; white-space: pre-wrap; word-break: break-all; margin: 0; line-height: 1.7; }
-  .sheet-actions { display: flex; align-items: center; gap: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #e5e7eb; }
-  .ew-action-btn { padding: 0.375rem 0.75rem; font-size: 0.8125rem; font-weight: 500; font-family: inherit; border: 1px solid #e5e7eb; border-radius: 0; background: #fff; color: #374151; cursor: pointer; &:hover { background: #f3f4f6; } }
-  .ew-action-link { font-size: 0.8125rem; font-weight: 500; color: #213258; text-decoration: none; margin-left: auto; &:hover { text-decoration: underline; } }
+  .sheet-meta-label { color: #64748b; }
+  .sheet-pre { font-size: 0.6875rem; font-family: "SF Mono", Monaco, Menlo, monospace; background: #f8fafc; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; overflow-x: auto; white-space: pre-wrap; word-break: break-all; margin: 0; line-height: 1.7; }
+  .sheet-actions { display: flex; align-items: center; gap: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #e2e8f0; }
+  .ew-action-btn {
+    padding: 0.4375rem 0.875rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    font-family: inherit;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    background: #fff;
+    color: #334155;
+    cursor: pointer;
+    transition: background-color 0.1s;
+  }
+  .ew-action-btn:hover { background: #f8fafc; }
+  .ew-action-link { font-size: 0.8125rem; font-weight: 500; color: #0f172a; text-decoration: none; margin-left: auto; }
+  .ew-action-link:hover { text-decoration: underline; }
 
   /* Where section */
-  .sheet-where { display: flex; flex-direction: column; gap: 0; border: 1px solid #e5e7eb; }
-  .where-row { display: flex; align-items: center; gap: 0.5rem; padding: 0.375rem 0.625rem; border-bottom: 1px solid #f3f4f6; &:last-child { border-bottom: none; } }
-  .where-label { font-size: 0.6875rem; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.04em; width: 5rem; flex-shrink: 0; }
+  .sheet-where { display: flex; flex-direction: column; gap: 0; border: 1px solid #e2e8f0; border-radius: 0.5rem; overflow: hidden; }
+  .where-row { display: flex; align-items: center; gap: 0.5rem; padding: 0.375rem 0.625rem; border-bottom: 1px solid #f1f5f9; }
+  .where-row:last-child { border-bottom: none; }
+  .where-label { font-size: 0.6875rem; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.04em; width: 5rem; flex-shrink: 0; }
   .where-val { font-size: 0.8125rem; color: #1e293b; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .mono { font-family: "SF Mono", Monaco, Menlo, monospace; font-size: 0.75rem; }
 
   /* Occurrence list */
-  .occ-list { display: flex; flex-direction: column; border: 1px solid #e5e7eb; }
-  .occ-item { display: flex; align-items: center; gap: 0.625rem; padding: 0.375rem 0.625rem; border-bottom: 1px solid #f3f4f6; font-size: 0.75rem; &:last-child { border-bottom: none; } }
-  .occ-time { color: #6b7280; font-weight: 500; flex-shrink: 0; }
-  .occ-url { color: #374151; font-family: monospace; font-size: 0.6875rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .occ-route { color: #213258; font-weight: 500; }
-  .occ-user { color: #9ca3af; margin-left: auto; flex-shrink: 0; }
+  .occ-list { display: flex; flex-direction: column; border: 1px solid #e2e8f0; border-radius: 0.5rem; overflow: hidden; }
+  .occ-item { display: flex; align-items: center; gap: 0.625rem; padding: 0.375rem 0.625rem; border-bottom: 1px solid #f1f5f9; font-size: 0.75rem; }
+  .occ-item:last-child { border-bottom: none; }
+  .occ-time { color: #64748b; font-weight: 500; flex-shrink: 0; }
+  .occ-url { color: #334155; font-family: monospace; font-size: 0.6875rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .occ-route { color: #0f172a; font-weight: 500; }
+  .occ-user { color: #94a3b8; margin-left: auto; flex-shrink: 0; }
 </style>

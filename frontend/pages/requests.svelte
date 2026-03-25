@@ -1,5 +1,5 @@
 <script>
-  import { router } from "@inertiajs/svelte";
+  import { router, usePage } from "@inertiajs/svelte";
   import DaylightLayout from "./DaylightLayout.svelte";
   import Badge from "@/components/ui/Badge.svelte";
   import Button from "@/components/ui/Button.svelte";
@@ -7,17 +7,20 @@
   import SortableHeader from "@/components/ui/SortableHeader.svelte";
   import PeriodSelect from "./PeriodSelect.svelte";
   import EwSheet from "./EwSheet.svelte";
+  import BarList from "@/components/charts/BarList.svelte";
 
   let {
     endpoints = [], route_requests = [], selected_request = null,
     selected_route = null, period = "24h", total_requests = 0
   } = $props();
+  const pageStore = usePage();
+  let base = $derived($pageStore.props?.base_path || "/daylight");
 
   let sheetOpen = $state(false);
   let sheetItem = $state(null);
   let sheetType = $state("endpoint");
 
-  function changePeriod(p) { router.get("/daylight/requests", { period: p }, { preserveState: true }); }
+  function changePeriod(p) { router.get(`${base}/requests`, { period: p }, { preserveState: true }); }
   function fmt(ms) { if (ms == null) return "—"; return ms >= 1000 ? `${(ms / 1000).toFixed(1)}s` : `${Math.round(ms)}ms`; }
   function timeAgo(d) { if (!d) return ""; const m = Math.floor((Date.now() - new Date(d).getTime()) / 60000); if (m < 1) return "now"; if (m < 60) return `${m}m`; const h = Math.floor(m / 60); return h < 24 ? `${h}h` : `${Math.floor(h / 24)}d`; }
   function formatTime(d) { if (!d) return ""; return new Date(d).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit" }); }
@@ -26,11 +29,11 @@
 
   // Drill-down: click endpoint → load individual requests
   function selectEndpoint(ep) {
-    router.get("/daylight/requests", { period, route: ep.route }, { preserveState: true });
+    router.get(`${base}/requests`, { period, route: ep.route }, { preserveState: true });
   }
 
   function goBack() {
-    router.get("/daylight/requests", { period }, { preserveState: true });
+    router.get(`${base}/requests`, { period }, { preserveState: true });
   }
 
   // Click individual request → open sheet with timeline
@@ -40,7 +43,7 @@
     sheetOpen = true;
     // Load queries for this request
     if (!req.queries) {
-      router.get("/daylight/requests", { period, route: selected_route, request_id: req.id }, {
+      router.get(`${base}/requests`, { period, route: selected_route, request_id: req.id }, {
         preserveState: true,
         only: ["selected_request"],
         onSuccess: (page) => {
@@ -67,78 +70,146 @@
     if (sheetItem.queries?.length) ctx += `\n\nSlow queries during this request:\n${sheetItem.queries.map(q => `${fmt(q.duration_ms)} ${q.sql}`).join("\n")}`;
     return ctx;
   });
+
+  // Derived stats
+  let statTotal = $derived(endpoints.reduce((s, ep) => s + (ep.total || 0), 0));
+  let statAvg = $derived.by(() => {
+    const totalReqs = endpoints.reduce((s, ep) => s + (ep.total || 0), 0);
+    if (totalReqs === 0) return 0;
+    const weighted = endpoints.reduce((s, ep) => s + (ep.avg_duration || 0) * (ep.total || 0), 0);
+    return weighted / totalReqs;
+  });
+  let statErrors = $derived(endpoints.reduce((s, ep) => s + (ep.server_error_count || 0), 0));
+  let statErrorRate = $derived(statTotal > 0 ? ((statErrors / statTotal) * 100).toFixed(1) : "0.0");
+  let statP95 = $derived(endpoints.length > 0 ? Math.max(...endpoints.map(ep => ep.p95_duration || 0)) : 0);
+
+  let topEndpoints = $derived(
+    endpoints.slice().sort((a, b) => b.avg_duration - a.avg_duration).slice(0, 5).map(ep => ({
+      label: ep.route?.replace(/^(GET|POST|PATCH|PUT|DELETE)\s/, "") || ep.route,
+      value: ep.avg_duration,
+    }))
+  );
 </script>
 
 <svelte:head><title>Requests — Daylight</title></svelte:head>
 
 <DaylightLayout>
-  <div class="ew-page">
-    <div class="ew-page-header">
+  <div class="page">
+    <div class="page-header">
       <div>
-        <h1 class="ew-page-title">Requests</h1>
-        <p class="ew-page-sub">{total_requests.toLocaleString()} requests in the last {period}</p>
+        <h1 class="page-title">Requests</h1>
+        <p class="page-sub">{total_requests.toLocaleString()} requests in the last {period}</p>
       </div>
-      <PeriodSelect value={period} onchange={changePeriod} />
+      <div class="period-wrapper">
+        <PeriodSelect value={period} onchange={changePeriod} />
+      </div>
     </div>
 
     {#if selected_route && route_requests.length > 0}
       <!-- Level 2: Individual requests for a route -->
-      <button class="back-btn" onclick={goBack}>&larr; All routes</button>
-      <h2 class="route-title">{selected_route}</h2>
+      <button class="back-btn" onclick={goBack}>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        All endpoints
+      </button>
+      <div class="drilldown-header">
+        <h2 class="route-title">{selected_route}</h2>
+        <span class="drilldown-count">{route_requests.length} requests</span>
+      </div>
 
-      <div class="ew-table">
-        <div class="ew-thead">
-          <div class="ew-th" style="width:3.5rem">Status</div>
-          <div class="ew-th" style="flex:2">Path</div>
-          <div class="ew-th r" style="width:5rem">Duration</div>
-          <div class="ew-th r" style="width:3.5rem">DB</div>
-          <div class="ew-th r" style="width:2.5rem">Qry</div>
-          <div class="ew-th" style="width:4rem">IP</div>
-          <div class="ew-th r" style="width:5rem">When</div>
-        </div>
-        {#each route_requests as req (req.id)}
-          <button class="ew-row ew-row-btn" onclick={() => openRequest(req)}>
-            <div class="ew-cell" style="width:3.5rem"><span class="status-badge {sc(req.status_code)}">{req.status_code}</span></div>
-            <div class="ew-cell mono" style="flex:2">{req.path}</div>
-            <div class="ew-cell num" style="width:5rem" class:slow={req.duration_ms > 500}>{fmt(req.duration_ms)}</div>
-            <div class="ew-cell num" style="width:3.5rem">{fmt(req.db_duration_ms)}</div>
-            <div class="ew-cell num" style="width:2.5rem">{req.query_count}</div>
-            <div class="ew-cell" style="width:4rem"><span class="ip">{req.ip}</span></div>
-            <div class="ew-cell r" style="width:5rem"><span class="time-ago">{timeAgo(req.occurred_at)}</span></div>
-          </button>
-        {/each}
+      <div class="table-container">
+        <table class="table">
+          <thead>
+            <tr>
+              <th class="th" style="width:4.5rem">Status</th>
+              <th class="th" style="width:auto">Path</th>
+              <th class="th r" style="width:5.5rem">Duration</th>
+              <th class="th r" style="width:4.5rem">DB</th>
+              <th class="th r" style="width:3.5rem">Qry</th>
+              <th class="th" style="width:5rem">IP</th>
+              <th class="th r" style="width:4.5rem">When</th>
+            </tr>
+          </thead>
+          <tbody>
+            {#each route_requests as req (req.id)}
+              <tr class="row" onclick={() => openRequest(req)}>
+                <td class="cell"><span class="status-badge {sc(req.status_code)}">{req.status_code}</span></td>
+                <td class="cell mono-cell">{req.path}</td>
+                <td class="cell num" class:slow={req.duration_ms > 500}>{fmt(req.duration_ms)}</td>
+                <td class="cell num">{fmt(req.db_duration_ms)}</td>
+                <td class="cell num">{req.query_count}</td>
+                <td class="cell"><span class="ip-text">{req.ip}</span></td>
+                <td class="cell r"><span class="time-ago">{timeAgo(req.occurred_at)}</span></td>
+              </tr>
+            {/each}
+          </tbody>
+        </table>
       </div>
 
     {:else}
-      <!-- Level 1: Route list (Nightwatch-style) -->
-      <div class="ew-table">
-        <div class="ew-thead">
-          <div class="ew-th" style="flex:2.5">Route</div>
-          <div class="ew-th r" style="width:3.5rem"><SortableHeader column="total" label="Reqs" /></div>
-          <div class="ew-th r" style="width:4.5rem"><SortableHeader column="avg_duration" label="Avg" /></div>
-          <div class="ew-th r" style="width:4.5rem">P95</div>
-          <div class="ew-th r" style="width:4.5rem"><SortableHeader column="max_duration" label="Max" /></div>
-          <div class="ew-th c" style="width:3rem"><SortableHeader column="ok_count" label="2xx" /></div>
-          <div class="ew-th c" style="width:2.5rem"><SortableHeader column="client_error_count" label="4xx" /></div>
-          <div class="ew-th c" style="width:2.5rem"><SortableHeader column="server_error_count" label="5xx" /></div>
+      <!-- Stat cards + bar chart -->
+      <div class="stats-row">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <span class="stat-card-label">Total Requests</span>
+            <span class="stat-card-value">{statTotal.toLocaleString()}</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-card-label">Avg Response Time</span>
+            <span class="stat-card-value">{fmt(statAvg)}</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-card-label">Error Rate (5xx)</span>
+            <span class="stat-card-value" class:stat-danger={statErrors > 0}>{statErrorRate}%</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-card-label">P95 Response Time</span>
+            <span class="stat-card-value" class:stat-warn={statP95 > 500}>{fmt(statP95)}</span>
+          </div>
         </div>
-        {#each endpoints as ep (ep.route)}
-          <button class="ew-row ew-row-btn" onclick={() => selectEndpoint(ep)}>
-            <div class="ew-cell" style="flex:2.5">
-              <span class="method-badge" style="color: {methodColor(ep.method)}">{ep.method}</span>
-              <span class="route-path">{ep.route?.replace(/^(GET|POST|PATCH|PUT|DELETE)\s/, "") || ep.route}</span>
-            </div>
-            <div class="ew-cell num" style="width:3.5rem">{ep.total}</div>
-            <div class="ew-cell num" style="width:4.5rem">{fmt(ep.avg_duration)}</div>
-            <div class="ew-cell num" style="width:4.5rem" class:warn={ep.p95_duration > 500}>{fmt(ep.p95_duration)}</div>
-            <div class="ew-cell num" style="width:4.5rem" class:slow={ep.max_duration > 1000}>{fmt(ep.max_duration)}</div>
-            <div class="ew-cell num c" style="width:3rem">{ep.ok_count}</div>
-            <div class="ew-cell num c" style="width:2.5rem" class:warn={ep.client_error_count > 0}>{ep.client_error_count}</div>
-            <div class="ew-cell num c" style="width:2.5rem" class:err={ep.server_error_count > 0}>{ep.server_error_count}</div>
-          </button>
-        {/each}
+        <div class="chart-card">
+          <h3 class="chart-title">Slowest Endpoints</h3>
+          <BarList items={topEndpoints} valueFormatter={fmt} color="#6366f1" />
+        </div>
+      </div>
+
+      <!-- Level 1: Endpoints table -->
+      <div class="table-container">
+        <table class="table">
+          <thead>
+            <tr>
+              <th class="th" style="width:auto">Route</th>
+              <th class="th r" style="width:4rem"><SortableHeader column="total" label="Reqs" /></th>
+              <th class="th r" style="width:5rem"><SortableHeader column="avg_duration" label="Avg" /></th>
+              <th class="th r" style="width:5rem">P95</th>
+              <th class="th r" style="width:5rem"><SortableHeader column="max_duration" label="Max" /></th>
+              <th class="th c" style="width:3.5rem"><SortableHeader column="ok_count" label="2xx" /></th>
+              <th class="th c" style="width:3.5rem"><SortableHeader column="client_error_count" label="4xx" /></th>
+              <th class="th c" style="width:3.5rem"><SortableHeader column="server_error_count" label="5xx" /></th>
+            </tr>
+          </thead>
+          <tbody>
+            {#each endpoints as ep (ep.route)}
+              <tr class="row" onclick={() => selectEndpoint(ep)}>
+                <td class="cell">
+                  <span class="method-pill" style="background: {methodColor(ep.method)}15; color: {methodColor(ep.method)}">{ep.method}</span>
+                  <span class="route-path">{ep.route?.replace(/^(GET|POST|PATCH|PUT|DELETE)\s/, "") || ep.route}</span>
+                </td>
+                <td class="cell num">{ep.total}</td>
+                <td class="cell num">{fmt(ep.avg_duration)}</td>
+                <td class="cell num" class:warn={ep.p95_duration > 500}>{fmt(ep.p95_duration)}</td>
+                <td class="cell num" class:slow={ep.max_duration > 1000}>{fmt(ep.max_duration)}</td>
+                <td class="cell num c">{ep.ok_count}</td>
+                <td class="cell num c" class:warn={ep.client_error_count > 0}>{ep.client_error_count}</td>
+                <td class="cell num c" class:err={ep.server_error_count > 0}>{ep.server_error_count}</td>
+              </tr>
+            {/each}
+          </tbody>
+        </table>
         {#if endpoints.length === 0}
-          <div class="ew-empty-row">No request data yet. Requests are tracked automatically.</div>
+          <div class="empty-state">
+            <p class="empty-text">No request data yet</p>
+            <p class="empty-hint">Requests are tracked automatically once your app starts serving traffic.</p>
+          </div>
         {/if}
       </div>
     {/if}
@@ -163,8 +234,8 @@
         </dl>
       {:else}
         <dl class="dl">
-          <div class="dl-row"><dt>Method</dt><dd><span class="method-badge" style="color: {methodColor(sheetItem.method)}">{sheetItem.method}</span></dd></div>
-          <div class="dl-row"><dt>Path</dt><dd class="mono">{sheetItem.path}</dd></div>
+          <div class="dl-row"><dt>Method</dt><dd><span class="method-pill" style="background: {methodColor(sheetItem.method)}15; color: {methodColor(sheetItem.method)}">{sheetItem.method}</span></dd></div>
+          <div class="dl-row"><dt>Path</dt><dd class="mono-dd">{sheetItem.path}</dd></div>
           <div class="dl-row"><dt>Controller</dt><dd>{sheetItem.controller_action}</dd></div>
           <div class="dl-row"><dt>Status</dt><dd><span class="status-badge {sc(sheetItem.status_code)}">{sheetItem.status_code}</span></dd></div>
           <div class="dl-row"><dt>Duration</dt><dd class:slow={sheetItem.duration_ms > 500}>{fmt(sheetItem.duration_ms)}</dd></div>
@@ -199,46 +270,262 @@
 </EwSheet>
 
 <style>
-  .ew-page { display: flex; flex-direction: column; gap: 1.25rem; }
-  .ew-page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
-  .ew-page-title { font-size: 1.25rem; font-weight: 700; color: #1e293b; margin: 0; }
-  .ew-page-sub { font-size: 0.8125rem; color: #6b7280; margin: 0.125rem 0 0; }
+  /* Page layout */
+  .page { display: flex; flex-direction: column; gap: 1.5rem; }
+  .page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+  .page-title { font-size: 1.375rem; font-weight: 700; color: #0f172a; margin: 0; letter-spacing: -0.01em; }
+  .page-sub { font-size: 0.8125rem; color: #64748b; margin: 0.25rem 0 0; }
 
-  .back-btn { display: inline-flex; align-items: center; font-size: 0.8125rem; color: #6b7280; border: none; background: none; font-family: inherit; cursor: pointer; padding: 0; &:hover { color: #213258; } }
-  .route-title { font-size: 0.9375rem; font-weight: 600; color: #213258; margin: -0.5rem 0 0; font-family: "SF Mono", Monaco, Menlo, monospace; }
+  .period-wrapper {
+    display: flex;
+    align-items: center;
+  }
 
-  .ew-table { background: #fff; border: 1px solid #e5e7eb; overflow: hidden; }
-  .ew-thead { display: flex; align-items: center; padding: 0 0.75rem; background: #f9fafb; border-bottom: 1px solid #e5e7eb; }
-  .ew-th { padding: 0.5rem 0.375rem; font-size: 0.5625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #9ca3af; }
+  /* Stat cards + chart row */
+  .stats-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+  .stat-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  .stat-card-label { font-size: 0.8125rem; font-weight: 500; color: #64748b; }
+  .stat-card-value { font-size: 1.75rem; font-weight: 700; color: #0f172a; letter-spacing: -0.02em; line-height: 1; font-variant-numeric: tabular-nums; }
+  .stat-danger { color: #ef4444; }
+  .stat-warn { color: #f59e0b; }
+
+  .chart-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .chart-title {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #0f172a;
+    margin: 0;
+  }
+
+  /* Back button + drilldown */
+  .back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: #64748b;
+    border: none;
+    background: none;
+    font-family: inherit;
+    cursor: pointer;
+    padding: 0.25rem 0;
+    transition: color 0.15s;
+  }
+  .back-btn:hover { color: #0f172a; }
+  .drilldown-header {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    margin-top: -0.5rem;
+  }
+  .route-title {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #0f172a;
+    margin: 0;
+    font-family: "SF Mono", Monaco, Menlo, Consolas, monospace;
+  }
+  .drilldown-count {
+    font-size: 0.75rem;
+    color: #64748b;
+    font-weight: 500;
+  }
+
+  /* Table */
+  .table-container {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    overflow: hidden;
+  }
+  .table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+  .table thead {
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .th {
+    padding: 0.625rem 0.75rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748b;
+    text-align: left;
+    white-space: nowrap;
+  }
+  .th.r { text-align: right; }
+  .th.c { text-align: center; }
+
+  .row {
+    cursor: pointer;
+    border-bottom: 1px solid #f1f5f9;
+    transition: background 0.1s;
+  }
+  .row:last-child { border-bottom: none; }
+  .row:hover { background: #f8fafc; }
+
+  .cell {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8125rem;
+    color: #0f172a;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: middle;
+  }
+  .num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+  }
   .r { text-align: right; }
   .c { text-align: center; }
-  .ew-row { display: flex; align-items: center; padding: 0 0.75rem; border-bottom: 1px solid #f3f4f6; &:last-child { border-bottom: none; } &:hover { background: #f9fafb; } }
-  .ew-row-btn { width: 100%; border: none; background: none; font-family: inherit; cursor: pointer; text-align: left; }
-  .ew-cell { padding: 0.4375rem 0.375rem; font-size: 0.8125rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .ew-empty-row { padding: 2rem; text-align: center; color: #9ca3af; font-size: 0.8125rem; }
-  .num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 500; }
-  .mono { font-family: "SF Mono", Monaco, Menlo, monospace; font-size: 0.6875rem; }
-  .slow { color: #dc2626; font-weight: 600; }
-  .warn { color: #d97706; font-weight: 600; }
-  .err { color: #dc2626; font-weight: 600; }
-  .method-badge { font-size: 0.625rem; font-weight: 800; letter-spacing: 0.02em; margin-right: 0.375rem; }
-  .route-path { font-size: 0.8125rem; font-weight: 500; color: #213258; }
-  .status-badge { font-size: 0.6875rem; font-weight: 700; font-variant-numeric: tabular-nums; }
-  .s2xx { color: #16a34a; } .s4xx { color: #d97706; } .s5xx { color: #dc2626; }
-  .ip { font-size: 0.6875rem; color: #9ca3af; font-family: monospace; }
-  .time-ago { font-size: 0.6875rem; color: #9ca3af; }
+  .mono-cell {
+    font-family: "SF Mono", Monaco, Menlo, Consolas, monospace;
+    font-size: 0.75rem;
+    color: #334155;
+  }
+
+  /* Method pills */
+  .method-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    padding: 0.125rem 0.4375rem;
+    border-radius: 9999px;
+    margin-right: 0.5rem;
+    vertical-align: middle;
+  }
+  .route-path {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: #0f172a;
+    vertical-align: middle;
+  }
+
+  /* Status badges */
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+  }
+  .s2xx { background: #dcfce7; color: #15803d; }
+  .s4xx { background: #fef3c7; color: #b45309; }
+  .s5xx { background: #fee2e2; color: #dc2626; }
+
+  .ip-text { font-size: 0.6875rem; color: #64748b; font-family: "SF Mono", Monaco, Menlo, Consolas, monospace; }
+  .time-ago { font-size: 0.6875rem; color: #64748b; }
+  .slow { color: #ef4444; font-weight: 600; }
+  .warn { color: #f59e0b; font-weight: 600; }
+  .err { color: #ef4444; font-weight: 600; }
+
+  /* Empty state */
+  .empty-state {
+    padding: 3rem 2rem;
+    text-align: center;
+  }
+  .empty-text {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #0f172a;
+    margin: 0 0 0.25rem;
+  }
+  .empty-hint {
+    font-size: 0.8125rem;
+    color: #64748b;
+    margin: 0;
+  }
+
+  /* Sheet styles */
   .sheet-detail { display: flex; flex-direction: column; gap: 1rem; }
   .dl { display: flex; flex-direction: column; margin: 0; }
-  .dl-row { display: flex; justify-content: space-between; padding: 0.4375rem 0; border-bottom: 1px solid #f3f4f6; font-size: 0.8125rem; &:last-child { border-bottom: none; } }
-  .dl-row dt { color: #6b7280; font-weight: 500; }
-  .dl-row dd { color: #1e293b; font-weight: 500; margin: 0; }
-  .sheet-sub { font-size: 0.6875rem; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.04em; margin: 0; }
-  .sheet-hint { font-size: 0.8125rem; color: #6b7280; margin: 0; }
+  .dl-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 0.8125rem;
+  }
+  .dl-row:last-child { border-bottom: none; }
+  .dl-row dt { color: #64748b; font-weight: 500; }
+  .dl-row dd { color: #0f172a; font-weight: 500; margin: 0; }
+  .mono-dd { font-family: "SF Mono", Monaco, Menlo, Consolas, monospace; font-size: 0.75rem; }
+
+  .sheet-sub {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0.5rem 0 0;
+  }
+  .sheet-hint { font-size: 0.8125rem; color: #64748b; margin: 0; }
+
+  /* Timeline */
   .timeline { display: flex; flex-direction: column; gap: 0.5rem; }
-  .tl-item { display: flex; flex-direction: column; gap: 0.25rem; padding: 0.5rem; border: 1px solid #e5e7eb; }
-  .tl-bar { height: 4px; background: #213258; min-width: 4px; }
+  .tl-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.625rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    background: #fff;
+  }
+  .tl-bar { height: 4px; background: #6366f1; border-radius: 2px; min-width: 4px; }
   .tl-info { display: flex; align-items: center; gap: 0.5rem; }
-  .tl-duration { font-size: 0.75rem; font-weight: 700; font-variant-numeric: tabular-nums; color: #374151; }
-  .tl-source { font-size: 0.625rem; color: #9ca3af; font-family: monospace; }
-  .tl-sql { font-size: 0.625rem; font-family: "SF Mono", Monaco, Menlo, monospace; color: #6b7280; background: #f9fafb; padding: 0.375rem; margin: 0; overflow-x: auto; white-space: pre-wrap; word-break: break-all; line-height: 1.4; }
+  .tl-duration { font-size: 0.75rem; font-weight: 700; font-variant-numeric: tabular-nums; color: #0f172a; }
+  .tl-source { font-size: 0.625rem; color: #64748b; font-family: "SF Mono", Monaco, Menlo, Consolas, monospace; }
+  .tl-sql {
+    font-size: 0.625rem;
+    font-family: "SF Mono", Monaco, Menlo, Consolas, monospace;
+    color: #475569;
+    background: #f8fafc;
+    padding: 0.375rem 0.5rem;
+    margin: 0;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+    line-height: 1.5;
+    border-radius: 0.375rem;
+  }
 </style>

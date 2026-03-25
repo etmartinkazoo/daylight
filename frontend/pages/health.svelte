@@ -1,20 +1,16 @@
 <script>
+  import { usePage } from "@inertiajs/svelte";
   import DaylightLayout from "./DaylightLayout.svelte";
   import EwSheet from "./EwSheet.svelte";
+  import DonutChart from "@/components/charts/DonutChart.svelte";
 
   let { system = {}, database = {}, jobs = {}, errors = {} } = $props();
+  const pageStore = usePage();
+  let base = $derived($pageStore.props?.base_path || "/daylight");
 
-  let activeTab = $state("system");
   let sheetOpen = $state(false);
   let sheetTitle = $state("");
   let sheetData = $state(null);
-
-  const tabs = [
-    { key: "system", label: "System" },
-    { key: "database", label: "Database" },
-    { key: "errors", label: "Errors" },
-    { key: "jobs", label: "Jobs" },
-  ];
 
   function formatTime(iso) {
     if (!iso) return "—";
@@ -26,127 +22,219 @@
     sheetData = f;
     sheetOpen = true;
   }
+
+  let errorChartSegments = $derived([
+    { value: errors.open ?? 0, color: "#ef4444", label: "Open" },
+    { value: Math.max((errors.total ?? 0) - (errors.open ?? 0), 0), color: "#22c55e", label: "Resolved" },
+  ]);
 </script>
 
 <svelte:head>
-  <title>Health — Daylight</title>
+  <title>Health Dashboard — Daylight</title>
 </svelte:head>
 
 <DaylightLayout>
-  <div class="health-page">
-    <h1 class="page-title">Health</h1>
-
-    <div class="tab-bar">
-      {#each tabs as tab (tab.key)}
-        <button class="tab" class:active={activeTab === tab.key} onclick={() => activeTab = tab.key}>
-          {tab.label}
-        </button>
-      {/each}
+  <div class="health-dashboard">
+    <!-- Page Header -->
+    <div class="page-header">
+      <h1 class="page-title">Health Dashboard</h1>
+      <p class="page-subtitle">System monitoring and performance overview</p>
     </div>
 
-    <div class="tab-content">
-      {#if activeTab === "system"}
-        <dl class="info-list">
-          <div class="info-row"><dt>Ruby</dt><dd>{system.ruby_version}</dd></div>
-          <div class="info-row"><dt>Rails</dt><dd>{system.rails_version}</dd></div>
-          <div class="info-row">
-            <dt>Environment</dt>
-            <dd><span class="env-badge" class:production={system.environment === "production"}>{system.environment}</span></dd>
+    <!-- System Info Row -->
+    <div class="section">
+      <h2 class="section-title">System Info</h2>
+      <div class="card-grid">
+        <div class="stat-card">
+          <span class="stat-card-label">Environment</span>
+          <div class="stat-card-value">
+            <span class="env-badge" class:production={system.environment === "production"}>
+              {system.environment || "—"}
+            </span>
           </div>
-          <div class="info-row"><dt>Uptime</dt><dd>{system.uptime}</dd></div>
-          <div class="info-row"><dt>Memory</dt><dd>{system.memory_mb ? `${system.memory_mb} MB` : "—"}</dd></div>
-          <div class="info-row"><dt>PID</dt><dd class="mono">{system.pid}</dd></div>
-          <div class="info-row"><dt>Server Time</dt><dd>{formatTime(system.server_time)}</dd></div>
-        </dl>
+        </div>
+        <div class="stat-card">
+          <span class="stat-card-label">Ruby Version</span>
+          <span class="stat-card-value stat-card-value-sm">{system.ruby_version || "—"}</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-card-label">Rails Version</span>
+          <span class="stat-card-value stat-card-value-sm">{system.rails_version || "—"}</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-card-label">Uptime</span>
+          <span class="stat-card-value stat-card-value-sm">{system.uptime || "—"}</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-card-label">Memory Usage</span>
+          <span class="stat-card-value">{system.memory_mb ? `${system.memory_mb}` : "—"}</span>
+          {#if system.memory_mb}
+            <span class="stat-card-unit">MB</span>
+          {/if}
+        </div>
+        <div class="stat-card">
+          <span class="stat-card-label">Process ID</span>
+          <span class="stat-card-value mono">{system.pid || "—"}</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-card-label">Server Time</span>
+          <span class="stat-card-value stat-card-value-sm">{formatTime(system.server_time)}</span>
+        </div>
+      </div>
+    </div>
 
-      {:else if activeTab === "database"}
-        <dl class="info-list">
-          <div class="info-row"><dt>Adapter</dt><dd>{database.adapter || "—"}</dd></div>
-          <div class="info-row">
-            <dt>Connected</dt>
-            <dd>
-              <span class="dot" class:ok={database.connected} class:err={!database.connected}></span>
-              {database.connected ? "Yes" : "No"}
-            </dd>
+    <!-- Database Status Row -->
+    <div class="section">
+      <h2 class="section-title">Database Status</h2>
+      <div class="card-grid">
+        <div class="stat-card">
+          <span class="stat-card-label">Connection</span>
+          <div class="stat-card-value">
+            <span class="status-indicator">
+              <span class="status-dot" class:connected={database.connected} class:disconnected={!database.connected}></span>
+              {database.connected ? "Connected" : "Disconnected"}
+            </span>
           </div>
-          <div class="info-row"><dt>Tables</dt><dd>{database.tables ?? "—"}</dd></div>
-          {#if database.size_mb != null}
-            <div class="info-row"><dt>App DB Size</dt><dd>{database.size_mb} MB</dd></div>
-          {/if}
-          {#if database.errorwatch_size_mb != null}
-            <div class="info-row"><dt>Daylight DB Size</dt><dd>{database.errorwatch_size_mb} MB</dd></div>
-          {/if}
-          {#if database.error}
-            <div class="info-row"><dt>Error</dt><dd class="err-text">{database.error}</dd></div>
-          {/if}
-        </dl>
+        </div>
+        <div class="stat-card">
+          <span class="stat-card-label">Adapter</span>
+          <span class="stat-card-value stat-card-value-sm">{database.adapter || "—"}</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-card-label">Tables</span>
+          <span class="stat-card-value">{database.tables ?? "—"}</span>
+        </div>
+        {#if database.size_mb != null}
+          <div class="stat-card">
+            <span class="stat-card-label">App DB Size</span>
+            <span class="stat-card-value">{database.size_mb}</span>
+            <span class="stat-card-unit">MB</span>
+          </div>
+        {/if}
+        {#if database.errorwatch_size_mb != null}
+          <div class="stat-card">
+            <span class="stat-card-label">Daylight DB Size</span>
+            <span class="stat-card-value">{database.errorwatch_size_mb}</span>
+            <span class="stat-card-unit">MB</span>
+          </div>
+        {/if}
+        {#if database.error}
+          <div class="stat-card stat-card-error">
+            <span class="stat-card-label">Error</span>
+            <span class="stat-card-value stat-card-value-sm err-text">{database.error}</span>
+          </div>
+        {/if}
+      </div>
+    </div>
 
-      {:else if activeTab === "errors"}
-        <div class="stat-row">
-          <div class="stat" class:stat-err={errors.open > 0}>
-            <span class="stat-val">{errors.open}</span>
-            <span class="stat-label">Open</span>
+    <!-- Performance Overview Row -->
+    <div class="section">
+      <h2 class="section-title">Performance Overview</h2>
+
+      <!-- Errors -->
+      <div class="subsection">
+        <h3 class="subsection-title">Errors</h3>
+        <div class="card-grid-with-chart">
+          <div class="chart-card">
+            <span class="stat-card-label">Error Distribution</span>
+            <div class="chart-wrapper">
+              <DonutChart
+                segments={errorChartSegments}
+                size={140}
+                strokeWidth={16}
+                centerValue={String(errors.total ?? 0)}
+                centerLabel="total"
+              />
+            </div>
           </div>
-          <div class="stat">
-            <span class="stat-val">{errors.last_24h}</span>
-            <span class="stat-label">Last 24h</span>
-          </div>
-          <div class="stat">
-            <span class="stat-val">{errors.last_7d}</span>
-            <span class="stat-label">Last 7d</span>
-          </div>
-          <div class="stat">
-            <span class="stat-val">{errors.total}</span>
-            <span class="stat-label">Total</span>
+          <div class="stat-cards-group">
+            <div class="stat-card" class:stat-card-alert={errors.open > 0}>
+              <span class="stat-card-label">Open Errors</span>
+              <span class="stat-card-value" class:err-value={errors.open > 0}>{errors.open ?? 0}</span>
+              <span class="stat-card-description">Currently unresolved</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-card-label">Last 24 Hours</span>
+              <span class="stat-card-value">{errors.last_24h ?? 0}</span>
+              <span class="stat-card-description">Errors in past day</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-card-label">Last 7 Days</span>
+              <span class="stat-card-value">{errors.last_7d ?? 0}</span>
+              <span class="stat-card-description">Errors in past week</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-card-label">Total Errors</span>
+              <span class="stat-card-value">{errors.total ?? 0}</span>
+              <span class="stat-card-description">All time</span>
+            </div>
           </div>
         </div>
         {#if errors.open > 0}
-          <a href="/daylight/errors" class="action-link">View open errors &rarr;</a>
+          <a href={`${base}/errors`} class="action-link">View open errors &rarr;</a>
         {/if}
+      </div>
 
-      {:else if activeTab === "jobs"}
+      <!-- Jobs -->
+      <div class="subsection">
+        <h3 class="subsection-title">Background Jobs</h3>
         {#if !jobs.available}
-          <p class="empty-text">Solid Queue not detected</p>
+          <div class="stat-card">
+            <span class="stat-card-label">Status</span>
+            <span class="stat-card-value stat-card-value-sm muted-text">Solid Queue not detected</span>
+          </div>
         {:else if jobs.error}
-          <p class="err-text">{jobs.error}</p>
+          <div class="stat-card stat-card-error">
+            <span class="stat-card-label">Error</span>
+            <span class="stat-card-value stat-card-value-sm err-text">{jobs.error}</span>
+          </div>
         {:else}
-          <div class="stat-row">
-            <div class="stat">
-              <span class="stat-val">{jobs.ready ?? 0}</span>
-              <span class="stat-label">Ready</span>
+          <div class="card-grid">
+            <div class="stat-card">
+              <span class="stat-card-label">Ready</span>
+              <span class="stat-card-value">{jobs.ready ?? 0}</span>
+              <span class="stat-card-description">Queued for processing</span>
             </div>
-            <div class="stat">
-              <span class="stat-val">{jobs.scheduled ?? 0}</span>
-              <span class="stat-label">Scheduled</span>
+            <div class="stat-card">
+              <span class="stat-card-label">Scheduled</span>
+              <span class="stat-card-value">{jobs.scheduled ?? 0}</span>
+              <span class="stat-card-description">Waiting to run</span>
             </div>
-            <div class="stat">
-              <span class="stat-val">{jobs.claimed ?? 0}</span>
-              <span class="stat-label">Running</span>
+            <div class="stat-card">
+              <span class="stat-card-label">Running</span>
+              <span class="stat-card-value">{jobs.claimed ?? 0}</span>
+              <span class="stat-card-description">Currently executing</span>
             </div>
-            <div class="stat" class:stat-err={jobs.failed > 0}>
-              <span class="stat-val">{jobs.failed ?? 0}</span>
-              <span class="stat-label">Failed</span>
+            <div class="stat-card" class:stat-card-alert={jobs.failed > 0}>
+              <span class="stat-card-label">Failed</span>
+              <span class="stat-card-value" class:err-value={jobs.failed > 0}>{jobs.failed ?? 0}</span>
+              <span class="stat-card-description">Requires attention</span>
             </div>
-            <div class="stat">
-              <span class="stat-val">{jobs.processes ?? 0}</span>
-              <span class="stat-label">Processes</span>
+            <div class="stat-card">
+              <span class="stat-card-label">Processes</span>
+              <span class="stat-card-value">{jobs.processes ?? 0}</span>
+              <span class="stat-card-description">Active workers</span>
             </div>
           </div>
 
           {#if jobs.recent_failures?.length > 0}
-            <h3 class="sub-title">Recent Failures</h3>
-            <div class="failure-list">
-              {#each jobs.recent_failures as f (f.id)}
-                <button class="failure-row" onclick={() => openFailure(f)}>
-                  <span class="failure-job">{f.job_class || "Unknown"}</span>
-                  <span class="failure-err">{f.error_class}: {f.error_message}</span>
-                  <span class="failure-time">{formatTime(f.failed_at)}</span>
-                </button>
-              {/each}
+            <div class="failures-section">
+              <h4 class="failures-title">Recent Failures</h4>
+              <div class="failures-list">
+                {#each jobs.recent_failures as f (f.id)}
+                  <button class="failure-row" onclick={() => openFailure(f)}>
+                    <div class="failure-main">
+                      <span class="failure-job">{f.job_class || "Unknown"}</span>
+                      <span class="failure-time">{formatTime(f.failed_at)}</span>
+                    </div>
+                    <span class="failure-err">{f.error_class}: {f.error_message}</span>
+                  </button>
+                {/each}
+              </div>
             </div>
           {/if}
         {/if}
-      {/if}
+      </div>
     </div>
   </div>
 </DaylightLayout>
@@ -168,83 +256,379 @@
 </EwSheet>
 
 <style>
-  .health-page { display: flex; flex-direction: column; gap: 1.25rem; }
-  .page-title { font-size: 1.25rem; font-weight: 700; color: #1e293b; margin: 0; }
-
-  /* Tabs */
-  .tab-bar { display: flex; gap: 0; border-bottom: 1px solid #e5e7eb; }
-  .tab {
-    padding: 0.5rem 1rem;
-    font-size: 0.8125rem;
-    font-weight: 500;
-    font-family: inherit;
-    border: none;
-    background: none;
-    color: #6b7280;
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -1px;
-    transition: color 0.1s;
-    &:hover { color: #1e293b; }
-    &.active { color: #213258; border-bottom-color: #213258; font-weight: 600; }
+  /* Page Layout */
+  .health-dashboard {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
   }
 
-  .tab-content {
-    padding: 1rem 0;
+  .page-header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .page-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+    letter-spacing: -0.02em;
+  }
+
+  .page-subtitle {
+    font-size: 0.875rem;
+    color: #64748b;
+    margin: 0;
+  }
+
+  /* Sections */
+  .section {
     display: flex;
     flex-direction: column;
     gap: 1rem;
   }
 
-  /* Info list */
-  .info-list { display: flex; flex-direction: column; margin: 0; }
-  .info-row {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 0.5rem 0; border-bottom: 1px solid #f3f4f6;
-    &:last-child { border-bottom: none; }
+  .section-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #0f172a;
+    margin: 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e2e8f0;
   }
-  .info-row dt { font-size: 0.8125rem; color: #6b7280; font-weight: 500; }
-  .info-row dd { font-size: 0.8125rem; color: #1e293b; font-weight: 500; margin: 0; text-align: right; }
 
-  .mono { font-family: "SF Mono", Monaco, Menlo, monospace; font-size: 0.75rem; }
+  .subsection {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .subsection-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #334155;
+    margin: 0;
+  }
+
+  /* Card Grid */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.75rem;
+  }
+
+  .card-grid-with-chart {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 1rem;
+    align-items: start;
+  }
+
+  @media (max-width: 640px) {
+    .card-grid-with-chart {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .stat-cards-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.75rem;
+  }
+
+  /* Stat Card */
+  .stat-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    transition: box-shadow 0.15s ease, border-color 0.15s ease;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  }
+
+  .stat-card:hover {
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.06);
+  }
+
+  .stat-card-alert {
+    border-color: #fecaca;
+    background: #fff5f5;
+  }
+
+  .stat-card-error {
+    border-color: #fecaca;
+    background: #fef2f2;
+  }
+
+  .stat-card-label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: #64748b;
+  }
+
+  .stat-card-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #0f172a;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+
+  .stat-card-value-sm {
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0;
+  }
+
+  .stat-card-unit {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-top: -0.25rem;
+  }
+
+  .stat-card-description {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin-top: -0.125rem;
+  }
+
+  /* Chart Card */
+  .chart-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  }
+
+  .chart-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* Status Indicator */
+  .status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #0f172a;
+  }
+
+  .status-dot {
+    width: 0.625rem;
+    height: 0.625rem;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .status-dot.connected {
+    background: #22c55e;
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15);
+  }
+
+  .status-dot.disconnected {
+    background: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+  }
+
+  /* Environment Badge */
   .env-badge {
-    font-size: 0.625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
-    padding: 0.0625rem 0.375rem; border-radius: 0; background: #dbeafe; color: #1d4ed8;
-    &.production { background: #fee2e2; color: #dc2626; }
+    display: inline-block;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.25rem 0.625rem;
+    border-radius: 9999px;
+    background: #dbeafe;
+    color: #1d4ed8;
   }
-  .dot { display: inline-block; width: 0.5rem; height: 0.5rem; border-radius: 50%; margin-right: 0.25rem; &.ok { background: #22c55e; } &.err { background: #ef4444; } }
-  .err-text { color: #dc2626; font-size: 0.8125rem; }
-  .empty-text { color: #9ca3af; font-size: 0.8125rem; margin: 0; }
 
-  /* Stats */
-  .stat-row { display: flex; gap: 0; border: 1px solid #e5e7eb; overflow: hidden; }
-  .stat {
-    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 0.0625rem;
-    padding: 0.75rem 0.5rem; border-right: 1px solid #e5e7eb;
-    &:last-child { border-right: none; }
+  .env-badge.production {
+    background: #fee2e2;
+    color: #dc2626;
   }
-  .stat-err .stat-val { color: #dc2626; }
-  .stat-val { font-size: 1.25rem; font-weight: 700; color: #1e293b; font-variant-numeric: tabular-nums; }
-  .stat-label { font-size: 0.5625rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: #9ca3af; }
 
-  .action-link { font-size: 0.8125rem; font-weight: 500; color: #213258; text-decoration: none; &:hover { text-decoration: underline; } }
+  .mono {
+    font-family: "SF Mono", Monaco, Menlo, monospace;
+    font-size: 1.25rem;
+  }
 
-  /* Failures */
-  .sub-title { font-size: 0.8125rem; font-weight: 600; color: #374151; margin: 0; }
-  .failure-list { display: flex; flex-direction: column; border: 1px solid #e5e7eb; overflow: hidden; }
+  .err-text {
+    color: #dc2626;
+  }
+
+  .err-value {
+    color: #dc2626;
+  }
+
+  .muted-text {
+    color: #94a3b8;
+  }
+
+  /* Action Link */
+  .action-link {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: #3b82f6;
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+
+  .action-link:hover {
+    color: #1d4ed8;
+    text-decoration: underline;
+  }
+
+  /* Failures Section */
+  .failures-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+
+  .failures-title {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #334155;
+    margin: 0;
+  }
+
+  .failures-list {
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    overflow: hidden;
+  }
+
   .failure-row {
-    display: flex; flex-direction: column; gap: 0.125rem;
-    padding: 0.5rem 0.75rem; border: none; border-bottom: 1px solid #f3f4f6;
-    background: none; font-family: inherit; text-align: left; cursor: pointer;
-    &:last-child { border-bottom: none; }
-    &:hover { background: #f9fafb; }
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.75rem 1rem;
+    border: none;
+    border-bottom: 1px solid #f1f5f9;
+    background: none;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.1s ease;
   }
-  .failure-job { font-size: 0.8125rem; font-weight: 600; color: #213258; }
-  .failure-err { font-size: 0.6875rem; color: #dc2626; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .failure-time { font-size: 0.625rem; color: #9ca3af; }
 
-  /* Sheet detail */
-  .sheet-detail { display: flex; flex-direction: column; gap: 1rem; }
-  .sheet-sub { font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.04em; margin: 0; }
-  .sheet-pre { font-size: 0.75rem; font-family: "SF Mono", Monaco, Menlo, monospace; background: #f9fafb; padding: 0.75rem; border: 1px solid #e5e7eb; border-radius: 0; overflow-x: auto; white-space: pre-wrap; word-break: break-all; margin: 0; color: #dc2626; }
+  .failure-row:last-child {
+    border-bottom: none;
+  }
+
+  .failure-row:hover {
+    background: #f8fafc;
+  }
+
+  .failure-main {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .failure-job {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #0f172a;
+  }
+
+  .failure-time {
+    font-size: 0.6875rem;
+    color: #94a3b8;
+    flex-shrink: 0;
+  }
+
+  .failure-err {
+    font-size: 0.75rem;
+    color: #dc2626;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Sheet Detail (kept from original) */
+  .info-list {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+  }
+
+  .info-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  .info-row:last-child {
+    border-bottom: none;
+  }
+
+  .info-row dt {
+    font-size: 0.8125rem;
+    color: #64748b;
+    font-weight: 500;
+  }
+
+  .info-row dd {
+    font-size: 0.8125rem;
+    color: #0f172a;
+    font-weight: 500;
+    margin: 0;
+    text-align: right;
+  }
+
+  .sheet-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .sheet-sub {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin: 0;
+  }
+
+  .sheet-pre {
+    font-size: 0.75rem;
+    font-family: "SF Mono", Monaco, Menlo, monospace;
+    background: #f8fafc;
+    padding: 0.75rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+    margin: 0;
+    color: #dc2626;
+  }
 </style>
