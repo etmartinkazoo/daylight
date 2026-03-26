@@ -50,17 +50,17 @@
     font-size: 0.8125rem;
     font-weight: 500;
     font-family: inherit;
-    background: var(--color-bg, #fff);
-    color: var(--color-fg, #1e293b);
-    border: 1px solid var(--color-border, #e2e8f0);
-    border-radius: var(--radius-sm, 0.375rem);
+    background: var(--color-bg);
+    color: var(--color-fg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
     box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     cursor: pointer;
     transition: all 0.15s ease;
 
     &:hover {
-      background: var(--color-accent, #f8fafc);
-      border-color: var(--color-input-border, #cbd5e1);
+      background: var(--color-accent);
+      border-color: var(--color-input-border);
     }
 
     &:active {
@@ -72,9 +72,9 @@
     position: absolute;
     top: calc(100% + 0.25rem);
     right: 0;
-    background: var(--color-bg, #fff);
-    border: 1px solid var(--color-border, #e2e8f0);
-    border-radius: var(--radius-sm, 0.375rem);
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
     box-shadow: 0 4px 12px rgb(0 0 0 / 0.1);
     z-index: 20;
     min-width: 5rem;
@@ -89,18 +89,18 @@
     font-weight: 500;
     font-family: inherit;
     background: transparent;
-    color: var(--color-fg, #1e293b);
+    color: var(--color-fg);
     border: none;
     cursor: pointer;
     text-align: left;
     transition: background 0.1s ease;
 
     &:hover {
-      background: var(--color-accent, #f1f5f9);
+      background: var(--color-accent);
     }
 
     &:not(:last-child) {
-      border-bottom: 1px solid var(--color-border, #f1f5f9);
+      border-bottom: 1px solid var(--color-border);
     }
   }
 </style>

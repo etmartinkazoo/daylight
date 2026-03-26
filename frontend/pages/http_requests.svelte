@@ -364,7 +364,7 @@
 
   .card-subtitle {
     font-size: 0.75rem;
-    color: #64748b;
+    color: var(--color-muted);
   }
 
   .card-body {
@@ -373,8 +373,8 @@
 
   /* Data Table */
   .data-table {
-    background: #fff;
-    border: 1px solid #e2e8f0;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
     border-radius: 0.75rem;
     overflow: hidden;
   }
@@ -388,8 +388,8 @@
     display: flex;
     align-items: center;
     padding: 0 1rem;
-    background: #f8fafc;
-    border-bottom: 1px solid #e2e8f0;
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
   }
 
   .th {
@@ -398,7 +398,7 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #64748b;
+    color: var(--color-muted);
   }
 
   .th-right {
@@ -411,7 +411,7 @@
     padding: 0 1rem;
     width: 100%;
     border: none;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--color-accent);
     background: none;
     font-family: inherit;
     cursor: pointer;
@@ -424,7 +424,7 @@
   }
 
   .table-row:hover {
-    background: #f8fafc;
+    background: var(--color-surface);
   }
 
   .td {
@@ -433,7 +433,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    color: #0f172a;
+    color: var(--color-fg);
   }
 
   .td-url {
@@ -443,7 +443,7 @@
   .url-text {
     font-family: "SF Mono", Monaco, Menlo, Consolas, monospace;
     font-size: 0.75rem;
-    color: #334155;
+    color: var(--color-fg-tertiary);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -454,23 +454,23 @@
     text-align: right;
     font-variant-numeric: tabular-nums;
     font-weight: 500;
-    color: #334155;
+    color: var(--color-fg-tertiary);
   }
 
   .td-danger {
-    color: #ef4444;
+    color: var(--color-danger);
     font-weight: 600;
   }
 
   .host-name {
     font-size: 0.8125rem;
     font-weight: 600;
-    color: #0f172a;
+    color: var(--color-fg);
   }
 
   .time-ago {
     font-size: 0.6875rem;
-    color: #64748b;
+    color: var(--color-muted);
   }
 
   /* Status badges */
@@ -485,9 +485,9 @@
     border-radius: 9999px;
   }
 
-  .s2xx { background: #dcfce7; color: #15803d; }
-  .s4xx { background: #fef3c7; color: #b45309; }
-  .s5xx { background: #fee2e2; color: #dc2626; }
+  .s2xx { background: var(--color-status-2xx-bg); color: var(--color-status-2xx); }
+  .s4xx { background: var(--color-status-4xx-bg); color: var(--color-status-4xx); }
+  .s5xx { background: var(--color-status-5xx-bg); color: var(--color-danger-hover); }
 
   .table-empty {
     display: flex;
@@ -495,7 +495,7 @@
     align-items: center;
     gap: 0.5rem;
     padding: 2.5rem 1rem;
-    color: #94a3b8;
+    color: var(--color-muted-light);
     font-size: 0.8125rem;
   }
 
@@ -517,7 +517,7 @@
     justify-content: space-between;
     align-items: center;
     padding: 0.5rem 0;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--color-accent);
     font-size: 0.8125rem;
   }
 
@@ -526,12 +526,12 @@
   }
 
   .dl-row dt {
-    color: #64748b;
+    color: var(--color-muted);
     font-weight: 500;
   }
 
   .dl-row dd {
-    color: #0f172a;
+    color: var(--color-fg);
     font-weight: 500;
     margin: 0;
   }
@@ -545,7 +545,7 @@
   .sheet-sub {
     font-size: 0.6875rem;
     font-weight: 600;
-    color: #64748b;
+    color: var(--color-muted);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     margin: 0;
@@ -554,16 +554,16 @@
   .sheet-pre {
     font-size: 0.75rem;
     font-family: "SF Mono", Monaco, Menlo, Consolas, monospace;
-    background: #f8fafc;
+    background: var(--color-surface);
     padding: 1rem;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--color-border);
     border-radius: 0.5rem;
     overflow-x: auto;
     white-space: pre-wrap;
     word-break: break-all;
     margin: 0;
     line-height: 1.6;
-    color: #334155;
+    color: var(--color-fg-tertiary);
   }
 
   /* Responsive */

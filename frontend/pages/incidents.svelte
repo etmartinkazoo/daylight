@@ -373,7 +373,7 @@
     padding: 0;
   }
   .incident-card:hover {
-    box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+    box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.08), 0 2px 4px -2px var(--color-border-subtle-alpha);
     transform: translateY(-1px);
     border-color: var(--color-muted-lightest);
   }
@@ -386,7 +386,7 @@
     50% { border-color: var(--color-warning); }
   }
   .incident-card-critical {
-    background: #fffbfb;
+    background: var(--color-danger-bg);
   }
 
   /* Severity Bar */

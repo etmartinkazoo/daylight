@@ -325,33 +325,33 @@
     font-size: 0.8125rem;
     font-weight: 500;
     font-family: inherit;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--color-border);
     border-radius: 0.5rem;
-    background: #fff;
-    color: #0f172a;
+    background: var(--color-bg);
+    color: var(--color-fg);
     cursor: pointer;
     transition: all 0.15s ease;
   }
 
   .action-btn:hover {
-    background: #f8fafc;
-    border-color: #cbd5e1;
+    background: var(--color-surface);
+    border-color: var(--color-muted-lightest);
   }
 
   .action-btn-danger {
-    color: #dc2626;
-    border-color: #fecaca;
+    color: var(--color-danger-hover);
+    border-color: var(--color-danger-border);
   }
 
   .action-btn-danger:hover {
-    background: #fef2f2;
+    background: var(--color-danger-subtle);
     border-color: #fca5a5;
   }
 
   /* Section cards */
   .section-card {
-    background: #fff;
-    border: 1px solid #e2e8f0;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
     border-radius: 0.75rem;
     overflow: hidden;
   }
@@ -361,13 +361,13 @@
     align-items: center;
     gap: 0.5rem;
     padding: 1.25rem 1.5rem;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--color-accent);
   }
 
   .section-title {
     font-size: 0.9375rem;
     font-weight: 600;
-    color: #0f172a;
+    color: var(--color-fg);
     margin: 0;
   }
 
@@ -380,8 +380,8 @@
     padding: 0 0.4375rem;
     font-size: 0.6875rem;
     font-weight: 700;
-    color: #64748b;
-    background: #f1f5f9;
+    color: var(--color-muted);
+    background: var(--color-accent);
     border-radius: 9999px;
   }
 
@@ -391,8 +391,8 @@
 
   /* Backtrace */
   .backtrace {
-    background: #0f172a;
-    color: #e2e8f0;
+    background: var(--color-fg);
+    color: var(--color-border);
     padding: 1.25rem 1.5rem;
     font-family: "SF Mono", Monaco, Menlo, "Courier New", monospace;
     font-size: 0.75rem;
@@ -416,7 +416,7 @@
   }
 
   .occ-item:not(:last-child) {
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--color-accent);
   }
 
   .occ-header {
@@ -429,12 +429,12 @@
   .occ-time {
     font-size: 0.8125rem;
     font-weight: 500;
-    color: #0f172a;
+    color: var(--color-fg);
   }
 
   .occ-url {
     font-size: 0.75rem;
-    color: #64748b;
+    color: var(--color-muted);
     font-family: "SF Mono", Monaco, Menlo, "Courier New", monospace;
     display: inline-flex;
     align-items: center;
@@ -445,20 +445,20 @@
     font-size: 0.625rem;
     font-weight: 700;
     text-transform: uppercase;
-    color: #fff;
-    background: #64748b;
+    color: var(--color-bg);
+    background: var(--color-muted);
     padding: 0.0625rem 0.375rem;
     border-radius: 0.25rem;
   }
 
   .occ-context {
     font-size: 0.75rem;
-    color: #64748b;
+    color: var(--color-muted);
     font-family: "SF Mono", Monaco, Menlo, "Courier New", monospace;
-    background: #f8fafc;
+    background: var(--color-surface);
     padding: 0.75rem 1rem;
     border-radius: 0.5rem;
-    border: 1px solid #f1f5f9;
+    border: 1px solid var(--color-accent);
     overflow-x: auto;
     white-space: pre-wrap;
     word-break: break-all;
@@ -476,7 +476,7 @@
     gap: 0.25rem;
     font-size: 0.75rem;
     font-weight: 500;
-    color: #94a3b8;
+    color: var(--color-muted-light);
     cursor: pointer;
     user-select: none;
     transition: color 0.15s ease;
@@ -488,7 +488,7 @@
   }
 
   .occ-summary:hover {
-    color: #64748b;
+    color: var(--color-muted);
   }
 
   .occ-details[open] .occ-summary svg {
@@ -497,7 +497,7 @@
 
   .occ-bt {
     font-size: 0.6875rem;
-    color: #cbd5e1;
+    color: var(--color-muted-lightest);
     font-family: "SF Mono", Monaco, Menlo, "Courier New", monospace;
     white-space: pre;
     overflow-x: auto;
@@ -505,7 +505,7 @@
     overflow-y: auto;
     margin: 0.5rem 0 0;
     padding: 0.75rem 1rem;
-    background: #0f172a;
+    background: var(--color-fg);
     border-radius: 0.5rem;
     line-height: 1.7;
   }
@@ -514,6 +514,6 @@
     padding: 2rem 1.5rem;
     text-align: center;
     font-size: 0.875rem;
-    color: #94a3b8;
+    color: var(--color-muted-light);
   }
 </style>

@@ -81,7 +81,7 @@
   .ew-sheet-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.25);
+    background: var(--color-overlay);
     backdrop-filter: blur(2px);
     z-index: 100;
     animation: ew-fade 0.2s ease;
@@ -96,9 +96,9 @@
     bottom: 0;
     width: 540px;
     max-width: 90vw;
-    background: var(--color-bg, #fff);
-    box-shadow: var(--shadow-xl, 0 8px 16px rgba(0, 0, 0, 0.04), 0 16px 40px -8px rgba(0, 0, 0, 0.1));
-    border-left: 1px solid var(--color-border, #e2e8f0);
+    background: var(--color-bg);
+    box-shadow: var(--shadow-xl);
+    border-left: 1px solid var(--color-border);
     z-index: 101;
     display: flex;
     flex-direction: column;
@@ -112,14 +112,14 @@
     align-items: center;
     justify-content: space-between;
     padding: 0.75rem 1rem;
-    border-bottom: 1px solid var(--color-border, rgba(226, 232, 240, 0.6));
+    border-bottom: 1px solid var(--color-border);
     flex-shrink: 0;
   }
 
   .ew-sheet-title {
     font-size: 0.9375rem;
     font-weight: 700;
-    color: var(--color-fg, #0f172a);
+    color: var(--color-fg);
     margin: 0;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -135,17 +135,17 @@
     font-size: 1.25rem;
     border: none;
     background: none;
-    color: var(--color-muted, #64748b);
+    color: var(--color-muted);
     cursor: pointer;
     flex-shrink: 0;
     border-radius: var(--radius-sm, 0.375rem);
     transition: all 0.1s;
-    &:hover { background: var(--color-accent, #f1f5f9); color: var(--color-fg, #0f172a); }
+    &:hover { background: var(--color-accent); color: var(--color-fg); }
   }
 
   .ew-sheet-tabs {
     display: flex;
-    border-bottom: 1px solid var(--color-border, rgba(226, 232, 240, 0.6));
+    border-bottom: 1px solid var(--color-border);
     flex-shrink: 0;
   }
 
@@ -159,15 +159,15 @@
     letter-spacing: 0.04em;
     border: none;
     background: none;
-    color: var(--color-muted, #64748b);
+    color: var(--color-muted);
     cursor: pointer;
     text-align: center;
     border-bottom: 2px solid transparent;
     margin-bottom: -1px;
     transition: all 0.15s ease;
 
-    &:hover { color: var(--color-fg, #0f172a); }
-    &.active { color: var(--color-primary, #4f46e5); border-bottom-color: var(--color-primary, #4f46e5); }
+    &:hover { color: var(--color-fg); }
+    &.active { color: var(--color-primary); border-bottom-color: var(--color-primary); }
   }
 
   .ew-sheet-body {

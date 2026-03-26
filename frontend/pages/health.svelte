@@ -300,14 +300,14 @@
   .page-title {
     font-size: 1.5rem;
     font-weight: 700;
-    color: #0f172a;
+    color: var(--color-fg);
     margin: 0;
     letter-spacing: -0.02em;
   }
 
   .page-subtitle {
     font-size: 0.875rem;
-    color: #64748b;
+    color: var(--color-muted);
     margin: 0;
   }
 
@@ -321,10 +321,10 @@
   .section-title {
     font-size: 1rem;
     font-weight: 600;
-    color: #0f172a;
+    color: var(--color-fg);
     margin: 0;
     padding-bottom: 0.5rem;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid var(--color-border);
   }
 
   .subsection {
@@ -336,7 +336,7 @@
   .subsection-title {
     font-size: 0.875rem;
     font-weight: 600;
-    color: #334155;
+    color: var(--color-fg-tertiary);
     margin: 0;
   }
 
@@ -368,8 +368,8 @@
 
   /* Stat Card */
   .stat-card {
-    background: #fff;
-    border: 1px solid #e2e8f0;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
     border-radius: 0.75rem;
     padding: 1.25rem;
     display: flex;
@@ -380,29 +380,29 @@
   }
 
   .stat-card:hover {
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 1px 3px 0 var(--color-border-alpha), 0 1px 2px -1px var(--color-border-alpha);
   }
 
   .stat-card-alert {
-    border-color: #fecaca;
-    background: #fff5f5;
+    border-color: var(--color-danger-border);
+    background: var(--color-danger-bg);
   }
 
   .stat-card-error {
-    border-color: #fecaca;
-    background: #fef2f2;
+    border-color: var(--color-danger-border);
+    background: var(--color-danger-subtle);
   }
 
   .stat-card-label {
     font-size: 0.8125rem;
     font-weight: 500;
-    color: #64748b;
+    color: var(--color-muted);
   }
 
   .stat-card-value {
     font-size: 1.75rem;
     font-weight: 700;
-    color: #0f172a;
+    color: var(--color-fg);
     letter-spacing: -0.02em;
     font-variant-numeric: tabular-nums;
     line-height: 1;
@@ -417,7 +417,7 @@
   .stat-card-unit {
     font-size: 0.75rem;
     font-weight: 500;
-    color: #94a3b8;
+    color: var(--color-muted-light);
     text-transform: uppercase;
     letter-spacing: 0.04em;
     margin-top: -0.25rem;
@@ -425,14 +425,14 @@
 
   .stat-card-description {
     font-size: 0.75rem;
-    color: #94a3b8;
+    color: var(--color-muted-light);
     margin-top: -0.125rem;
   }
 
   /* Chart Card */
   .chart-card {
-    background: #fff;
-    border: 1px solid #e2e8f0;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
     border-radius: 0.75rem;
     padding: 1.25rem;
     display: flex;
@@ -454,7 +454,7 @@
     gap: 0.5rem;
     font-size: 1rem;
     font-weight: 600;
-    color: #0f172a;
+    color: var(--color-fg);
   }
 
   .status-dot {
@@ -465,12 +465,12 @@
   }
 
   .status-dot.connected {
-    background: #22c55e;
+    background: var(--color-success);
     box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15);
   }
 
   .status-dot.disconnected {
-    background: #ef4444;
+    background: var(--color-danger);
     box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
   }
 
@@ -483,13 +483,13 @@
     letter-spacing: 0.05em;
     padding: 0.25rem 0.625rem;
     border-radius: 9999px;
-    background: #dbeafe;
-    color: #1d4ed8;
+    background: var(--color-info-bg);
+    color: var(--color-info-darker);
   }
 
   .env-badge.production {
-    background: #fee2e2;
-    color: #dc2626;
+    background: var(--color-status-5xx-bg);
+    color: var(--color-danger-hover);
   }
 
   .mono {
@@ -498,15 +498,15 @@
   }
 
   .err-text {
-    color: #dc2626;
+    color: var(--color-danger-hover);
   }
 
   .err-value {
-    color: #dc2626;
+    color: var(--color-danger-hover);
   }
 
   .muted-text {
-    color: #94a3b8;
+    color: var(--color-muted-light);
   }
 
   /* Action Link */
@@ -515,13 +515,13 @@
     align-items: center;
     font-size: 0.8125rem;
     font-weight: 500;
-    color: #3b82f6;
+    color: var(--color-info);
     text-decoration: none;
     transition: color 0.15s ease;
   }
 
   .action-link:hover {
-    color: #1d4ed8;
+    color: var(--color-info-darker);
     text-decoration: underline;
   }
 
@@ -536,15 +536,15 @@
   .failures-title {
     font-size: 0.8125rem;
     font-weight: 600;
-    color: #334155;
+    color: var(--color-fg-tertiary);
     margin: 0;
   }
 
   .failures-list {
     display: flex;
     flex-direction: column;
-    background: #fff;
-    border: 1px solid #e2e8f0;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
     border-radius: 0.75rem;
     overflow: hidden;
   }
@@ -555,7 +555,7 @@
     gap: 0.25rem;
     padding: 0.75rem 1rem;
     border: none;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--color-accent);
     background: none;
     font-family: inherit;
     text-align: left;
@@ -568,7 +568,7 @@
   }
 
   .failure-row:hover {
-    background: #f8fafc;
+    background: var(--color-surface);
   }
 
   .failure-main {
@@ -581,18 +581,18 @@
   .failure-job {
     font-size: 0.8125rem;
     font-weight: 600;
-    color: #0f172a;
+    color: var(--color-fg);
   }
 
   .failure-time {
     font-size: 0.6875rem;
-    color: #94a3b8;
+    color: var(--color-muted-light);
     flex-shrink: 0;
   }
 
   .failure-err {
     font-size: 0.75rem;
-    color: #dc2626;
+    color: var(--color-danger-hover);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -610,7 +610,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 0.5rem 0;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--color-accent);
   }
 
   .info-row:last-child {
@@ -619,13 +619,13 @@
 
   .info-row dt {
     font-size: 0.8125rem;
-    color: #64748b;
+    color: var(--color-muted);
     font-weight: 500;
   }
 
   .info-row dd {
     font-size: 0.8125rem;
-    color: #0f172a;
+    color: var(--color-fg);
     font-weight: 500;
     margin: 0;
     text-align: right;
@@ -640,7 +640,7 @@
   .sheet-sub {
     font-size: 0.75rem;
     font-weight: 600;
-    color: #64748b;
+    color: var(--color-muted);
     text-transform: uppercase;
     letter-spacing: 0.04em;
     margin: 0;
@@ -649,21 +649,21 @@
   .sheet-pre {
     font-size: 0.75rem;
     font-family: "SF Mono", Monaco, Menlo, monospace;
-    background: #f8fafc;
+    background: var(--color-surface);
     padding: 0.75rem;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--color-border);
     border-radius: 0.5rem;
     overflow-x: auto;
     white-space: pre-wrap;
     word-break: break-all;
     margin: 0;
-    color: #dc2626;
+    color: var(--color-danger-hover);
   }
 
   /* Apdex card */
   .apdex-card {
-    background: #fff;
-    border: 1px solid #e2e8f0;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
     border-radius: 0.75rem;
     padding: 1.5rem;
     display: flex;
@@ -676,7 +676,7 @@
   .apdex-label {
     font-size: 0.8125rem;
     font-weight: 500;
-    color: #64748b;
+    color: var(--color-muted);
   }
   .apdex-value {
     font-size: 2.5rem;
@@ -688,7 +688,7 @@
   .apdex-desc {
     font-size: 0.75rem;
     font-weight: 600;
-    color: #64748b;
+    color: var(--color-muted);
     text-transform: uppercase;
     letter-spacing: 0.04em;
   }

@@ -57,6 +57,14 @@ module Daylight
       self.table_name = "daylight_settings"
     end
 
+    class PerformanceIssueRecord < ActiveRecord::Base
+      self.table_name = "daylight_performance_issues"
+    end
+
+    class SecurityIssueRecord < ActiveRecord::Base
+      self.table_name = "daylight_security_issues"
+    end
+
     class << self
       def connection
         ensure_connected!
@@ -406,6 +414,59 @@ module Daylight
             t.timestamps
           end
           conn.add_index :daylight_settings, :key, unique: true
+        end
+
+        # Performance issues (from scheduled scans)
+        unless conn.table_exists?(:daylight_performance_issues)
+          conn.create_table :daylight_performance_issues do |t|
+            t.string   :scan_id, null: false
+            t.string   :issue_type, null: false   # n_plus_one, slow_query, counter_cache
+            t.string   :severity, null: false      # critical, warning, info
+            t.string   :title, null: false
+            t.text     :description
+            t.text     :sql_pattern
+            t.string   :source_location
+            t.string   :controller_action
+            t.integer  :occurrences, default: 0
+            t.float    :avg_duration_ms
+            t.float    :max_duration_ms
+            t.float    :total_time_ms
+            t.text     :solution
+            t.string   :status, default: "open"   # open, fixed, ignored
+            t.datetime :detected_at, null: false
+          end
+          conn.add_index :daylight_performance_issues, :scan_id
+          conn.add_index :daylight_performance_issues, :issue_type
+          conn.add_index :daylight_performance_issues, :status
+          conn.add_index :daylight_performance_issues, :detected_at
+        end
+
+        # Security issues (from Brakeman scans)
+        unless conn.table_exists?(:daylight_security_issues)
+          conn.create_table :daylight_security_issues do |t|
+            t.string   :scan_id, null: false
+            t.string   :issue_type, null: false      # injection, xss, csrf, mass_assignment, rce, redirect, file_access, config, auth, render, other
+            t.string   :warning_type, null: false     # original Brakeman warning type
+            t.string   :severity, null: false         # critical, warning, info
+            t.string   :confidence                    # high, medium, weak
+            t.string   :title, null: false
+            t.text     :description
+            t.string   :file_path
+            t.integer  :line_number
+            t.text     :code_snippet
+            t.string   :check_name
+            t.string   :link
+            t.string   :fingerprint
+            t.text     :solution
+            t.string   :status, default: "open"       # open, fixed, ignored
+            t.datetime :detected_at, null: false
+          end
+          conn.add_index :daylight_security_issues, :scan_id
+          conn.add_index :daylight_security_issues, :issue_type
+          conn.add_index :daylight_security_issues, :severity
+          conn.add_index :daylight_security_issues, :status
+          conn.add_index :daylight_security_issues, :fingerprint
+          conn.add_index :daylight_security_issues, :detected_at
         end
       end
 

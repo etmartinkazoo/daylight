@@ -30,6 +30,10 @@ Daylight::Engine.routes.draw do
   # Settings extras
   post "settings/cleanup", to: "settings#cleanup"
   post "settings/test_notification", to: "settings#test_notification"
+  post "settings/run_performance_scan", to: "settings#run_performance_scan"
+  patch "settings/performance_issues/:id", to: "settings#dismiss_performance_issue", as: :dismiss_performance_issue
+  post "settings/run_security_scan", to: "settings#run_security_scan"
+  patch "settings/security_issues/:id", to: "settings#dismiss_security_issue", as: :dismiss_security_issue
 
   root to: "errors#index"
 end

@@ -247,7 +247,7 @@
 
   .chart-label {
     font-size: 0.6875rem;
-    color: var(--color-muted, #94a3b8);
+    color: var(--color-muted);
     font-weight: 500;
   }
 
@@ -259,7 +259,7 @@
 
   .axis-label {
     font-size: 0.5625rem;
-    fill: var(--color-muted, #94a3b8);
+    fill: var(--color-muted);
     font-family: inherit;
     font-weight: 500;
   }
@@ -268,8 +268,8 @@
     position: absolute;
     bottom: 100%;
     transform: translateX(-50%);
-    background: var(--color-fg, #1e293b);
-    color: var(--color-bg, #fff);
+    background: var(--color-fg);
+    color: var(--color-bg);
     padding: 0.3125rem 0.5rem;
     border-radius: 0.375rem;
     font-size: 0.6875rem;

@@ -211,14 +211,14 @@
   .page-title {
     font-size: 1.5rem;
     font-weight: 800;
-    color: #0f172a;
+    color: var(--color-fg);
     margin: 0;
     letter-spacing: -0.025em;
   }
 
   .page-subtitle {
     font-size: 0.8125rem;
-    color: #64748b;
+    color: var(--color-muted);
     margin: 0.25rem 0 0;
   }
 
@@ -230,8 +230,8 @@
   .level-tabs {
     display: flex;
     gap: 0.25rem;
-    background: #fff;
-    border: 1px solid #e2e8f0;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
     border-radius: 0.75rem;
     padding: 0.25rem;
     width: fit-content;
@@ -244,7 +244,7 @@
     padding: 0.375rem 0.75rem;
     font-size: 0.8125rem;
     font-weight: 500;
-    color: #64748b;
+    color: var(--color-muted);
     border: none;
     background: none;
     border-radius: 0.5rem;
@@ -254,13 +254,13 @@
   }
 
   .level-tab:hover {
-    background: #f1f5f9;
-    color: #0f172a;
+    background: var(--color-accent);
+    color: var(--color-fg);
   }
 
   .level-tab.active {
-    background: #0f172a;
-    color: #fff;
+    background: var(--color-fg);
+    color: var(--color-bg);
     font-weight: 600;
   }
 
@@ -279,8 +279,8 @@
   }
 
   .stat-card {
-    background: #fff;
-    border: 1px solid #e2e8f0;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
     border-radius: 0.75rem;
     padding: 1.25rem;
     display: flex;
@@ -291,26 +291,26 @@
   .stat-card-label {
     font-size: 0.8125rem;
     font-weight: 500;
-    color: #64748b;
+    color: var(--color-muted);
   }
 
   .stat-card-value {
     font-size: 1.75rem;
     font-weight: 700;
-    color: #0f172a;
+    color: var(--color-fg);
     letter-spacing: -0.02em;
     line-height: 1;
     font-variant-numeric: tabular-nums;
   }
 
-  .stat-warn { color: #f59e0b; }
-  .stat-danger { color: #ef4444; }
-  .stat-fatal { color: #7c3aed; }
+  .stat-warn { color: var(--color-warning); }
+  .stat-danger { color: var(--color-danger); }
+  .stat-fatal { color: var(--color-purple); }
 
   /* Cards */
   .card {
-    background: #fff;
-    border: 1px solid #e2e8f0;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
     border-radius: 0.75rem;
     overflow: hidden;
   }
@@ -320,19 +320,19 @@
     align-items: baseline;
     justify-content: space-between;
     padding: 1rem 1.25rem;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid var(--color-border);
   }
 
   .card-title {
     font-size: 0.9375rem;
     font-weight: 650;
-    color: #0f172a;
+    color: var(--color-fg);
     margin: 0;
   }
 
   .card-subtitle {
     font-size: 0.75rem;
-    color: #64748b;
+    color: var(--color-muted);
   }
 
   .card-body {
@@ -341,8 +341,8 @@
 
   /* Data Table */
   .data-table {
-    background: #fff;
-    border: 1px solid #e2e8f0;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
     border-radius: 0.75rem;
     overflow: hidden;
   }
@@ -356,8 +356,8 @@
     display: flex;
     align-items: center;
     padding: 0 1rem;
-    background: #f8fafc;
-    border-bottom: 1px solid #e2e8f0;
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
   }
 
   .th {
@@ -366,7 +366,7 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #64748b;
+    color: var(--color-muted);
   }
 
   .th-right {
@@ -379,7 +379,7 @@
     padding: 0 1rem;
     width: 100%;
     border: none;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--color-accent);
     background: none;
     font-family: inherit;
     cursor: pointer;
@@ -392,7 +392,7 @@
   }
 
   .table-row:hover {
-    background: #f8fafc;
+    background: var(--color-surface);
   }
 
   .td {
@@ -401,7 +401,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    color: #0f172a;
+    color: var(--color-fg);
   }
 
   .td-message {
@@ -410,7 +410,7 @@
 
   .message-text {
     font-size: 0.8125rem;
-    color: #334155;
+    color: var(--color-fg-tertiary);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -421,12 +421,12 @@
     text-align: right;
     font-variant-numeric: tabular-nums;
     font-weight: 500;
-    color: #334155;
+    color: var(--color-fg-tertiary);
   }
 
   .td-source {
     font-size: 0.75rem;
-    color: #64748b;
+    color: var(--color-muted);
   }
 
   .table-empty {
@@ -435,7 +435,7 @@
     align-items: center;
     gap: 0.5rem;
     padding: 2.5rem 1rem;
-    color: #94a3b8;
+    color: var(--color-muted-light);
     font-size: 0.8125rem;
   }
 
@@ -452,11 +452,11 @@
     border-radius: 9999px;
   }
 
-  .level-debug { background: #f1f5f9; color: #64748b; }
-  .level-info { background: #dbeafe; color: #2563eb; }
-  .level-warn { background: #fef3c7; color: #b45309; }
-  .level-error { background: #fee2e2; color: #dc2626; }
-  .level-fatal { background: #ede9fe; color: #7c3aed; }
+  .level-debug { background: var(--color-accent); color: var(--color-muted); }
+  .level-info { background: var(--color-info-bg); color: var(--color-info-dark); }
+  .level-warn { background: var(--color-warning-bg); color: var(--color-status-4xx); }
+  .level-error { background: var(--color-status-5xx-bg); color: var(--color-danger-hover); }
+  .level-fatal { background: var(--color-purple-subtle); color: var(--color-purple); }
 
   /* Sheet Detail */
   .sheet-detail {
@@ -476,7 +476,7 @@
     justify-content: space-between;
     align-items: center;
     padding: 0.5rem 0;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--color-accent);
     font-size: 0.8125rem;
   }
 
@@ -485,12 +485,12 @@
   }
 
   .dl-row dt {
-    color: #64748b;
+    color: var(--color-muted);
     font-weight: 500;
   }
 
   .dl-row dd {
-    color: #0f172a;
+    color: var(--color-fg);
     font-weight: 500;
     margin: 0;
   }
@@ -503,7 +503,7 @@
   .sheet-sub {
     font-size: 0.6875rem;
     font-weight: 600;
-    color: #64748b;
+    color: var(--color-muted);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     margin: 0;
@@ -512,16 +512,16 @@
   .sheet-message {
     font-size: 0.75rem;
     font-family: "SF Mono", Monaco, Menlo, Consolas, monospace;
-    background: #f8fafc;
+    background: var(--color-surface);
     padding: 1rem;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--color-border);
     border-radius: 0.5rem;
     overflow-x: auto;
     white-space: pre-wrap;
     word-break: break-all;
     margin: 0;
     line-height: 1.6;
-    color: #334155;
+    color: var(--color-fg-tertiary);
   }
 
   /* Responsive */

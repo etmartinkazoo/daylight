@@ -8,6 +8,7 @@ module Daylight
     layout "daylight/application"
 
     before_action :authenticate_daylight!
+    after_action :maybe_enqueue_performance_scan
 
     inertia_share do
       ew_settings = begin
@@ -60,6 +61,20 @@ module Daylight
 
     def ensure_connected
       Database.ensure_connected!
+    end
+
+    # Check at most once per minute if scans are due
+    def maybe_enqueue_performance_scan
+      now = Time.current
+      @@last_scan_check ||= Time.at(0)
+      return if now - @@last_scan_check < 60
+
+      @@last_scan_check = now
+
+      Daylight::PerformanceScanJob.perform_later if Daylight::PerformanceScanner.due?
+      Daylight::SecurityScanJob.perform_later if Daylight::SecurityScanner.due?
+    rescue StandardError
+      # Never break the app
     end
   end
 end

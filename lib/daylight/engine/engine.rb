@@ -61,6 +61,28 @@ module Daylight
         Rails.error.subscribe(Daylight::ErrorSubscriber.new)
       end
     end
+
+    # Configure Bullet for N+1 detection if available
+    initializer "daylight.bullet", after: :load_config_initializers do
+      next unless defined?(Bullet)
+
+      Bullet.enable = true
+      Bullet.n_plus_one_query_enable = true
+      Bullet.unused_eager_loading_enable = true
+      Bullet.counter_cache_enable = true
+
+      # Disable Bullet's own output — Daylight captures everything
+      Bullet.add_footer = false
+      Bullet.console    = false
+      Bullet.rails_logger = false
+    end
+
+    initializer "daylight.bullet_middleware", after: "daylight.bullet" do |app|
+      next unless defined?(Bullet) && Bullet.enable?
+
+      # Insert middleware that flushes Bullet detections into Daylight after each request
+      app.middleware.use Daylight::BulletMiddleware
+    end
   end
 
   class ErrorSubscriber

@@ -224,10 +224,10 @@
     padding: 0.1875rem 0.5rem;
     font-size: 0.6875rem;
     font-weight: 500;
-    border: 1px solid var(--color-border, rgba(226, 232, 240, 0.6));
+    border: 1px solid var(--color-border);
     border-radius: 9999px;
-    background: var(--color-surface, #f8fafc);
-    color: var(--color-fg, #0f172a);
+    background: var(--color-surface);
+    color: var(--color-fg);
     animation: pill-in 0.15s ease;
   }
 
@@ -243,7 +243,7 @@
     width: 1.125rem;
     height: 1.125rem;
     border-radius: 0.1875rem;
-    background: var(--ref-color, #64748b);
+    background: var(--ref-color, var(--color-muted));
     color: white;
     font-size: 0.5625rem;
     font-weight: 700;
@@ -267,13 +267,13 @@
     background: none;
     border-radius: 50%;
     cursor: pointer;
-    color: var(--color-muted, #64748b);
+    color: var(--color-muted);
     font-size: 0.875rem;
     line-height: 1;
     padding: 0;
     flex-shrink: 0;
 
-    &:hover { background: var(--color-danger-subtle, #fef2f2); color: var(--color-danger, #dc2626); }
+    &:hover { background: var(--color-danger-subtle); color: var(--color-danger); }
   }
 
   .ai-scope-bar {
@@ -281,14 +281,14 @@
     align-items: center;
     gap: 0.375rem;
     padding: 0.375rem 0.75rem;
-    border-top: 1px solid var(--color-border, rgba(226, 232, 240, 0.6));
+    border-top: 1px solid var(--color-border);
     flex-shrink: 0;
   }
 
   .ai-scope-label {
     font-size: 0.6875rem;
     font-weight: 600;
-    color: var(--color-muted, #64748b);
+    color: var(--color-muted);
     text-transform: uppercase;
     letter-spacing: 0.04em;
   }
@@ -298,14 +298,14 @@
     font-size: 0.6875rem;
     font-weight: 500;
     font-family: inherit;
-    border: 1px solid var(--color-border, rgba(226, 232, 240, 0.6));
-    border-radius: var(--radius-sm, 0.375rem);
-    background: var(--color-bg, #fff);
-    color: var(--color-muted, #64748b);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg);
+    color: var(--color-muted);
     cursor: pointer;
 
-    &:hover { color: var(--color-fg, #0f172a); border-color: var(--color-input-border, rgba(203, 213, 225, 0.7)); }
-    &.active { background: var(--color-primary-subtle, #eef2ff); color: var(--color-primary, #4f46e5); border-color: var(--color-primary, #4f46e5); }
+    &:hover { color: var(--color-fg); border-color: var(--color-input-border); }
+    &.active { background: var(--color-primary-subtle); color: var(--color-primary); border-color: var(--color-primary); }
   }
 
   .ai-input-wrap {
@@ -320,10 +320,10 @@
     right: 1rem;
     max-height: 16rem;
     overflow-y: auto;
-    background: var(--color-bg, #fff);
-    border: 1px solid var(--color-border, rgba(226, 232, 240, 0.6));
-    border-radius: var(--radius, 0.5rem);
-    box-shadow: var(--shadow-lg, 0 4px 8px rgba(0, 0, 0, 0.03), 0 8px 24px -4px rgba(0, 0, 0, 0.08));
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
     z-index: 10;
     padding: 0.25rem;
   }
@@ -331,7 +331,7 @@
   .mention-loading, .mention-empty {
     padding: 0.75rem;
     font-size: 0.75rem;
-    color: var(--color-muted, #64748b);
+    color: var(--color-muted);
     text-align: center;
   }
 
@@ -340,11 +340,11 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.5rem 0.625rem;
-    border-radius: var(--radius-sm, 0.375rem);
+    border-radius: var(--radius-sm);
     cursor: pointer;
     transition: background 0.05s;
 
-    &:hover, &.active { background: var(--color-accent, #f1f5f9); }
+    &:hover, &.active { background: var(--color-accent); }
   }
 
   .mention-type-badge {
@@ -354,7 +354,7 @@
     width: 1.375rem;
     height: 1.375rem;
     border-radius: 0.1875rem;
-    background: var(--ref-color, #64748b);
+    background: var(--ref-color, var(--color-muted));
     color: white;
     font-size: 0.5625rem;
     font-weight: 700;
@@ -370,7 +370,7 @@
   .mention-item-name {
     font-size: 0.8125rem;
     font-weight: 500;
-    color: var(--color-fg, #0f172a);
+    color: var(--color-fg);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -378,7 +378,7 @@
 
   .mention-item-hint {
     font-size: 0.6875rem;
-    color: var(--color-muted, #64748b);
+    color: var(--color-muted);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -389,7 +389,7 @@
     align-items: flex-end;
     gap: 0.5rem;
     padding: 0.75rem 1rem;
-    border-top: 1px solid var(--color-border, rgba(226, 232, 240, 0.6));
+    border-top: 1px solid var(--color-border);
   }
 
   .ai-input {
@@ -397,10 +397,10 @@
     padding: 0.5rem 0.75rem;
     font-size: 0.8125rem;
     font-family: inherit;
-    border: 1px solid var(--color-input-border, rgba(203, 213, 225, 0.7));
-    border-radius: var(--radius-sm, 0.375rem);
-    background: var(--color-bg, #fff);
-    color: var(--color-fg, #0f172a);
+    border: 1px solid var(--color-input-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg);
+    color: var(--color-fg);
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
     outline: none;
     resize: none;
@@ -409,8 +409,8 @@
     line-height: 1.4;
     transition: border-color 0.15s, box-shadow 0.15s;
 
-    &:focus { border-color: var(--color-focus, #6366f1); box-shadow: 0 0 0 2px var(--color-focus-ring, rgba(99, 102, 241, 0.2)); }
-    &::placeholder { color: var(--color-muted, #64748b); }
+    &:focus { border-color: var(--color-focus); box-shadow: 0 0 0 2px var(--color-focus-ring); }
+    &::placeholder { color: var(--color-muted); }
     &:disabled { opacity: 0.6; }
   }
 
@@ -421,15 +421,15 @@
     width: 2.25rem;
     height: 2.25rem;
     border: none;
-    background: var(--color-primary, #4f46e5);
-    color: var(--color-primary-fg, #fff);
-    border-radius: var(--radius-sm, 0.375rem);
+    background: var(--color-primary);
+    color: var(--color-primary-fg);
+    border-radius: var(--radius-sm);
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     cursor: pointer;
     flex-shrink: 0;
     transition: background 0.15s, opacity 0.1s;
 
-    &:hover { background: var(--color-primary-hover, #4338ca); }
+    &:hover { background: var(--color-primary-hover); }
     &:disabled { opacity: 0.4; cursor: not-allowed; }
   }
 </style>

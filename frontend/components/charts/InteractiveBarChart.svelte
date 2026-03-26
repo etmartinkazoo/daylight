@@ -171,7 +171,7 @@
             y1={padding.top + chartHeight * (1 - frac)}
             x2={padding.left + chartWidth}
             y2={padding.top + chartHeight * (1 - frac)}
-            stroke="var(--color-border, #e2e8f0)"
+            stroke="var(--color-border)"
             stroke-dasharray="3,3"
             opacity="0.5"
           />
@@ -184,7 +184,7 @@
             y={padding.top}
             width={barWidth + barGap}
             height={chartHeight}
-            fill="var(--color-accent, #f1f5f9)"
+            fill="var(--color-accent)"
             rx="2"
           />
         {/if}
@@ -219,7 +219,7 @@
             x={lbl.x}
             y={height - 4}
             text-anchor="middle"
-            fill="var(--color-muted, #64748b)"
+            fill="var(--color-muted)"
             font-size="10"
             font-family="inherit"
           >{lbl.text}</text>
@@ -238,13 +238,13 @@
               width={tooltipW}
               height={tooltipH}
               rx="6"
-              fill="var(--color-fg, #0f172a)"
+              fill="var(--color-fg)"
               opacity="0.95"
             />
-            <text x={tx + 10} y={ty + 17} fill="#fff" font-size="10" font-family="inherit" opacity="0.7">
+            <text x={tx + 10} y={ty + 17} fill="var(--color-bg)" font-size="10" font-family="inherit" opacity="0.7">
               {formatTooltipLabel(tooltip.label)}
             </text>
-            <text x={tx + 10} y={ty + 34} fill="#fff" font-size="13" font-weight="600" font-family="inherit">
+            <text x={tx + 10} y={ty + 34} fill="var(--color-bg)" font-size="13" font-weight="600" font-family="inherit">
               {activeSeries?.label}: {valueFormatter(tooltip.value)}
             </text>
           </g>
@@ -258,16 +258,16 @@
 
 <style>
   .ibc {
-    background: var(--color-bg, #fff);
-    border: 1px solid var(--color-border, #e2e8f0);
-    border-radius: var(--radius-lg, 0.75rem);
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
     overflow: hidden;
   }
 
   .ibc-header {
     display: flex;
     align-items: stretch;
-    border-bottom: 1px solid var(--color-border, #e2e8f0);
+    border-bottom: 1px solid var(--color-border);
   }
 
   .ibc-title-area {
@@ -282,13 +282,13 @@
   .ibc-title {
     font-size: 0.9375rem;
     font-weight: 650;
-    color: var(--color-fg, #0f172a);
+    color: var(--color-fg);
     margin: 0;
   }
 
   .ibc-desc {
     font-size: 0.75rem;
-    color: var(--color-muted, #64748b);
+    color: var(--color-muted);
     margin: 0;
   }
 
@@ -303,7 +303,7 @@
     gap: 0.25rem;
     padding: 0.75rem 1.25rem;
     border: none;
-    border-left: 1px solid var(--color-border, #e2e8f0);
+    border-left: 1px solid var(--color-border);
     background: none;
     font-family: inherit;
     cursor: pointer;
@@ -313,22 +313,22 @@
   }
 
   .ibc-tab:hover {
-    background: var(--color-surface, #f8fafc);
+    background: var(--color-surface);
   }
 
   .ibc-tab.active {
-    background: var(--color-accent, #f1f5f9);
+    background: var(--color-accent);
   }
 
   .ibc-tab-label {
     font-size: 0.6875rem;
-    color: var(--color-muted, #64748b);
+    color: var(--color-muted);
   }
 
   .ibc-tab-value {
     font-size: 1.25rem;
     font-weight: 700;
-    color: var(--color-fg, #0f172a);
+    color: var(--color-fg);
     letter-spacing: -0.02em;
     line-height: 1;
     font-variant-numeric: tabular-nums;
@@ -358,12 +358,12 @@
     justify-content: center;
     height: 200px;
     font-size: 0.8125rem;
-    color: var(--color-muted, #64748b);
+    color: var(--color-muted);
   }
 
   @media (max-width: 640px) {
     .ibc-header { flex-direction: column; }
-    .ibc-tab { border-left: none; border-top: 1px solid var(--color-border, #e2e8f0); }
+    .ibc-tab { border-left: none; border-top: 1px solid var(--color-border); }
     .ibc-tab-value { font-size: 1rem; }
   }
 </style>

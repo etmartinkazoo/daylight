@@ -34,7 +34,7 @@
     flex: 1;
     position: relative;
     height: 1.75rem;
-    background: #f8fafc;
+    background: var(--color-surface);
     border-radius: 0.375rem;
     overflow: hidden;
   }
@@ -53,7 +53,7 @@
     padding: 0 0.625rem;
     font-size: 0.8125rem;
     font-weight: 500;
-    color: #1e293b;
+    color: var(--color-fg-secondary);
     line-height: 1.75rem;
     white-space: nowrap;
     overflow: hidden;
@@ -62,7 +62,7 @@
   .bar-value {
     font-size: 0.8125rem;
     font-weight: 600;
-    color: #1e293b;
+    color: var(--color-fg-secondary);
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
     min-width: 3rem;
@@ -70,7 +70,7 @@
   }
   .bar-empty {
     font-size: 0.8125rem;
-    color: #94a3b8;
+    color: var(--color-muted-light);
     text-align: center;
     padding: 1rem;
     margin: 0;
