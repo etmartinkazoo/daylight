@@ -18,7 +18,14 @@ module Daylight
     end
 
     def resolved_database_path
-      @database_path || (defined?(Rails) ? Rails.root.join("db", "daylight.sqlite3").to_s : "daylight.sqlite3")
+      return @database_path if @database_path
+
+      unless defined?(Rails)
+        return "daylight.sqlite3"
+      end
+
+      # Prefer storage/ (persists across deploys, same as Active Storage / Solid Queue)
+      Rails.root.join("storage", "daylight.sqlite3").to_s
     end
   end
 end
