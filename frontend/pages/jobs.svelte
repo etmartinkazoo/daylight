@@ -9,6 +9,7 @@
   import EwSheet from "./EwSheet.svelte";
   import DonutChart from "@/components/charts/DonutChart.svelte";
   import TimeSeriesChart from "@/components/charts/TimeSeriesChart.svelte";
+  import InteractiveBarChart from "@/components/charts/InteractiveBarChart.svelte";
   import ExportButton from "@/components/ui/ExportButton.svelte";
 
   let { job_classes = [], failures = [], period = "24h", totals = {}, solid_queue = null, volume_series = [], failure_series = [] } = $props();
@@ -106,30 +107,23 @@
       {/if}
     </div>
 
-    <!-- Job Volume Time Series -->
+    <!-- Job Volume Chart -->
     {#if volume_series.length > 0}
-      <div class="chart-section">
-        <TimeSeriesChart
-          data={volume_series}
-          width={720}
-          height={180}
-          color="#3b82f6"
-          label="Job volume over time"
-          showArea={true}
-        />
-        {#if failure_series.length > 0}
-          <div style="margin-top: 0.75rem;">
-            <TimeSeriesChart
-              data={failure_series}
-              width={720}
-              height={100}
-              color="#ef4444"
-              label="Failures over time"
-              showArea={true}
-            />
-          </div>
-        {/if}
-      </div>
+      {@const jobChartData = volume_series.map((d, i) => ({
+        t: d.t,
+        total: d.v,
+        failed: failure_series[i]?.v || 0,
+      }))}
+      <InteractiveBarChart
+        data={jobChartData}
+        series={[
+          { key: "total", label: "Total Jobs", color: "#3b82f6" },
+          { key: "failed", label: "Failed", color: "#ef4444" },
+        ]}
+        title="Job Volume"
+        description="Job execution over time"
+        height={250}
+      />
     {/if}
 
     <!-- Solid Queue Status -->

@@ -9,6 +9,7 @@
   import EwSheet from "./EwSheet.svelte";
   import BarList from "@/components/charts/BarList.svelte";
   import TimeSeriesChart from "@/components/charts/TimeSeriesChart.svelte";
+  import InteractiveBarChart from "@/components/charts/InteractiveBarChart.svelte";
   import ExportButton from "@/components/ui/ExportButton.svelte";
 
   let { queries = [], slowest = [], period = "24h", total_queries = 0, volume_series = [], n_plus_one_requests = [] } = $props();
@@ -71,18 +72,15 @@
       </div>
     </div>
 
-    <!-- Volume Time Series -->
+    <!-- Query Volume Chart -->
     {#if volume_series.length > 0}
-      <div class="chart-section">
-        <TimeSeriesChart
-          data={volume_series}
-          width={720}
-          height={180}
-          color="#ef4444"
-          label="Query volume over time"
-          showArea={true}
-        />
-      </div>
+      <InteractiveBarChart
+        data={volume_series.map(d => ({ ...d, queries: d.v }))}
+        series={[{ key: "queries", label: "Slow Queries", color: "#ef4444" }]}
+        title="Query Volume"
+        description="Slow queries over time"
+        height={250}
+      />
     {/if}
 
     <!-- N+1 Query Suspects -->

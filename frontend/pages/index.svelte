@@ -8,6 +8,7 @@
   import EwSheet from "./EwSheet.svelte";
   import DonutChart from "@/components/charts/DonutChart.svelte";
   import TimeSeriesChart from "@/components/charts/TimeSeriesChart.svelte";
+  import InteractiveBarChart from "@/components/charts/InteractiveBarChart.svelte";
   import AutoRefresh from "@/components/ui/AutoRefresh.svelte";
   import ExportButton from "@/components/ui/ExportButton.svelte";
 
@@ -166,19 +167,15 @@
       {/if}
     </div>
 
-    <!-- Time Series Chart -->
+    <!-- Error Volume Chart -->
     {#if error_series.length > 0}
-      <div class="chart-section">
-        <TimeSeriesChart
-          data={error_series}
-          width={720}
-          height={180}
-          color="#ef4444"
-          label="Errors over time"
-          deploys={deploys}
-          showArea={true}
-        />
-      </div>
+      <InteractiveBarChart
+        data={error_series.map(d => ({ ...d, errors: d.v }))}
+        series={[{ key: "errors", label: "Errors", color: "#ef4444" }]}
+        title="Error Volume"
+        description="Error occurrences over time"
+        height={250}
+      />
     {/if}
 
     <!-- Tabs -->

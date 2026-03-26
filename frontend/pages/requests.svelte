@@ -10,6 +10,7 @@
   import BarList from "@/components/charts/BarList.svelte";
   import Sparkline from "@/components/charts/Sparkline.svelte";
   import TimeSeriesChart from "@/components/charts/TimeSeriesChart.svelte";
+  import InteractiveBarChart from "@/components/charts/InteractiveBarChart.svelte";
   import AutoRefresh from "@/components/ui/AutoRefresh.svelte";
   import ExportButton from "@/components/ui/ExportButton.svelte";
 
@@ -200,20 +201,24 @@
         </div>
       </div>
 
-      <!-- Latency Time Series -->
-      {#if latency_series.length > 0}
-        <div class="chart-section">
-          <TimeSeriesChart
-            data={latency_series}
-            width={720}
-            height={180}
-            color="#6366f1"
-            label="Response time (ms)"
-            valueFormatter={fmt}
-            deploys={deploys}
-            showArea={true}
-          />
-        </div>
+      <!-- Request Performance Chart -->
+      {#if latency_series.length > 0 || throughput_series.length > 0}
+        {@const chartData = latency_series.map((d, i) => ({
+          t: d.t,
+          latency: d.v,
+          throughput: throughput_series[i]?.v || 0,
+        }))}
+        <InteractiveBarChart
+          data={chartData}
+          series={[
+            { key: "latency", label: "Avg Latency (ms)", color: "#6366f1" },
+            { key: "throughput", label: "Throughput (req)", color: "#3b82f6" },
+          ]}
+          title="Request Performance"
+          description="Response time and throughput over time"
+          height={250}
+          valueFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(1)}s` : `${Math.round(v)}`}
+        />
       {/if}
 
       <!-- Level 1: Endpoints table -->
