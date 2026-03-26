@@ -144,7 +144,7 @@
             <div class="th r" style="width:5rem"><SortableHeader column="avg_duration" label="Avg" /></div>
             <div class="th r" style="width:5rem"><SortableHeader column="max_duration" label="Max" /></div>
           </div>
-          {#each allTaskClasses as tc (tc.task_class)}
+          {#each allTaskClasses as tc, i (tc.task_class + ':' + i)}
             <button class="table-row" onclick={() => openClass(tc)}>
               <div class="td" style="flex:2"><span class="task-name">{tc.task_class}</span></div>
               <div class="td num" style="width:4rem">{tc.total}</div>

@@ -157,7 +157,7 @@
           <div class="th th-right" style="width:5.5rem">Hit Rate</div>
           <div class="th th-right" style="width:5rem"><SortableHeader column="avg_duration" label="Avg" /></div>
         </div>
-        {#each allPatterns as p (p.key_pattern)}
+        {#each allPatterns as p, i (p.key_pattern + ':' + i)}
           <button class="table-row" onclick={() => openPattern(p)}>
             <div class="td td-key" style="flex:3">
               <span class="key-text">{p.key_pattern}</span>

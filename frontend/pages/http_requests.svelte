@@ -192,7 +192,7 @@
             <div class="th th-right" style="width:5rem"><SortableHeader column="max_duration" label="Max" /></div>
             <div class="th th-right" style="width:4.5rem">Errors</div>
           </div>
-          {#each allHosts as host (host.host)}
+          {#each allHosts as host, i (host.host + ':' + i)}
             <button class="table-row" onclick={() => selectHost(host)}>
               <div class="td" style="flex:2"><span class="host-name">{host.host}</span></div>
               <div class="td td-num" style="width:5rem">{host.total}</div>

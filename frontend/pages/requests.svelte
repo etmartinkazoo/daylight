@@ -290,7 +290,7 @@
             </tr>
           </thead>
           <tbody>
-            {#each allEndpoints as ep (ep.route)}
+            {#each allEndpoints as ep, i (ep.route + ':' + i)}
               <tr class="row" onclick={() => selectEndpoint(ep)}>
                 <td class="cell">
                   <span class="method-pill" style="background: {methodColor(ep.method)}15; color: {methodColor(ep.method)}">{ep.method}</span>

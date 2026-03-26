@@ -126,7 +126,7 @@
             <div class="np1-th np1-th-right" style="width:5rem">Query Count</div>
             <div class="np1-th np1-th-right" style="width:5rem">When</div>
           </div>
-          {#each n_plus_one_requests as np (np.path + np.controller_action + np.occurred_at)}
+          {#each n_plus_one_requests as np, i (np.path + ':' + i)}
             <div class="np1-row">
               <div class="np1-td" style="flex:2">
                 <span class="np1-warning-badge">N+1</span>

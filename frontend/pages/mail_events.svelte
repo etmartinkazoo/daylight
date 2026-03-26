@@ -131,7 +131,7 @@
             <div class="th r" style="width:4rem"><SortableHeader column="failed_count" label="Failed" /></div>
             <div class="th r" style="width:5rem"><SortableHeader column="avg_duration" label="Avg" /></div>
           </div>
-          {#each allMailers as ml (ml.mailer_class)}
+          {#each allMailers as ml, i (ml.mailer_class + ':' + i)}
             <button class="table-row" onclick={() => openMailer(ml)}>
               <div class="td" style="flex:2"><span class="mailer-name">{ml.mailer_class}</span></div>
               <div class="td num" style="width:4rem">{ml.total}</div>

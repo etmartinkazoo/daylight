@@ -10,7 +10,7 @@
 </script>
 
 <div class="bar-list">
-  {#each displayItems as item, i (item.label)}
+  {#each displayItems as item, i (item.label + ':' + i)}
     <div class="bar-item">
       <div class="bar-bg">
         <div

@@ -198,7 +198,7 @@
             <div class="th r" style="width:5rem"><SortableHeader column="avg_duration" label="Avg" /></div>
             <div class="th r" style="width:5rem"><SortableHeader column="max_duration" label="Max" /></div>
           </div>
-          {#each allJobClasses as jc (jc.job_class)}
+          {#each allJobClasses as jc, i (jc.job_class + ':' + i)}
             <button class="table-row" onclick={() => openClass(jc)}>
               <div class="td" style="flex:2"><span class="job-name">{jc.job_class}</span></div>
               <div class="td num" style="width:4rem">{jc.total}</div>
