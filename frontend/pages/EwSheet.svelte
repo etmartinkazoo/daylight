@@ -94,11 +94,11 @@
     top: 0;
     right: 0;
     bottom: 0;
-    width: 100%;
-    max-width: 28rem;
+    width: 540px;
+    max-width: 90vw;
     background: var(--color-bg, #fff);
     box-shadow: var(--shadow-xl, 0 8px 16px rgba(0, 0, 0, 0.04), 0 16px 40px -8px rgba(0, 0, 0, 0.1));
-    border-radius: var(--radius-lg, 0.75rem) 0 0 var(--radius-lg, 0.75rem);
+    border-left: 1px solid var(--color-border, #e2e8f0);
     z-index: 101;
     display: flex;
     flex-direction: column;
