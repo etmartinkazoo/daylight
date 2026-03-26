@@ -10,6 +10,7 @@ module Daylight
         Database.ensure_connected!
         mark_checked!
 
+        IncidentInvestigator.unstick_stale!
         check_error_spike
         check_new_errors
         check_latency_spike
@@ -136,10 +137,10 @@ module Daylight
         if defined?(ActiveJob) && ActiveJob::Base.queue_adapter.class.name != "ActiveJob::QueueAdapters::InlineAdapter"
           Daylight::InvestigateIncidentJob.perform_later(incident.id)
         else
-          Thread.new { IncidentInvestigator.investigate(incident) rescue nil }
+          Thread.new { IncidentInvestigator.investigate(incident) }
         end
       rescue StandardError
-        Thread.new { IncidentInvestigator.investigate(incident) rescue nil }
+        Thread.new { IncidentInvestigator.investigate(incident) }
       end
     end
   end

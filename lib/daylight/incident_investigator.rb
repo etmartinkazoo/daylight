@@ -2,9 +2,12 @@
 
 require "net/http"
 require "json"
+require "timeout"
 
 module Daylight
   module IncidentInvestigator
+    INVESTIGATION_TIMEOUT = 120 # seconds
+
     class << self
       def investigate(incident)
         Database.ensure_connected!
@@ -21,8 +24,10 @@ module Daylight
         prompt = build_prompt(incident, context)
 
         begin
-          chat = Daylight::AI.chat
-          response = chat.ask(prompt)
+          response = Timeout.timeout(INVESTIGATION_TIMEOUT) do
+            chat = Daylight::AI.chat
+            chat.ask(prompt)
+          end
 
           investigation = response.content
           summary = investigation.split("\n").reject(&:blank?).first&.truncate(300) || incident.title
@@ -32,12 +37,36 @@ module Daylight
             summary: summary,
             status: "open"
           )
+        rescue Timeout::Error
+          incident.update!(
+            investigation: "AI investigation timed out after #{INVESTIGATION_TIMEOUT} seconds. You can reopen this incident to retry.",
+            status: "open"
+          )
         rescue StandardError => e
           incident.update!(
             investigation: "AI investigation failed: #{e.message}",
             status: "open"
           )
         end
+      rescue StandardError => e
+        # Last-resort rescue: ensure the incident never stays stuck in "investigating"
+        incident.update(status: "open", investigation: "Investigation error: #{e.message}") rescue nil
+      end
+
+      # Unstick any incidents that have been in "investigating" for too long
+      def unstick_stale!
+        Database.ensure_connected!
+        Database::IncidentRecord
+          .where(status: "investigating")
+          .where("started_at < ?", 5.minutes.ago)
+          .find_each do |incident|
+            incident.update!(
+              status: "open",
+              investigation: incident.investigation.presence || "Investigation did not complete. You can retry from the incident page."
+            )
+          end
+      rescue StandardError
+        # Never break the app
       end
 
       private
