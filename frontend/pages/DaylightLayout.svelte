@@ -9,6 +9,7 @@ let base = $derived($pageStore.props?.base_path || "/daylight");
 let nav = $derived([
   { label: "Errors", href: `${base}/errors`, match: `${base}/errors`, icon: "errors" },
   { label: "Incidents", href: `${base}/incidents`, match: `${base}/incidents`, icon: "incidents" },
+  { label: "Solutions", href: `${base}/solutions`, match: `${base}/solutions`, icon: "solutions" },
   { label: "Requests", href: `${base}/requests`, match: `${base}/requests`, icon: "requests" },
   { label: "Queries", href: `${base}/queries`, match: `${base}/queries`, icon: "queries" },
   { label: "Jobs", href: `${base}/jobs`, match: `${base}/jobs`, icon: "jobs" },
@@ -22,9 +23,9 @@ let nav = $derived([
 ]);
 
 // Group nav into sections
-let primaryNav = $derived(nav.slice(0, 6));
-let secondaryNav = $derived(nav.slice(6, 10));
-let utilNav = $derived(nav.slice(10));
+let primaryNav = $derived(nav.slice(0, 7));
+let secondaryNav = $derived(nav.slice(7, 11));
+let utilNav = $derived(nav.slice(11));
 
 function isActive(item) {
   if (item.match)
@@ -77,6 +78,8 @@ function toggleTheme() {
                 <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
               {:else if item.icon === "incidents"}
                 <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+              {:else if item.icon === "solutions"}
+                <path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/>
               {:else if item.icon === "requests"}
                 <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
               {:else if item.icon === "queries"}

@@ -51,10 +51,9 @@ module Daylight
         # Deduplicate against existing open issues
         issues = deduplicate(issues)
 
-        # Generate AI solutions if API key is configured
-        api_key = Database.get_setting("gemini_api_key")
-        if api_key.present?
-          issues.each { |issue| generate_solution(issue, api_key) }
+        # Generate AI solutions if an API key is configured
+        if Daylight::AI.configured?
+          issues.each { |issue| generate_solution(issue) }
         end
 
         # Store results
@@ -149,21 +148,13 @@ module Daylight
       end
 
       # ── AI Solution Generation ──────────────────────────────────────
-      def generate_solution(issue, api_key)
-        configure_llm(api_key)
-
+      def generate_solution(issue)
         prompt = build_solution_prompt(issue)
-        chat = RubyLLM.chat(model: "gemini-2.5-flash")
+        chat = Daylight::AI.chat
         response = chat.ask(prompt)
         issue[:solution] = response.content
       rescue StandardError => e
         issue[:solution] = "AI solution generation failed: #{e.message}"
-      end
-
-      def configure_llm(api_key)
-        RubyLLM.configure do |c|
-          c.gemini_api_key = api_key
-        end
       end
 
       def build_solution_prompt(issue)

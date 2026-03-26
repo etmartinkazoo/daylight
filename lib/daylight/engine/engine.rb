@@ -62,7 +62,11 @@ module Daylight
       end
     end
 
-    # Configure Bullet for N+1 detection if available
+    # Configure Bullet for live N+1 detection.
+    #
+    # Development: always instruments every request.
+    # Production:  only instruments during a diagnostic window (toggled from
+    #              the Settings UI) and samples 5% of requests to limit overhead.
     initializer "daylight.bullet", after: :load_config_initializers do
       next unless defined?(Bullet)
 
@@ -80,7 +84,9 @@ module Daylight
     initializer "daylight.bullet_middleware", after: "daylight.bullet" do |app|
       next unless defined?(Bullet) && Bullet.enable?
 
-      # Insert middleware that flushes Bullet detections into Daylight after each request
+      require "daylight/bullet_collector"
+      # The middleware itself decides whether to instrument each request
+      # based on environment and diagnostic window state.
       app.middleware.use Daylight::BulletMiddleware
     end
   end

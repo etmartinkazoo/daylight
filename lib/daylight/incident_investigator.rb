@@ -9,10 +9,9 @@ module Daylight
       def investigate(incident)
         Database.ensure_connected!
 
-        api_key = Database.get_setting("gemini_api_key")
-        unless api_key.present?
+        unless Daylight::AI.configured?
           incident.update!(
-            investigation: "AI investigation unavailable — configure a Gemini API key in Settings.",
+            investigation: "AI investigation unavailable — configure a Gemini or Anthropic API key in Settings.",
             status: "open"
           )
           return
@@ -22,8 +21,7 @@ module Daylight
         prompt = build_prompt(incident, context)
 
         begin
-          configure_llm(api_key)
-          chat = RubyLLM.chat(model: "gemini-2.5-flash")
+          chat = Daylight::AI.chat
           response = chat.ask(prompt)
 
           investigation = response.content
@@ -43,12 +41,6 @@ module Daylight
       end
 
       private
-
-      def configure_llm(api_key)
-        RubyLLM.configure do |c|
-          c.gemini_api_key = api_key
-        end
-      end
 
       def gather_context(incident)
         ctx = {}

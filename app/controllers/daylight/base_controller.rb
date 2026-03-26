@@ -18,13 +18,21 @@ module Daylight
         {}
       end
 
+      ai_models = begin
+        Daylight::AI.available_models.map { |m| { value: m[:id], label: m[:label] } }
+      rescue StandardError
+        []
+      end
+
       {
         base_path: Daylight::Engine.routes.url_helpers.root_path.chomp("/"),
         ew_settings: {
           github_repo_url: ew_settings["github_repo_url"],
           github_default_branch: ew_settings["github_default_branch"] || "main",
           ai_context_notes: ew_settings["ai_context_notes"]
-        }
+        },
+        aiModels: ai_models,
+        defaultAiModel: ew_settings["default_ai_model"].presence || "gemini-2.5-flash"
       }
     end
 
@@ -73,6 +81,7 @@ module Daylight
 
       Daylight::PerformanceScanJob.perform_later if Daylight::PerformanceScanner.due?
       Daylight::SecurityScanJob.perform_later if Daylight::SecurityScanner.due?
+      Daylight::SolutionGenerationJob.perform_later if Daylight::SolutionGenerator.due?
     rescue StandardError
       # Never break the app
     end

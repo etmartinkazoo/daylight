@@ -17,7 +17,11 @@
     "settings[retention_days]": settings.retention_days || "30",
     "settings[ai_context_notes]": settings.ai_context_notes || "",
     "settings[gemini_api_key]": settings.gemini_api_key || "",
+    "settings[anthropic_api_key]": settings.anthropic_api_key || "",
+    "settings[default_ai_model]": settings.default_ai_model || "gemini-2.5-flash",
+    "settings[github_api_token]": settings.github_api_token || "",
     "settings[sample_rate]": settings.sample_rate || "1.0",
+    "settings[solutions_scan_enabled]": settings.solutions_scan_enabled || "false",
     "settings[performance_scan_enabled]": settings.performance_scan_enabled || "false",
     "settings[performance_scan_interval]": settings.performance_scan_interval || "daily",
     "settings[security_scan_enabled]": settings.security_scan_enabled || "false",
@@ -78,6 +82,28 @@
       onError: () => { secScanRunning = false; },
     });
   }
+
+  let bulletDuration = $state("30");
+  let bulletStarting = $state(false);
+
+  function startBulletDiagnostic() {
+    bulletStarting = true;
+    router.post(`${base}/settings/toggle_bullet_diagnostic`, { duration: bulletDuration }, {
+      preserveScroll: true,
+      onFinish: () => { bulletStarting = false; },
+    });
+  }
+
+  function stopBulletDiagnostic() {
+    router.post(`${base}/settings/stop_bullet_diagnostic`, {}, { preserveScroll: true });
+  }
+
+  let bulletTimeRemaining = $derived.by(() => {
+    if (!settings.bullet_diagnostic_active || !settings.bullet_diagnostic_expires_at) return null;
+    const expires = new Date(settings.bullet_diagnostic_expires_at);
+    const mins = Math.max(0, Math.round((expires - new Date()) / 60000));
+    return mins;
+  });
 
   function dismissIssue(id, status) {
     router.patch(`${base}/settings/performance_issues/${id}`, { new_status: status }, { preserveScroll: true });
@@ -305,13 +331,66 @@
               {/if}
             </div>
             <input id="gemini_api_key" type="password" class="form-input" placeholder={settings.gemini_api_key ? "Key saved — leave blank to keep" : "Enter API key"} bind:value={$form["settings[gemini_api_key]"]} autocomplete="off" />
-            <p class="form-hint">Used by the AI tab to analyze errors, queries, and requests. Get a key at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>.</p>
+            <p class="form-hint">Get a key at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>. Enables Gemini Flash and Pro models.</p>
+          </div>
+
+          <div class="form-field">
+            <div class="form-label-row">
+              <label class="form-label" for="anthropic_api_key">Anthropic API Key</label>
+              {#if settings.anthropic_api_key}
+                <span class="key-saved-badge">
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3.5 8.5l3 3 6-6"/></svg>
+                  Saved{#if settings.anthropic_api_key_saved_at}&nbsp;&middot;&nbsp;{formatKeyDate(settings.anthropic_api_key_saved_at)}{/if}
+                </span>
+              {/if}
+            </div>
+            <input id="anthropic_api_key" type="password" class="form-input" placeholder={settings.anthropic_api_key ? "Key saved — leave blank to keep" : "sk-ant-..."} bind:value={$form["settings[anthropic_api_key]"]} autocomplete="off" />
+            <p class="form-hint">Get a key at <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">Anthropic Console</a>. Enables Claude Haiku, Sonnet, and Opus models.</p>
+          </div>
+
+          <div class="form-field">
+            <label class="form-label" for="default_ai_model">Default Model</label>
+            <select id="default_ai_model" class="form-input" style="max-width: 280px;" bind:value={$form["settings[default_ai_model]"]}>
+              <optgroup label="Gemini">
+                <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+              </optgroup>
+              <optgroup label="Claude">
+                <option value="claude-haiku-4-5-20251001">Claude Haiku</option>
+                <option value="claude-sonnet-4-6">Claude Sonnet</option>
+                <option value="claude-opus-4-6">Claude Opus</option>
+              </optgroup>
+            </select>
+            <p class="form-hint">Default model for all AI features: scanners, solutions, and chat. Can be overridden per chat.</p>
           </div>
 
           <div class="form-field">
             <label class="form-label" for="ai_context_notes">Context Notes</label>
             <textarea id="ai_context_notes" class="form-textarea" rows="5" placeholder="e.g. This app uses multi-tenant SQLite via activerecord-tenanted. The main models are Partner, Project, Todo, Service..." bind:value={$form["settings[ai_context_notes]"]}></textarea>
             <p class="form-hint">Describe your app's architecture, key patterns, or common pitfalls. This is prepended to every AI conversation in errorwatch.</p>
+          </div>
+
+          <div class="form-field">
+            <div class="form-label-row">
+              <label class="form-label" for="github_api_token">GitHub API Token</label>
+              {#if settings.github_api_token}
+                <span class="key-saved-badge">
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3.5 8.5l3 3 6-6"/></svg>
+                  Saved{#if settings.github_api_token_saved_at}&nbsp;&middot;&nbsp;{formatKeyDate(settings.github_api_token_saved_at)}{/if}
+                </span>
+              {/if}
+            </div>
+            <input id="github_api_token" type="password" class="form-input" placeholder={settings.github_api_token ? "Token saved — leave blank to keep" : "ghp_..."} bind:value={$form["settings[github_api_token]"]} autocomplete="off" />
+            <p class="form-hint">Personal access token with <code>repo</code> scope. Required for Solutions to push PRs to GitHub.</p>
+          </div>
+
+          <div class="form-field">
+            <label class="form-label" for="solutions_scan_enabled">Auto-Generate Solutions</label>
+            <select id="solutions_scan_enabled" class="form-input form-input-sm" bind:value={$form["settings[solutions_scan_enabled]"]}>
+              <option value="true">Enabled (daily)</option>
+              <option value="false">Disabled</option>
+            </select>
+            <p class="form-hint">Automatically generate AI fix proposals for open performance and security issues once per day.</p>
           </div>
         </div>
       </div>
@@ -365,6 +444,32 @@
               {/if}
             </div>
             <p class="form-hint">Run a performance scan immediately. Analyzes the last 24h of query data. AI solutions require a Gemini API key.</p>
+          </div>
+
+          <!-- Bullet Diagnostic Mode -->
+          <div class="form-field">
+            <label class="form-label">Live N+1 Detection (Bullet)</label>
+            {#if settings.bullet_diagnostic_active}
+              <div class="diagnostic-active">
+                <span class="diagnostic-pulse"></span>
+                <span class="diagnostic-label">Live detection active — {bulletTimeRemaining}min remaining, sampling 5% of requests</span>
+                <Button variant="outline" size="sm" type="button" onclick={stopBulletDiagnostic}>Stop</Button>
+              </div>
+            {:else}
+              <div class="diagnostic-start">
+                <select class="form-input form-input-sm" bind:value={bulletDuration} style="max-width: 130px;">
+                  <option value="5">5 minutes</option>
+                  <option value="15">15 minutes</option>
+                  <option value="30">30 minutes</option>
+                  <option value="60">1 hour</option>
+                  <option value="120">2 hours</option>
+                </select>
+                <Button variant="outline" type="button" disabled={bulletStarting} onclick={startBulletDiagnostic}>
+                  {bulletStarting ? "Starting..." : "Start Diagnostic"}
+                </Button>
+              </div>
+            {/if}
+            <p class="form-hint">Enable Bullet live detection in production for a limited window. Instruments 5% of requests to detect N+1 queries, unused eager loads, and counter cache opportunities with exact model/association details. Always active in development.</p>
           </div>
         </div>
       </div>
@@ -877,6 +982,44 @@
   .scan-meta {
     font-size: 0.75rem;
     color: var(--color-muted);
+  }
+
+  /* ——— Bullet Diagnostic ——— */
+  .diagnostic-active {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.625rem 0.875rem;
+    background: var(--color-success-subtle);
+    border: 1px solid var(--color-success-border);
+    border-radius: 0.5rem;
+  }
+
+  .diagnostic-pulse {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--color-success);
+    flex-shrink: 0;
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .diagnostic-label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--color-success-dark);
+    flex: 1;
+  }
+
+  .diagnostic-start {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
   }
 
   /* ——— Performance Issues Section ——— */

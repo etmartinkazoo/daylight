@@ -65,6 +65,14 @@ module Daylight
       self.table_name = "daylight_security_issues"
     end
 
+    class SolutionRecord < ActiveRecord::Base
+      self.table_name = "daylight_solutions"
+    end
+
+    class SolutionMessageRecord < ActiveRecord::Base
+      self.table_name = "daylight_solution_messages"
+    end
+
     class << self
       def connection
         ensure_connected!
@@ -85,7 +93,7 @@ module Daylight
           timeout: 5000
         }
 
-        [ErrorRecord, OccurrenceRecord, RequestRecord, QueryRecord, JobRecord, LogRecord, DeployRecord, HttpRequestRecord, CacheEventRecord, ScheduledTaskRecord, MailEventRecord, IncidentRecord, SettingRecord].each do |klass|
+        [ErrorRecord, OccurrenceRecord, RequestRecord, QueryRecord, JobRecord, LogRecord, DeployRecord, HttpRequestRecord, CacheEventRecord, ScheduledTaskRecord, MailEventRecord, IncidentRecord, SettingRecord, PerformanceIssueRecord, SecurityIssueRecord, SolutionRecord, SolutionMessageRecord].each do |klass|
           klass.establish_connection(config)
         end
 
@@ -467,6 +475,40 @@ module Daylight
           conn.add_index :daylight_security_issues, :status
           conn.add_index :daylight_security_issues, :fingerprint
           conn.add_index :daylight_security_issues, :detected_at
+        end
+
+        # Solutions (AI-generated fix proposals)
+        unless conn.table_exists?(:daylight_solutions)
+          conn.create_table :daylight_solutions do |t|
+            t.string   :source_type, null: false     # performance, security
+            t.integer  :source_issue_id, null: false
+            t.string   :title, null: false
+            t.text     :problem_description
+            t.text     :proposed_fix                  # markdown with code diffs
+            t.text     :file_paths                    # JSON array
+            t.string   :status, default: "draft"      # draft, approved, pushed, rejected
+            t.string   :severity, null: false
+            t.string   :pr_url
+            t.string   :pr_branch
+            t.datetime :generated_at, null: false
+            t.datetime :approved_at
+            t.datetime :pushed_at
+          end
+          conn.add_index :daylight_solutions, :status
+          conn.add_index :daylight_solutions, :severity
+          conn.add_index :daylight_solutions, :generated_at
+          conn.add_index :daylight_solutions, [:source_type, :source_issue_id]
+        end
+
+        # Solution chat messages
+        unless conn.table_exists?(:daylight_solution_messages)
+          conn.create_table :daylight_solution_messages do |t|
+            t.integer  :solution_id, null: false
+            t.string   :role, null: false             # user, assistant
+            t.text     :content, null: false
+            t.datetime :created_at, null: false
+          end
+          conn.add_index :daylight_solution_messages, :solution_id
         end
       end
 

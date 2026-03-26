@@ -3,15 +3,30 @@
 require "digest"
 
 module Daylight
-  # Rack middleware that flushes Bullet detections into Daylight performance issues
-  # after each request completes.
+  # Rack middleware that flushes Bullet detections into Daylight performance issues.
+  #
+  # In development: always active.
+  # In production: only active during a time-limited diagnostic window, and only
+  # instruments a sample of requests to limit overhead.
+  #
+  # IMPORTANT: Skips Daylight's own routes to avoid infinite recursion
+  # (Bullet tracking Daylight's DB writes which trigger more Bullet notifications).
   class BulletMiddleware
+    SAMPLE_RATE = 0.05 # Instrument 5% of production requests
+    CHECK_INTERVAL = 30 # Seconds between checking if diagnostic window is still active
+
     def initialize(app)
       @app = app
+      @last_window_check = Time.at(0)
+      @window_active = false
     end
 
     def call(env)
-      return @app.call(env) unless defined?(Bullet) && Bullet.enable?
+      # Never instrument Daylight's own routes — prevents infinite recursion
+      path = env["PATH_INFO"] || ""
+      return @app.call(env) if path.start_with?("/daylight")
+
+      return @app.call(env) unless should_instrument?
 
       Bullet.start_request
       response = @app.call(env)
@@ -25,8 +40,46 @@ module Daylight
 
     private
 
+    def should_instrument?
+      return false unless defined?(Bullet) && Bullet.enable?
+
+      # Development/test: always instrument
+      return true unless production?
+
+      # Production: only during an active diagnostic window + sampled
+      return false unless diagnostic_window_active?
+      rand < SAMPLE_RATE
+    end
+
+    def production?
+      defined?(Rails) && Rails.env.production?
+    end
+
+    # Rate-limited check against the database setting
+    def diagnostic_window_active?
+      now = Time.current
+      if now - @last_window_check > CHECK_INTERVAL
+        @last_window_check = now
+        @window_active = check_window
+      end
+      @window_active
+    end
+
+    def check_window
+      Database.ensure_connected!
+      expires = Database.get_setting("bullet_diagnostic_expires_at")
+      return false if expires.blank?
+      Time.parse(expires) > Time.current
+    rescue StandardError
+      false
+    end
+
     def collect_bullet_notifications
       return unless Bullet.notification?
+
+      # Re-entrancy guard: Daylight DB writes could trigger Bullet tracking
+      return if Thread.current[:daylight_bullet_storing]
+      Thread.current[:daylight_bullet_storing] = true
 
       controller_action = Thread.current[:daylight_controller_action]
 
@@ -35,6 +88,8 @@ module Daylight
       end
     rescue StandardError => e
       Rails.logger.debug("[Daylight] Bullet collection error: #{e.message}") if defined?(Rails)
+    ensure
+      Thread.current[:daylight_bullet_storing] = false
     end
 
     def store_notification(notification, controller_action)
@@ -44,7 +99,7 @@ module Daylight
       body = notification_body(notification)
       issue_type = detect_type(notification)
 
-      # Build a stable fingerprint so we don't duplicate
+      # Stable fingerprint for deduplication
       fingerprint = Digest::SHA256.hexdigest("bullet:#{issue_type}:#{title}")[0..31]
 
       # Increment if already tracked, otherwise create

@@ -71,6 +71,12 @@ module Daylight
           ai_context_notes: settings["ai_context_notes"] || "",
           gemini_api_key: settings["gemini_api_key"].present? ? "••••••••" : "",
           gemini_api_key_saved_at: settings["gemini_api_key_saved_at"],
+          anthropic_api_key: settings["anthropic_api_key"].present? ? "••••••••" : "",
+          anthropic_api_key_saved_at: settings["anthropic_api_key_saved_at"],
+          default_ai_model: settings["default_ai_model"] || "gemini-2.5-flash",
+          github_api_token: settings["github_api_token"].present? ? "••••••••" : "",
+          github_api_token_saved_at: settings["github_api_token_saved_at"],
+          solutions_scan_enabled: settings["solutions_scan_enabled"] || "false",
           performance_scan_enabled: settings["performance_scan_enabled"] || "false",
           performance_scan_interval: settings["performance_scan_interval"] || "daily",
           last_performance_scan_at: settings["last_performance_scan_at"],
@@ -82,7 +88,9 @@ module Daylight
           last_security_scan_at: settings["last_security_scan_at"],
           last_security_scan_count: settings["last_security_scan_count"],
           last_security_scan_total_warnings: settings["last_security_scan_total_warnings"],
-          last_security_scan_error: settings["last_security_scan_error"]
+          last_security_scan_error: settings["last_security_scan_error"],
+          bullet_diagnostic_expires_at: settings["bullet_diagnostic_expires_at"],
+          bullet_diagnostic_active: bullet_diagnostic_active?(settings["bullet_diagnostic_expires_at"])
         },
         performance_issues: perf_issues,
         security_issues: sec_issues
@@ -95,9 +103,11 @@ module Daylight
         notification_emails slack_webhook_url
         slow_request_threshold_ms slow_query_threshold_ms
         retention_days sample_rate ai_context_notes
-        gemini_api_key
+        gemini_api_key anthropic_api_key default_ai_model
+        github_api_token
         performance_scan_enabled performance_scan_interval
         security_scan_enabled security_scan_interval security_scan_min_confidence
+        solutions_scan_enabled
       ]
 
       settings_params = params.require(:settings).permit(*allowed_keys)
@@ -109,6 +119,18 @@ module Daylight
           next if value.blank? || value.start_with?("••")
           Database.set_setting(key, value)
           Database.set_setting("gemini_api_key_saved_at", Time.current.iso8601)
+          next
+        end
+        if key == "anthropic_api_key"
+          next if value.blank? || value.start_with?("••")
+          Database.set_setting(key, value)
+          Database.set_setting("anthropic_api_key_saved_at", Time.current.iso8601)
+          next
+        end
+        if key == "github_api_token"
+          next if value.blank? || value.start_with?("••")
+          Database.set_setting(key, value)
+          Database.set_setting("github_api_token_saved_at", Time.current.iso8601)
           next
         end
         Database.set_setting(key, value)
@@ -181,10 +203,34 @@ module Daylight
       redirect_to settings_path
     end
 
+    def toggle_bullet_diagnostic
+      duration = (params[:duration] || "30").to_i.clamp(5, 120)
+      expires_at = Time.current + duration.minutes
+      Database.set_setting("bullet_diagnostic_expires_at", expires_at.iso8601)
+      flash[:success] = "Live N+1 detection enabled for #{duration} minutes (sampling 5% of requests)"
+      redirect_to settings_path
+    rescue StandardError => e
+      flash[:error] = "Failed to start diagnostic: #{e.message}"
+      redirect_to settings_path
+    end
+
+    def stop_bullet_diagnostic
+      Database.set_setting("bullet_diagnostic_expires_at", nil)
+      flash[:success] = "Live N+1 detection stopped"
+      redirect_to settings_path
+    end
+
     private
 
     def ensure_connected
       Database.ensure_connected!
+    end
+
+    def bullet_diagnostic_active?(expires_at)
+      return false if expires_at.blank?
+      Time.parse(expires_at) > Time.current
+    rescue StandardError
+      false
     end
   end
 end
