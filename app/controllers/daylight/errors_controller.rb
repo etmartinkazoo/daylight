@@ -33,7 +33,11 @@ module Daylight
 
       scope = apply_sort(scope, default: "last_seen_at", allowed: %w[error_class occurrences_count last_seen_at first_seen_at], direction: "desc")
 
-      errors = scope.limit(100).map { |e| serialize_error(e) }
+      page = (params[:page] || 1).to_i
+      per_page = 50
+      errors = scope.limit(per_page + 1).offset((page - 1) * per_page).map { |e| serialize_error(e) }
+      has_more = errors.length > per_page
+      errors = errors.first(per_page)
       counts = {
         open: Database::ErrorRecord.where(status: "open").count,
         resolved: Database::ErrorRecord.where(status: "resolved").count,
@@ -51,6 +55,8 @@ module Daylight
         status: status,
         period: period,
         query: params[:q],
+        page: page,
+        has_more: has_more,
         error_series: time_series_buckets(occurrence_scope, period),
         **sort_props
       }

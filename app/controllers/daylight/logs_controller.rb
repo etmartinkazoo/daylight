@@ -19,13 +19,19 @@ module Daylight
         .group(:level)
         .count
 
-      logs = scope.order(occurred_at: :desc).limit(100).map { |l| serialize_log(l) }
+      page = (params[:page] || 1).to_i
+      per_page = 50
+      logs = scope.order(occurred_at: :desc).limit(per_page + 1).offset((page - 1) * per_page).map { |l| serialize_log(l) }
+      has_more = logs.length > per_page
+      logs = logs.first(per_page)
 
       render inertia: "daylight/logs", props: {
         logs: logs,
         counts: counts,
         period: period,
         level: params[:level],
+        page: page,
+        has_more: has_more,
         total_logs: scope.count,
         volume_series: time_series_buckets(Database::LogRecord, period)
       }

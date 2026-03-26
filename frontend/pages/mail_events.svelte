@@ -9,8 +9,9 @@
   import EwSheet from "./EwSheet.svelte";
   import TimeSeriesChart from "@/components/charts/TimeSeriesChart.svelte";
   import ExportButton from "@/components/ui/ExportButton.svelte";
+  import InfiniteScroll from "@/components/ui/InfiniteScroll.svelte";
 
-  let { mailers = [], events = [], totals = {}, period = "24h", volume_series = [] } = $props();
+  let { mailers = [], events = [], totals = {}, period = "24h", volume_series = [], page = 1, has_more = false } = $props();
   const pageStore = usePage();
   let base = $derived($pageStore.props?.base_path || "/daylight");
 
@@ -38,6 +39,34 @@
   });
 
   let deliveryRate = $derived(totals.total > 0 ? Math.round(((totals.delivered || 0) / totals.total) * 100) : 0);
+
+  let allMailers = $state(mailers);
+  let currentPage = $state(page);
+  let loadingMore = $state(false);
+
+  $effect(() => {
+    period;
+    allMailers = mailers;
+    currentPage = page;
+  });
+
+  function loadMore() {
+    if (loadingMore || !has_more) return;
+    loadingMore = true;
+    router.get(`${base}/mail_events`, { period, page: currentPage + 1 }, {
+      preserveState: true,
+      preserveScroll: true,
+      only: ['mailers', 'page', 'has_more'],
+      onSuccess: (p) => {
+        const newItems = p.props.mailers || [];
+        allMailers = [...allMailers, ...newItems];
+        currentPage = p.props.page;
+        has_more = p.props.has_more;
+        loadingMore = false;
+      },
+      onError: () => { loadingMore = false; }
+    });
+  }
 </script>
 
 <svelte:head><title>Mail & Notifications — Daylight</title></svelte:head>
@@ -91,7 +120,7 @@
     {/if}
 
     <!-- Mailers Table -->
-    {#if mailers.length > 0}
+    {#if allMailers.length > 0}
       <div class="section">
         <h2 class="section-title">Mailer Classes</h2>
         <div class="table-container">
@@ -102,7 +131,7 @@
             <div class="th r" style="width:4rem"><SortableHeader column="failed_count" label="Failed" /></div>
             <div class="th r" style="width:5rem"><SortableHeader column="avg_duration" label="Avg" /></div>
           </div>
-          {#each mailers as ml (ml.mailer_class)}
+          {#each allMailers as ml (ml.mailer_class)}
             <button class="table-row" onclick={() => openMailer(ml)}>
               <div class="td" style="flex:2"><span class="mailer-name">{ml.mailer_class}</span></div>
               <div class="td num" style="width:4rem">{ml.total}</div>
@@ -111,6 +140,7 @@
               <div class="td num" style="width:5rem">{fmt(ml.avg_duration)}</div>
             </button>
           {/each}
+          <InfiniteScroll loading={loadingMore} hasMore={has_more} onLoadMore={loadMore} />
         </div>
       </div>
     {/if}
@@ -148,7 +178,7 @@
           {/each}
         </div>
       </div>
-    {:else if mailers.length === 0}
+    {:else if allMailers.length === 0}
       <div class="empty-state">
         <div class="empty-icon">
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">

@@ -11,8 +11,9 @@
   import TimeSeriesChart from "@/components/charts/TimeSeriesChart.svelte";
   import InteractiveBarChart from "@/components/charts/InteractiveBarChart.svelte";
   import ExportButton from "@/components/ui/ExportButton.svelte";
+  import InfiniteScroll from "@/components/ui/InfiniteScroll.svelte";
 
-  let { job_classes = [], failures = [], period = "24h", totals = {}, solid_queue = null, volume_series = [], failure_series = [] } = $props();
+  let { job_classes = [], failures = [], period = "24h", totals = {}, solid_queue = null, volume_series = [], failure_series = [], page = 1, has_more = false } = $props();
   const pageStore = usePage();
   let base = $derived($pageStore.props?.base_path || "/daylight");
 
@@ -56,6 +57,34 @@
   ].filter(s => s.value > 0));
 
   let completionPct = $derived(totals.total > 0 ? Math.round(((totals.completed || 0) / totals.total) * 100) : 0);
+
+  let allJobClasses = $state(job_classes);
+  let currentPage = $state(page);
+  let loadingMore = $state(false);
+
+  $effect(() => {
+    period;
+    allJobClasses = job_classes;
+    currentPage = page;
+  });
+
+  function loadMore() {
+    if (loadingMore || !has_more) return;
+    loadingMore = true;
+    router.get(`${base}/jobs`, { period, page: currentPage + 1 }, {
+      preserveState: true,
+      preserveScroll: true,
+      only: ['job_classes', 'page', 'has_more'],
+      onSuccess: (p) => {
+        const newItems = p.props.job_classes || [];
+        allJobClasses = [...allJobClasses, ...newItems];
+        currentPage = p.props.page;
+        has_more = p.props.has_more;
+        loadingMore = false;
+      },
+      onError: () => { loadingMore = false; }
+    });
+  }
 </script>
 
 <svelte:head><title>Jobs — Daylight</title></svelte:head>
@@ -156,7 +185,7 @@
     {/if}
 
     <!-- Job Classes Table -->
-    {#if job_classes.length > 0}
+    {#if allJobClasses.length > 0}
       <div class="section">
         <h2 class="section-title">Job Classes</h2>
         <div class="table-container">
@@ -169,7 +198,7 @@
             <div class="th r" style="width:5rem"><SortableHeader column="avg_duration" label="Avg" /></div>
             <div class="th r" style="width:5rem"><SortableHeader column="max_duration" label="Max" /></div>
           </div>
-          {#each job_classes as jc (jc.job_class)}
+          {#each allJobClasses as jc (jc.job_class)}
             <button class="table-row" onclick={() => openClass(jc)}>
               <div class="td" style="flex:2"><span class="job-name">{jc.job_class}</span></div>
               <div class="td num" style="width:4rem">{jc.total}</div>
@@ -180,6 +209,7 @@
               <div class="td num" style="width:5rem" class:slow-val={jc.max_duration > 10000}>{fmt(jc.max_duration)}</div>
             </button>
           {/each}
+          <InfiniteScroll loading={loadingMore} hasMore={has_more} onLoadMore={loadMore} />
         </div>
       </div>
     {/if}
@@ -216,7 +246,7 @@
           {/each}
         </div>
       </div>
-    {:else if job_classes.length === 0}
+    {:else if allJobClasses.length === 0}
       <div class="empty-state">
         <div class="empty-icon">
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">

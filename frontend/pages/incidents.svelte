@@ -3,8 +3,9 @@
   import DaylightLayout from "./DaylightLayout.svelte";
   import PeriodSelect from "./PeriodSelect.svelte";
   import InteractiveBarChart from "@/components/charts/InteractiveBarChart.svelte";
+  import InfiniteScroll from "@/components/ui/InfiniteScroll.svelte";
 
-  let { incidents = [], counts = {}, status = "all", period = "24h", incident_series = [] } = $props();
+  let { incidents = [], counts = {}, status = "all", period = "24h", incident_series = [], page = 1, has_more = false } = $props();
   const pageStore = usePage();
   let base = $derived($pageStore.props?.base_path || "/daylight");
 
@@ -66,6 +67,34 @@
 
   function getStatusBadge(s) {
     return statusBadgeStyles[s] || { bg: "#f1f5f9", color: "#64748b" };
+  }
+
+  let allIncidents = $state(incidents);
+  let currentPage = $state(page);
+  let loadingMore = $state(false);
+
+  $effect(() => {
+    status; period;
+    allIncidents = incidents;
+    currentPage = page;
+  });
+
+  function loadMore() {
+    if (loadingMore || !has_more) return;
+    loadingMore = true;
+    router.get(`${base}/incidents`, { status, period, page: currentPage + 1 }, {
+      preserveState: true,
+      preserveScroll: true,
+      only: ['incidents', 'page', 'has_more'],
+      onSuccess: (p) => {
+        const newItems = p.props.incidents || [];
+        allIncidents = [...allIncidents, ...newItems];
+        currentPage = p.props.page;
+        has_more = p.props.has_more;
+        loadingMore = false;
+      },
+      onError: () => { loadingMore = false; }
+    });
   }
 
   let chartData = $derived(
@@ -135,7 +164,7 @@
     </div>
 
     <!-- Incident Cards -->
-    {#if incidents.length === 0}
+    {#if allIncidents.length === 0}
       <div class="empty-state">
         <div class="empty-icon">
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -148,7 +177,7 @@
       </div>
     {:else}
       <div class="incident-list">
-        {#each incidents as incident (incident.id)}
+        {#each allIncidents as incident (incident.id)}
           {@const sevColor = severityColors[incident.severity] || "#64748b"}
           {@const typeBadge = getTypeBadge(incident.incident_type)}
           {@const statusBadge = getStatusBadge(incident.status)}
@@ -205,6 +234,7 @@
             </div>
           </button>
         {/each}
+        <InfiniteScroll loading={loadingMore} hasMore={has_more} onLoadMore={loadMore} />
       </div>
     {/if}
   </div>

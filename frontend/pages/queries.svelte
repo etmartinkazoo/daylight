@@ -11,8 +11,9 @@
   import TimeSeriesChart from "@/components/charts/TimeSeriesChart.svelte";
   import InteractiveBarChart from "@/components/charts/InteractiveBarChart.svelte";
   import ExportButton from "@/components/ui/ExportButton.svelte";
+  import InfiniteScroll from "@/components/ui/InfiniteScroll.svelte";
 
-  let { queries = [], slowest = [], period = "24h", total_queries = 0, volume_series = [], n_plus_one_requests = [] } = $props();
+  let { queries = [], slowest = [], period = "24h", total_queries = 0, volume_series = [], n_plus_one_requests = [], page = 1, has_more = false } = $props();
   const pageStore = usePage();
   let base = $derived($pageStore.props?.base_path || "/daylight");
 
@@ -34,6 +35,34 @@
   function timeAgo(d) { if (!d) return ""; const m = Math.floor((Date.now() - new Date(d).getTime()) / 60000); if (m < 1) return "now"; if (m < 60) return `${m}m`; return `${Math.floor(m / 60)}h`; }
 
   function openQuery(q) { sheetItem = q; sheetOpen = true; }
+
+  let allQueries = $state(queries);
+  let currentPage = $state(page);
+  let loadingMore = $state(false);
+
+  $effect(() => {
+    period;
+    allQueries = queries;
+    currentPage = page;
+  });
+
+  function loadMore() {
+    if (loadingMore || !has_more) return;
+    loadingMore = true;
+    router.get(`${base}/queries`, { period, page: currentPage + 1 }, {
+      preserveState: true,
+      preserveScroll: true,
+      only: ['queries', 'page', 'has_more'],
+      onSuccess: (p) => {
+        const newQueries = p.props.queries || [];
+        allQueries = [...allQueries, ...newQueries];
+        currentPage = p.props.page;
+        has_more = p.props.has_more;
+        loadingMore = false;
+      },
+      onError: () => { loadingMore = false; }
+    });
+  }
 </script>
 
 <svelte:head><title>Queries — Daylight</title></svelte:head>
@@ -139,7 +168,7 @@
           <div class="th th-right" style="width:5rem"><SortableHeader column="max_duration" label="Max" /></div>
           <div class="th" style="flex:1">Source</div>
         </div>
-        {#each queries as q, i (q.normalized_sql + ':' + i)}
+        {#each allQueries as q, i (q.normalized_sql + ':' + i)}
           <button class="table-row" onclick={() => openQuery(q)}>
             <div class="td td-sql" style="flex:3">
               <span class="sql-text">{q.normalized_sql}</span>
@@ -150,12 +179,13 @@
             <div class="td td-source" style="flex:1">{q.source_location || "\u2014"}</div>
           </button>
         {/each}
-        {#if queries.length === 0}
+        {#if allQueries.length === 0}
           <div class="table-empty">
             <svg width="24" height="24" fill="none" stroke="#94a3b8" stroke-width="1.5" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-3-3.87M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM3 21v-2a4 4 0 0 1 4-4h1"/><circle cx="17" cy="8" r="4"/></svg>
             <span>No slow queries recorded in this period.</span>
           </div>
         {/if}
+        <InfiniteScroll loading={loadingMore} hasMore={has_more} onLoadMore={loadMore} />
       </div>
     </div>
 

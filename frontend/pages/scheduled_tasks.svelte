@@ -9,8 +9,9 @@
   import EwSheet from "./EwSheet.svelte";
   import TimeSeriesChart from "@/components/charts/TimeSeriesChart.svelte";
   import ExportButton from "@/components/ui/ExportButton.svelte";
+  import InfiniteScroll from "@/components/ui/InfiniteScroll.svelte";
 
-  let { task_classes = [], failures = [], totals = {}, period = "24h", volume_series = [], failure_series = [] } = $props();
+  let { task_classes = [], failures = [], totals = {}, period = "24h", volume_series = [], failure_series = [], page = 1, has_more = false } = $props();
   const pageStore = usePage();
   let base = $derived($pageStore.props?.base_path || "/daylight");
 
@@ -38,6 +39,34 @@
   });
 
   let avgDuration = $derived(task_classes.length > 0 ? task_classes.reduce((s, t) => s + (t.avg_duration || 0), 0) / task_classes.length : 0);
+
+  let allTaskClasses = $state(task_classes);
+  let currentPage = $state(page);
+  let loadingMore = $state(false);
+
+  $effect(() => {
+    period;
+    allTaskClasses = task_classes;
+    currentPage = page;
+  });
+
+  function loadMore() {
+    if (loadingMore || !has_more) return;
+    loadingMore = true;
+    router.get(`${base}/scheduled_tasks`, { period, page: currentPage + 1 }, {
+      preserveState: true,
+      preserveScroll: true,
+      only: ['task_classes', 'page', 'has_more'],
+      onSuccess: (p) => {
+        const newItems = p.props.task_classes || [];
+        allTaskClasses = [...allTaskClasses, ...newItems];
+        currentPage = p.props.page;
+        has_more = p.props.has_more;
+        loadingMore = false;
+      },
+      onError: () => { loadingMore = false; }
+    });
+  }
 </script>
 
 <svelte:head><title>Scheduled Tasks — Daylight</title></svelte:head>
@@ -103,7 +132,7 @@
     {/if}
 
     <!-- Task Classes Table -->
-    {#if task_classes.length > 0}
+    {#if allTaskClasses.length > 0}
       <div class="section">
         <h2 class="section-title">Task Classes</h2>
         <div class="table-container">
@@ -115,7 +144,7 @@
             <div class="th r" style="width:5rem"><SortableHeader column="avg_duration" label="Avg" /></div>
             <div class="th r" style="width:5rem"><SortableHeader column="max_duration" label="Max" /></div>
           </div>
-          {#each task_classes as tc (tc.task_class)}
+          {#each allTaskClasses as tc (tc.task_class)}
             <button class="table-row" onclick={() => openClass(tc)}>
               <div class="td" style="flex:2"><span class="task-name">{tc.task_class}</span></div>
               <div class="td num" style="width:4rem">{tc.total}</div>
@@ -125,6 +154,7 @@
               <div class="td num" style="width:5rem" class:slow-val={tc.max_duration > 10000}>{fmt(tc.max_duration)}</div>
             </button>
           {/each}
+          <InfiniteScroll loading={loadingMore} hasMore={has_more} onLoadMore={loadMore} />
         </div>
       </div>
     {/if}
@@ -157,7 +187,7 @@
           {/each}
         </div>
       </div>
-    {:else if task_classes.length === 0}
+    {:else if allTaskClasses.length === 0}
       <div class="empty-state">
         <div class="empty-icon">
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">

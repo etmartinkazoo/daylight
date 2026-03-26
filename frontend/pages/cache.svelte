@@ -6,8 +6,9 @@
   import SortableHeader from "@/components/ui/SortableHeader.svelte";
   import AreaChart from "@/components/charts/AreaChart.svelte";
   import DonutChart from "@/components/charts/DonutChart.svelte";
+  import InfiniteScroll from "@/components/ui/InfiniteScroll.svelte";
 
-  let { stats = {}, patterns = [], period = "24h", total_events = 0, volume_series = [] } = $props();
+  let { stats = {}, patterns = [], period = "24h", total_events = 0, volume_series = [], page = 1, has_more = false } = $props();
   const pageStore = usePage();
   let base = $derived($pageStore.props?.base_path || "/daylight");
 
@@ -39,6 +40,34 @@
     if (!sheetItem) return "";
     return `Cache Key Pattern: ${sheetItem.key_pattern}\nReads: ${sheetItem.reads}\nWrites: ${sheetItem.writes}\nHit Rate: ${sheetItem.hit_rate != null ? (sheetItem.hit_rate * 100).toFixed(1) + "%" : "N/A"}\nAvg Duration: ${fmt(sheetItem.avg_duration)}`;
   });
+
+  let allPatterns = $state(patterns);
+  let currentPage = $state(page);
+  let loadingMore = $state(false);
+
+  $effect(() => {
+    period;
+    allPatterns = patterns;
+    currentPage = page;
+  });
+
+  function loadMore() {
+    if (loadingMore || !has_more) return;
+    loadingMore = true;
+    router.get(`${base}/cache`, { period, page: currentPage + 1 }, {
+      preserveState: true,
+      preserveScroll: true,
+      only: ['patterns', 'page', 'has_more'],
+      onSuccess: (p) => {
+        const newItems = p.props.patterns || [];
+        allPatterns = [...allPatterns, ...newItems];
+        currentPage = p.props.page;
+        has_more = p.props.has_more;
+        loadingMore = false;
+      },
+      onError: () => { loadingMore = false; }
+    });
+  }
 
   function patternHitRateClass(rate) {
     if (rate == null) return "";
@@ -128,7 +157,7 @@
           <div class="th th-right" style="width:5.5rem">Hit Rate</div>
           <div class="th th-right" style="width:5rem"><SortableHeader column="avg_duration" label="Avg" /></div>
         </div>
-        {#each patterns as p (p.key_pattern)}
+        {#each allPatterns as p (p.key_pattern)}
           <button class="table-row" onclick={() => openPattern(p)}>
             <div class="td td-key" style="flex:3">
               <span class="key-text">{p.key_pattern}</span>
@@ -141,12 +170,13 @@
             <div class="td td-num" style="width:5rem">{fmt(p.avg_duration)}</div>
           </button>
         {/each}
-        {#if patterns.length === 0}
+        {#if allPatterns.length === 0}
           <div class="table-empty">
             <svg width="24" height="24" fill="none" stroke="#94a3b8" stroke-width="1.5" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
             <span>No cache events recorded in this period.</span>
           </div>
         {/if}
+        <InfiniteScroll loading={loadingMore} hasMore={has_more} onLoadMore={loadMore} />
       </div>
     </div>
   </div>

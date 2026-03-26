@@ -11,8 +11,9 @@
   import InteractiveBarChart from "@/components/charts/InteractiveBarChart.svelte";
   import AutoRefresh from "@/components/ui/AutoRefresh.svelte";
   import ExportButton from "@/components/ui/ExportButton.svelte";
+  import InfiniteScroll from "@/components/ui/InfiniteScroll.svelte";
 
-  let { errors = [], counts = {}, status = "open", query = "", error_series = [], unhandled_count = 0, deploys = [], performance = 0 } = $props();
+  let { errors = [], counts = {}, status = "open", query = "", error_series = [], unhandled_count = 0, deploys = [], performance = 0, page = 1, has_more = false } = $props();
   const pageStore = usePage();
   let base = $derived($pageStore.props?.base_path || "/daylight");
 
@@ -44,7 +45,7 @@
     selectedIds = selectedIds.includes(id) ? selectedIds.filter(i => i !== id) : [...selectedIds, id];
   }
 
-  function selectAll() { selectedIds = errors.map(e => e.id); }
+  function selectAll() { selectedIds = allErrors.map(e => e.id); }
 
   function batchAction(action) {
     router.post(`${base}/errors/batch`, { ids: selectedIds, action_type: action, filter_status: status }, {
@@ -91,7 +92,35 @@
     return new Date(dateStr).toLocaleString(undefined, { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" });
   }
 
-  let allSelected = $derived(errors.length > 0 && selectedIds.length === errors.length);
+  let allErrors = $state(errors);
+  let currentPage = $state(page);
+  let loadingMore = $state(false);
+
+  $effect(() => {
+    status; query; severityFilter; handledFilter;
+    allErrors = errors;
+    currentPage = page;
+  });
+
+  function loadMore() {
+    if (loadingMore || !has_more) return;
+    loadingMore = true;
+    router.get(`${base}/errors`, { status, q: query || undefined, severity: severityFilter || undefined, page: currentPage + 1 }, {
+      preserveState: true,
+      preserveScroll: true,
+      only: ['errors', 'page', 'has_more'],
+      onSuccess: (p) => {
+        const newErrors = p.props.errors || [];
+        allErrors = [...allErrors, ...newErrors];
+        currentPage = p.props.page;
+        has_more = p.props.has_more;
+        loadingMore = false;
+      },
+      onError: () => { loadingMore = false; }
+    });
+  }
+
+  let allSelected = $derived(allErrors.length > 0 && selectedIds.length === allErrors.length);
 
   const tabs = [
     { key: "open", label: "Open" },
@@ -227,7 +256,7 @@
     {/if}
 
     <!-- Table or empty state -->
-    {#if errors.length === 0}
+    {#if allErrors.length === 0}
       <div class="ew-empty">
         <svg class="empty-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
         <p class="ew-empty-title">No errors found</p>
@@ -245,7 +274,7 @@
           <div class="ew-th" style="width:7rem"><SortableHeader column="last_seen_at" label="Last Seen" /></div>
           <div class="ew-th" style="width:5rem"></div>
         </div>
-        {#each errors as error (error.id)}
+        {#each allErrors as error (error.id)}
           <div class="ew-row" class:ew-row-selected={selectedIds.includes(error.id)}>
             <div class="ew-cell ew-col-check" onclick={(e) => e.stopPropagation()}>
               <input type="checkbox" checked={selectedIds.includes(error.id)} onchange={() => toggleSelect(error.id)} />
@@ -282,6 +311,7 @@
             </div>
           </div>
         {/each}
+        <InfiniteScroll loading={loadingMore} hasMore={has_more} onLoadMore={loadMore} />
       </div>
     {/if}
   </div>

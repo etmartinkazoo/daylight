@@ -18,7 +18,11 @@ module Daylight
         "ROUND(AVG(duration_ms), 1) as avg_duration",
         "ROUND(MAX(duration_ms), 1) as max_duration",
         "SUM(CASE WHEN status_code >= 400 THEN 1 ELSE 0 END) as error_count"
-      ).order(Arel.sql("total DESC")).limit(100)
+      ).order(Arel.sql("total DESC"))
+
+      page = (params[:page] || 1).to_i
+      per_page = 50
+      grouped = grouped.limit(per_page + 1).offset((page - 1) * per_page)
 
       hosts = grouped.map do |row|
         {
@@ -30,20 +34,31 @@ module Daylight
         }
       end
 
+      has_more = hosts.length > per_page
+      hosts = hosts.first(per_page)
+
       # Individual requests when a host is selected
       host_requests = []
+      host_page = (params[:host_page] || 1).to_i
+      host_has_more = false
       if params[:host].present?
         host_requests = scope
           .where(host: params[:host])
           .order(occurred_at: :desc)
-          .limit(50)
+          .limit(per_page + 1).offset((host_page - 1) * per_page)
           .map { |r| serialize_http_request(r) }
+        host_has_more = host_requests.length > per_page
+        host_requests = host_requests.first(per_page)
       end
 
       render inertia: "daylight/http_requests", props: {
         hosts: hosts,
         host_requests: host_requests,
         selected_host: params[:host],
+        page: page,
+        has_more: has_more,
+        host_page: host_page,
+        host_has_more: host_has_more,
         period: period,
         total_requests: scope.count,
         volume_series: time_series_buckets(scope, period)

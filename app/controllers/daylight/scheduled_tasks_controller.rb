@@ -29,7 +29,11 @@ module Daylight
           "max_duration" => "max_duration"
         },
         direction: "desc"
-      ))).limit(50)
+      )))
+
+      page = (params[:page] || 1).to_i
+      per_page = 50
+      grouped = grouped.limit(per_page + 1).offset((page - 1) * per_page)
 
       task_classes = grouped.map do |row|
         {
@@ -41,6 +45,9 @@ module Daylight
           max_duration: row.max_duration
         }
       end
+
+      has_more = task_classes.length > per_page
+      task_classes = task_classes.first(per_page)
 
       failures = scope.where(status: "failed").order(occurred_at: :desc).limit(25).map do |t|
         {
@@ -57,6 +64,8 @@ module Daylight
         task_classes: task_classes,
         failures: failures,
         period: period,
+        page: page,
+        has_more: has_more,
         totals: {
           total: scope.count,
           completed: scope.where(status: "completed").count,

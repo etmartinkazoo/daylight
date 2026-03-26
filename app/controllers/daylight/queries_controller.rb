@@ -26,7 +26,11 @@ module Daylight
           "max_duration" => "max_duration"
         },
         direction: "desc"
-      ))).limit(50)
+      )))
+
+      page = (params[:page] || 1).to_i
+      per_page = 50
+      grouped = grouped.limit(per_page + 1).offset((page - 1) * per_page)
 
       queries = grouped.map do |row|
         {
@@ -38,8 +42,12 @@ module Daylight
         }
       end
 
+      has_more = queries.length > per_page
+      queries = queries.first(per_page)
+
       # Slowest individual queries
-      slowest = scope.order(duration_ms: :desc).limit(25).map do |q|
+      slowest_page = (params[:slowest_page] || 1).to_i
+      slowest = scope.order(duration_ms: :desc).limit(per_page + 1).offset((slowest_page - 1) * per_page).map do |q|
         {
           id: q.id,
           sql: q.sql,
@@ -50,6 +58,9 @@ module Daylight
           occurred_at: q.occurred_at
         }
       end
+
+      slowest_has_more = slowest.length > per_page
+      slowest = slowest.first(per_page)
 
       # N+1 requests in period
       n_plus_one_requests = Database::RequestRecord
@@ -71,6 +82,10 @@ module Daylight
         queries: queries,
         slowest: slowest,
         period: period,
+        page: page,
+        has_more: has_more,
+        slowest_page: slowest_page,
+        slowest_has_more: slowest_has_more,
         total_queries: scope.count,
         volume_series: time_series_buckets(scope, period),
         n_plus_one_requests: n_plus_one_requests,

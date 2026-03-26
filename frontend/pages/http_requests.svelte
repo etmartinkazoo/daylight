@@ -5,10 +5,12 @@
   import EwSheet from "./EwSheet.svelte";
   import SortableHeader from "@/components/ui/SortableHeader.svelte";
   import AreaChart from "@/components/charts/AreaChart.svelte";
+  import InfiniteScroll from "@/components/ui/InfiniteScroll.svelte";
 
   let {
     hosts = [], host_requests = [], selected_host = null,
-    period = "24h", total_http_requests = 0, volume_series = []
+    period = "24h", total_http_requests = 0, volume_series = [],
+    page = 1, has_more = false
   } = $props();
   const pageStore = usePage();
   let base = $derived($pageStore.props?.base_path || "/daylight");
@@ -36,6 +38,56 @@
     return `Outgoing HTTP Request:\nURL: ${sheetItem.url}\nStatus: ${sheetItem.status_code}\nDuration: ${fmt(sheetItem.duration_ms)}\nMethod: ${sheetItem.method || "GET"}\nTime: ${sheetItem.occurred_at || "N/A"}`;
   });
 
+  let allHosts = $state(hosts);
+  let allHostRequests = $state(host_requests);
+  let currentPage = $state(page);
+  let loadingMore = $state(false);
+
+  $effect(() => {
+    period;
+    if (!selected_host) {
+      allHosts = hosts;
+      currentPage = page;
+    }
+  });
+
+  $effect(() => {
+    selected_host;
+    if (selected_host) {
+      allHostRequests = host_requests;
+      currentPage = page;
+    }
+  });
+
+  function loadMore() {
+    if (loadingMore || !has_more) return;
+    loadingMore = true;
+    const params = selected_host
+      ? { period, host: selected_host, page: currentPage + 1 }
+      : { period, page: currentPage + 1 };
+    const onlyProps = selected_host
+      ? ['host_requests', 'page', 'has_more']
+      : ['hosts', 'page', 'has_more'];
+    router.get(`${base}/http_requests`, params, {
+      preserveState: true,
+      preserveScroll: true,
+      only: onlyProps,
+      onSuccess: (p) => {
+        if (selected_host) {
+          const newItems = p.props.host_requests || [];
+          allHostRequests = [...allHostRequests, ...newItems];
+        } else {
+          const newItems = p.props.hosts || [];
+          allHosts = [...allHosts, ...newItems];
+        }
+        currentPage = p.props.page;
+        has_more = p.props.has_more;
+        loadingMore = false;
+      },
+      onError: () => { loadingMore = false; }
+    });
+  }
+
   let uniqueHosts = $derived(hosts.length);
   let avgDuration = $derived(hosts.length > 0 ? hosts.reduce((s, h) => s + (h.avg_duration || 0), 0) / hosts.length : 0);
   let totalErrors = $derived(hosts.reduce((s, h) => s + (h.error_count || 0), 0));
@@ -57,7 +109,7 @@
       </div>
     </div>
 
-    {#if selected_host && host_requests.length > 0}
+    {#if selected_host && allHostRequests.length > 0}
       <!-- Level 2: Individual requests for a host -->
       <button class="back-btn" onclick={goBack}>
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -65,7 +117,7 @@
       </button>
       <div class="drilldown-header">
         <h2 class="route-title">{selected_host}</h2>
-        <span class="drilldown-count">{host_requests.length} requests</span>
+        <span class="drilldown-count">{allHostRequests.length} requests</span>
       </div>
 
       <div class="card">
@@ -76,7 +128,7 @@
             <div class="th th-right" style="width:5.5rem">Duration</div>
             <div class="th th-right" style="width:5rem">When</div>
           </div>
-          {#each host_requests as req (req.id || req.url + req.occurred_at)}
+          {#each allHostRequests as req (req.id || req.url + req.occurred_at)}
             <button class="table-row" onclick={() => openRequest(req)}>
               <div class="td" style="width:4.5rem">
                 <span class="status-badge {sc(req.status_code)}">{req.status_code}</span>
@@ -88,6 +140,7 @@
               <div class="td td-num" style="width:5rem"><span class="time-ago">{timeAgo(req.occurred_at)}</span></div>
             </button>
           {/each}
+          <InfiniteScroll loading={loadingMore} hasMore={has_more} onLoadMore={loadMore} />
         </div>
       </div>
 
@@ -139,7 +192,7 @@
             <div class="th th-right" style="width:5rem"><SortableHeader column="max_duration" label="Max" /></div>
             <div class="th th-right" style="width:4.5rem">Errors</div>
           </div>
-          {#each hosts as host (host.host)}
+          {#each allHosts as host (host.host)}
             <button class="table-row" onclick={() => selectHost(host)}>
               <div class="td" style="flex:2"><span class="host-name">{host.host}</span></div>
               <div class="td td-num" style="width:5rem">{host.total}</div>
@@ -148,12 +201,13 @@
               <div class="td td-num" style="width:4.5rem" class:td-danger={host.error_count > 0}>{host.error_count || 0}</div>
             </button>
           {/each}
-          {#if hosts.length === 0}
+          {#if allHosts.length === 0}
             <div class="table-empty">
               <svg width="24" height="24" fill="none" stroke="#94a3b8" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
               <span>No outgoing HTTP requests recorded in this period.</span>
             </div>
           {/if}
+          <InfiniteScroll loading={loadingMore} hasMore={has_more} onLoadMore={loadMore} />
         </div>
       </div>
     {/if}

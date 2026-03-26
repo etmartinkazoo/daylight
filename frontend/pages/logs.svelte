@@ -5,8 +5,9 @@
   import EwSheet from "./EwSheet.svelte";
   import SortableHeader from "@/components/ui/SortableHeader.svelte";
   import AreaChart from "@/components/charts/AreaChart.svelte";
+  import InfiniteScroll from "@/components/ui/InfiniteScroll.svelte";
 
-  let { logs = [], counts = {}, period = "24h", level = null, total_logs = 0, volume_series = [] } = $props();
+  let { logs = [], counts = {}, period = "24h", level = null, total_logs = 0, volume_series = [], page = 1, has_more = false } = $props();
   const pageStore = usePage();
   let base = $derived($pageStore.props?.base_path || "/daylight");
 
@@ -31,6 +32,34 @@
   }
 
   function openLog(log) { sheetItem = log; sheetOpen = true; }
+
+  let allLogs = $state(logs);
+  let currentPage = $state(page);
+  let loadingMore = $state(false);
+
+  $effect(() => {
+    period; level;
+    allLogs = logs;
+    currentPage = page;
+  });
+
+  function loadMore() {
+    if (loadingMore || !has_more) return;
+    loadingMore = true;
+    router.get(`${base}/logs`, { period, level, page: currentPage + 1 }, {
+      preserveState: true,
+      preserveScroll: true,
+      only: ['logs', 'page', 'has_more'],
+      onSuccess: (p) => {
+        const newLogs = p.props.logs || [];
+        allLogs = [...allLogs, ...newLogs];
+        currentPage = p.props.page;
+        has_more = p.props.has_more;
+        loadingMore = false;
+      },
+      onError: () => { loadingMore = false; }
+    });
+  }
 
   let sheetAi = $derived.by(() => {
     if (!sheetItem) return "";
@@ -123,7 +152,7 @@
           <div class="th" style="flex:1">Path</div>
           <div class="th th-right" style="width:5rem">Time</div>
         </div>
-        {#each logs as log (log.id || log.message + log.occurred_at)}
+        {#each allLogs as log (log.id || log.message + log.occurred_at)}
           <button class="table-row" onclick={() => openLog(log)}>
             <div class="td" style="width:5rem">
               <span class="level-badge {levelClass(log.level)}">{log.level}</span>
@@ -136,12 +165,13 @@
             <div class="td td-num" style="width:5rem">{timeAgo(log.occurred_at)}</div>
           </button>
         {/each}
-        {#if logs.length === 0}
+        {#if allLogs.length === 0}
           <div class="table-empty">
             <svg width="24" height="24" fill="none" stroke="#94a3b8" stroke-width="1.5" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
             <span>No log entries recorded in this period.</span>
           </div>
         {/if}
+        <InfiniteScroll loading={loadingMore} hasMore={has_more} onLoadMore={loadMore} />
       </div>
     </div>
   </div>

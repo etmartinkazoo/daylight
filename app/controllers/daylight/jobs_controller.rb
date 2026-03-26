@@ -32,7 +32,11 @@ module Daylight
           "max_duration" => "max_duration"
         },
         direction: "desc"
-      ))).limit(50)
+      )))
+
+      page = (params[:page] || 1).to_i
+      per_page = 50
+      grouped = grouped.limit(per_page + 1).offset((page - 1) * per_page)
 
       job_classes = grouped.map do |row|
         {
@@ -46,8 +50,12 @@ module Daylight
         }
       end
 
+      has_more = job_classes.length > per_page
+      job_classes = job_classes.first(per_page)
+
       # Daylight-tracked failures
-      ew_failures = scope.where(status: "failed").order(occurred_at: :desc).limit(25).map do |j|
+      failures_page = (params[:failures_page] || 1).to_i
+      ew_failures = scope.where(status: "failed").order(occurred_at: :desc).limit(per_page + 1).offset((failures_page - 1) * per_page).map do |j|
         {
           id: j.id,
           source: "daylight",
@@ -59,6 +67,9 @@ module Daylight
           occurred_at: j.occurred_at
         }
       end
+
+      ew_has_more = ew_failures.length > per_page
+      ew_failures = ew_failures.first(per_page)
 
       # Solid Queue failures (authoritative — catches everything including jobs that fail before AS::N fires)
       sq_failures = []
@@ -112,6 +123,10 @@ module Daylight
         job_classes: job_classes,
         failures: all_failures,
         period: period,
+        page: page,
+        has_more: has_more,
+        failures_page: failures_page,
+        failures_has_more: ew_has_more,
         totals: {
           total: scope.count,
           completed: scope.where(status: "completed").count,

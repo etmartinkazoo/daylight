@@ -27,7 +27,11 @@ module Daylight
           "avg_duration" => "avg_duration"
         },
         direction: "desc"
-      ))).limit(50)
+      )))
+
+      page = (params[:page] || 1).to_i
+      per_page = 50
+      grouped = grouped.limit(per_page + 1).offset((page - 1) * per_page)
 
       mailers = grouped.map do |row|
         {
@@ -39,12 +43,17 @@ module Daylight
         }
       end
 
+      has_more = mailers.length > per_page
+      mailers = mailers.first(per_page)
+
       # Individual events for drill-down by mailer
       events = []
+      events_page = (params[:events_page] || 1).to_i
+      events_has_more = false
       if params[:mailer].present?
         events = scope.where(mailer_class: params[:mailer])
           .order(occurred_at: :desc)
-          .limit(50)
+          .limit(per_page + 1).offset((events_page - 1) * per_page)
           .map do |e|
             {
               id: e.id,
@@ -57,6 +66,8 @@ module Daylight
               occurred_at: e.occurred_at
             }
           end
+        events_has_more = events.length > per_page
+        events = events.first(per_page)
       end
 
       total = scope.count
@@ -68,6 +79,10 @@ module Daylight
         mailers: mailers,
         events: events,
         selected_mailer: params[:mailer],
+        page: page,
+        has_more: has_more,
+        events_page: events_page,
+        events_has_more: events_has_more,
         period: period,
         totals: {
           total: total,

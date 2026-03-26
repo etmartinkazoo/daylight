@@ -38,7 +38,11 @@ module Daylight
           "server_error_count" => "server_error_count"
         },
         direction: "desc"
-      ))).limit(100)
+      )))
+
+      page = (params[:page] || 1).to_i
+      per_page = 50
+      grouped = grouped.limit(per_page + 1).offset((page - 1) * per_page)
 
       endpoints = grouped.map do |row|
         # P95: fetch from individual records for this route
@@ -60,14 +64,21 @@ module Daylight
         }
       end
 
+      has_more = endpoints.length > per_page
+      endpoints = endpoints.first(per_page)
+
       # Individual requests for drill-down (when a route is selected)
       route_requests = []
+      route_page = (params[:route_page] || 1).to_i
+      route_has_more = false
       selected_request = nil
       if params[:route].present?
         route_scope = scope.where("#{group_col} = ?", params[:route])
           .order(occurred_at: :desc)
-          .limit(50)
+          .limit(per_page + 1).offset((route_page - 1) * per_page)
         route_requests = route_scope.map { |r| serialize_request(r) }
+        route_has_more = route_requests.length > per_page
+        route_requests = route_requests.first(per_page)
 
         # Single request detail with linked queries
         if params[:request_id].present?
@@ -124,6 +135,10 @@ module Daylight
         route_requests: route_requests,
         selected_request: selected_request,
         selected_route: params[:route],
+        page: page,
+        has_more: has_more,
+        route_page: route_page,
+        route_has_more: route_has_more,
         period: period,
         total_requests: total,
         throughput_rpm: throughput_rpm,

@@ -13,11 +13,13 @@
   import InteractiveBarChart from "@/components/charts/InteractiveBarChart.svelte";
   import AutoRefresh from "@/components/ui/AutoRefresh.svelte";
   import ExportButton from "@/components/ui/ExportButton.svelte";
+  import InfiniteScroll from "@/components/ui/InfiniteScroll.svelte";
 
   let {
     endpoints = [], route_requests = [], selected_request = null,
     selected_route = null, period = "24h", total_requests = 0,
-    throughput_rpm = 0, apdex = null, latency_series = [], throughput_series = [], deploys = []
+    throughput_rpm = 0, apdex = null, latency_series = [], throughput_series = [], deploys = [],
+    page = 1, has_more = false
   } = $props();
   const pageStore = usePage();
   let base = $derived($pageStore.props?.base_path || "/daylight");
@@ -100,6 +102,56 @@
   let statErrorRate = $derived(statTotal > 0 ? ((statErrors / statTotal) * 100).toFixed(1) : "0.0");
   let statP95 = $derived(endpoints.length > 0 ? Math.max(...endpoints.map(ep => ep.p95_duration || 0)) : 0);
 
+  let allEndpoints = $state(endpoints);
+  let allRouteRequests = $state(route_requests);
+  let currentPage = $state(page);
+  let loadingMore = $state(false);
+
+  $effect(() => {
+    period;
+    if (!selected_route) {
+      allEndpoints = endpoints;
+      currentPage = page;
+    }
+  });
+
+  $effect(() => {
+    selected_route;
+    if (selected_route) {
+      allRouteRequests = route_requests;
+      currentPage = page;
+    }
+  });
+
+  function loadMore() {
+    if (loadingMore || !has_more) return;
+    loadingMore = true;
+    const params = selected_route
+      ? { period, route: selected_route, page: currentPage + 1 }
+      : { period, page: currentPage + 1 };
+    const onlyProps = selected_route
+      ? ['route_requests', 'page', 'has_more']
+      : ['endpoints', 'page', 'has_more'];
+    router.get(`${base}/requests`, params, {
+      preserveState: true,
+      preserveScroll: true,
+      only: onlyProps,
+      onSuccess: (p) => {
+        if (selected_route) {
+          const newItems = p.props.route_requests || [];
+          allRouteRequests = [...allRouteRequests, ...newItems];
+        } else {
+          const newItems = p.props.endpoints || [];
+          allEndpoints = [...allEndpoints, ...newItems];
+        }
+        currentPage = p.props.page;
+        has_more = p.props.has_more;
+        loadingMore = false;
+      },
+      onError: () => { loadingMore = false; }
+    });
+  }
+
   let topEndpoints = $derived(
     endpoints.slice().sort((a, b) => b.avg_duration - a.avg_duration).slice(0, 5).map(ep => ({
       label: ep.route?.replace(/^(GET|POST|PATCH|PUT|DELETE)\s/, "") || ep.route,
@@ -124,7 +176,7 @@
       </div>
     </div>
 
-    {#if selected_route && route_requests.length > 0}
+    {#if selected_route && allRouteRequests.length > 0}
       <!-- Level 2: Individual requests for a route -->
       <button class="back-btn" onclick={goBack}>
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -132,7 +184,7 @@
       </button>
       <div class="drilldown-header">
         <h2 class="route-title">{selected_route}</h2>
-        <span class="drilldown-count">{route_requests.length} requests</span>
+        <span class="drilldown-count">{allRouteRequests.length} requests</span>
       </div>
 
       <div class="table-container">
@@ -149,7 +201,7 @@
             </tr>
           </thead>
           <tbody>
-            {#each route_requests as req (req.id)}
+            {#each allRouteRequests as req (req.id)}
               <tr class="row" onclick={() => openRequest(req)}>
                 <td class="cell"><span class="status-badge {sc(req.status_code)}">{req.status_code}</span></td>
                 <td class="cell mono-cell">{req.path}</td>
@@ -162,6 +214,7 @@
             {/each}
           </tbody>
         </table>
+        <InfiniteScroll loading={loadingMore} hasMore={has_more} onLoadMore={loadMore} />
       </div>
 
     {:else}
@@ -237,7 +290,7 @@
             </tr>
           </thead>
           <tbody>
-            {#each endpoints as ep (ep.route)}
+            {#each allEndpoints as ep (ep.route)}
               <tr class="row" onclick={() => selectEndpoint(ep)}>
                 <td class="cell">
                   <span class="method-pill" style="background: {methodColor(ep.method)}15; color: {methodColor(ep.method)}">{ep.method}</span>
@@ -254,12 +307,13 @@
             {/each}
           </tbody>
         </table>
-        {#if endpoints.length === 0}
+        {#if allEndpoints.length === 0}
           <div class="empty-state">
             <p class="empty-text">No request data yet</p>
             <p class="empty-hint">Requests are tracked automatically once your app starts serving traffic.</p>
           </div>
         {/if}
+        <InfiniteScroll loading={loadingMore} hasMore={has_more} onLoadMore={loadMore} />
       </div>
     {/if}
   </div>
