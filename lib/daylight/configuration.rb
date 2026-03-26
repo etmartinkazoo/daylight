@@ -3,7 +3,8 @@
 module Daylight
   class Configuration
     attr_accessor :database_path, :ignored_exceptions, :auto_capture, :context_builder, :log_capture_level,
-                  :sample_rate, :sample_rates, :always_capture_exceptions
+                  :sample_rate, :sample_rates, :always_capture_exceptions,
+                  :username, :password
 
     def initialize
       @database_path = nil # resolved at boot from Rails.root
@@ -19,6 +20,8 @@ module Daylight
       @sample_rate = 1.0
       @sample_rates = {}
       @always_capture_exceptions = true
+      @username = nil
+      @password = nil
     end
 
     def resolved_database_path
