@@ -61,5 +61,5 @@
 
 <style>
   .area-chart { display: flex; flex-direction: column; gap: 0.25rem; }
-  .chart-label { font-size: 0.6875rem; color: #94a3b8; font-weight: 500; }
+  .chart-label { font-size: 0.6875rem; color: var(--color-muted-light); font-weight: 500; }
 </style>

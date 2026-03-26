@@ -36,7 +36,7 @@
     <!-- Background circle -->
     <circle
       cx={size / 2} cy={size / 2} r={(size - strokeWidth) / 2}
-      fill="none" stroke="#f1f5f9" stroke-width={strokeWidth}
+      fill="none" stroke="var(--color-accent)" stroke-width={strokeWidth}
     />
     {#each arcs as arc}
       <circle
@@ -71,11 +71,11 @@
   .donut-chart { display: flex; align-items: center; gap: 1.25rem; }
   .donut-arc { transition: opacity 0.2s; }
   .donut-arc:hover { opacity: 0.8; }
-  .center-value { font-size: 1.25rem; font-weight: 700; fill: #1e293b; font-family: inherit; }
-  .center-label { font-size: 0.625rem; font-weight: 500; fill: #94a3b8; font-family: inherit; text-transform: uppercase; letter-spacing: 0.05em; }
+  .center-value { font-size: 1.25rem; font-weight: 700; fill: var(--color-fg-secondary); font-family: inherit; }
+  .center-label { font-size: 0.625rem; font-weight: 500; fill: var(--color-muted-light); font-family: inherit; text-transform: uppercase; letter-spacing: 0.05em; }
   .donut-legend { display: flex; flex-direction: column; gap: 0.375rem; }
   .legend-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8125rem; }
   .legend-dot { width: 0.5rem; height: 0.5rem; border-radius: 50%; flex-shrink: 0; }
-  .legend-label { color: #64748b; }
-  .legend-value { font-weight: 600; color: #1e293b; margin-left: auto; font-variant-numeric: tabular-nums; }
+  .legend-label { color: var(--color-muted); }
+  .legend-value { font-weight: 600; color: var(--color-fg-secondary); margin-left: auto; font-variant-numeric: tabular-nums; }
 </style>

@@ -245,7 +245,7 @@
     align-items: center;
     gap: 0.5rem;
     padding-bottom: 0.5rem;
-    border-bottom: 1px solid var(--color-border, rgba(226, 232, 240, 0.6));
+    border-bottom: 1px solid var(--color-border);
     margin-bottom: 0.5rem;
   }
 
@@ -254,10 +254,10 @@
     font-size: 0.6875rem;
     font-weight: 500;
     font-family: inherit;
-    border: 1px solid var(--color-border, rgba(226, 232, 240, 0.6));
+    border: 1px solid var(--color-border);
     border-radius: var(--radius-sm, 0.375rem);
-    background: var(--color-bg, #fff);
-    color: var(--color-fg, #0f172a);
+    background: var(--color-bg);
+    color: var(--color-fg);
     box-shadow: var(--shadow-xs, 0 1px 2px rgba(0, 0, 0, 0.03));
     outline: none;
     cursor: pointer;
@@ -266,7 +266,7 @@
     background-repeat: no-repeat;
     background-position: right 0.375rem center;
 
-    &:focus { border-color: var(--color-focus, #6366f1); box-shadow: 0 0 0 2px var(--color-focus-ring, rgba(99, 102, 241, 0.2)); }
+    &:focus { border-color: var(--color-focus); box-shadow: 0 0 0 2px var(--color-focus-ring); }
     &:disabled { opacity: 0.6; cursor: not-allowed; }
   }
 
@@ -275,14 +275,14 @@
     font-weight: 500;
     font-family: inherit;
     padding: 0.25rem 0.5rem;
-    border: 1px solid var(--color-border, rgba(226, 232, 240, 0.6));
+    border: 1px solid var(--color-border);
     border-radius: var(--radius-sm, 0.375rem);
-    background: var(--color-bg, #fff);
-    color: var(--color-muted, #64748b);
+    background: var(--color-bg);
+    color: var(--color-muted);
     cursor: pointer;
     margin-left: auto;
     transition: all 0.1s;
 
-    &:hover { background: var(--color-accent, #f1f5f9); color: var(--color-fg, #0f172a); }
+    &:hover { background: var(--color-accent); color: var(--color-fg); }
   }
 </style>

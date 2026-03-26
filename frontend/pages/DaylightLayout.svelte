@@ -34,6 +34,27 @@ function isActive(item) {
     );
   return false;
 }
+
+// Theme toggle
+let dark = $state(false);
+
+$effect(() => {
+  const saved = localStorage.getItem("daylight-theme");
+  if (saved) {
+    dark = saved === "dark";
+  } else {
+    dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  }
+});
+
+$effect(() => {
+  document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+  localStorage.setItem("daylight-theme", dark ? "dark" : "light");
+});
+
+function toggleTheme() {
+  dark = !dark;
+}
 </script>
 
 <div class="shell">
@@ -112,6 +133,14 @@ function isActive(item) {
     </nav>
 
     <div class="sidebar-footer">
+      <button class="theme-toggle" onclick={toggleTheme} title={dark ? "Switch to light mode" : "Switch to dark mode"}>
+        {#if dark}
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        {:else}
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        {/if}
+        <span>{dark ? "Light mode" : "Dark mode"}</span>
+      </button>
       <a href="/" class="back-link">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
         Back to app
@@ -125,12 +154,204 @@ function isActive(item) {
 </div>
 
 <style>
+  /* ——— Theme Variables ——— */
+  :global(:root), :global([data-theme="light"]) {
+    /* Backgrounds */
+    --color-bg-page: #f4f5f7;
+    --color-bg: #fff;
+    --color-surface: #f8fafc;
+    --color-accent: #f1f5f9;
+
+    /* Text */
+    --color-fg: #0f172a;
+    --color-fg-secondary: #1e293b;
+    --color-fg-tertiary: #334155;
+    --color-muted: #64748b;
+    --color-muted-light: #94a3b8;
+    --color-muted-lightest: #cbd5e1;
+
+    /* Borders */
+    --color-border: #e2e8f0;
+    --color-border-subtle: #f1f5f9;
+    --color-input-border: #d1d5db;
+    --color-border-alpha: rgba(0, 0, 0, 0.06);
+    --color-border-subtle-alpha: rgba(0, 0, 0, 0.04);
+    --color-hover-overlay: rgba(0, 0, 0, 0.03);
+    --color-white-overlay: rgba(255, 255, 255, 0.5);
+    --color-overlay: rgba(0, 0, 0, 0.25);
+
+    /* Primary */
+    --color-primary: #f59e0b;
+    --color-primary-hover: #e8930a;
+    --color-primary-fg: #fff;
+    --color-primary-subtle: #fff7ed;
+
+    /* Danger */
+    --color-danger: #ef4444;
+    --color-danger-hover: #dc2626;
+    --color-danger-subtle: #fef2f2;
+    --color-danger-border: #fecaca;
+    --color-danger-bg: #fff5f5;
+
+    /* Success */
+    --color-success: #22c55e;
+    --color-success-dark: #16a34a;
+    --color-success-subtle: #f0fdf4;
+    --color-success-border: #bbf7d0;
+    --color-success-bg: #dcfce7;
+
+    /* Warning */
+    --color-warning: #f59e0b;
+    --color-warning-dark: #d97706;
+    --color-warning-darker: #92400e;
+    --color-warning-subtle: #fffbeb;
+    --color-warning-bg: #fef3c7;
+    --color-warning-border: #fde68a;
+
+    /* Info */
+    --color-info: #3b82f6;
+    --color-info-dark: #2563eb;
+    --color-info-darker: #1d4ed8;
+    --color-info-subtle: #eff6ff;
+    --color-info-bg: #dbeafe;
+
+    /* Purple */
+    --color-purple: #7c3aed;
+    --color-purple-light: #8b5cf6;
+    --color-purple-subtle: #ede9fe;
+
+    /* Rose */
+    --color-rose: #e11d48;
+
+    /* Nav */
+    --color-nav-active-bg: #0f172a;
+    --color-nav-active-fg: #fff;
+    --color-nav-active-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.15), 0 1px 3px -1px rgba(0, 0, 0, 0.1);
+
+    /* Shadows */
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.04);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+    --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1), 0 8px 10px rgba(0, 0, 0, 0.04);
+
+    /* Focus */
+    --color-focus: #6366f1;
+    --color-focus-ring: rgba(99, 102, 241, 0.2);
+    --focus-ring: 0 0 0 3px rgba(99, 102, 241, 0.2);
+
+    /* Radius */
+    --radius-sm: 0.5rem;
+    --radius-lg: 0.75rem;
+
+    /* Animation */
+    --duration-fast: 0.1s;
+    --duration-normal: 0.15s;
+    --ease-default: ease;
+
+    /* Misc */
+    --disabled-opacity: 0.5;
+    --scrollbar-thumb: rgba(0, 0, 0, 0.12);
+    --scrollbar-thumb-hover: rgba(0, 0, 0, 0.2);
+
+    /* Status 2xx/4xx/5xx */
+    --color-status-2xx: #15803d;
+    --color-status-2xx-bg: #dcfce7;
+    --color-status-4xx: #b45309;
+    --color-status-4xx-bg: #fef3c7;
+    --color-status-5xx: #dc2626;
+    --color-status-5xx-bg: #fee2e2;
+  }
+
+  :global([data-theme="dark"]) {
+    --color-bg-page: #09090b;
+    --color-bg: #18181b;
+    --color-surface: #1c1c20;
+    --color-accent: #27272a;
+
+    --color-fg: #fafafa;
+    --color-fg-secondary: #e4e4e7;
+    --color-fg-tertiary: #a1a1aa;
+    --color-muted: #71717a;
+    --color-muted-light: #52525b;
+    --color-muted-lightest: #3f3f46;
+
+    --color-border: #27272a;
+    --color-border-subtle: #1e1e22;
+    --color-input-border: #3f3f46;
+    --color-border-alpha: rgba(255, 255, 255, 0.08);
+    --color-border-subtle-alpha: rgba(255, 255, 255, 0.05);
+    --color-hover-overlay: rgba(255, 255, 255, 0.04);
+    --color-white-overlay: rgba(255, 255, 255, 0.08);
+    --color-overlay: rgba(0, 0, 0, 0.6);
+
+    --color-primary: #f59e0b;
+    --color-primary-hover: #fbbf24;
+    --color-primary-fg: #18181b;
+    --color-primary-subtle: #2a2015;
+
+    --color-danger: #f87171;
+    --color-danger-hover: #fca5a5;
+    --color-danger-subtle: #2a1515;
+    --color-danger-border: #5c2020;
+    --color-danger-bg: #2a1515;
+
+    --color-success: #4ade80;
+    --color-success-dark: #22c55e;
+    --color-success-subtle: #142a18;
+    --color-success-border: #1a4028;
+    --color-success-bg: #142a18;
+
+    --color-warning: #fbbf24;
+    --color-warning-dark: #f59e0b;
+    --color-warning-darker: #fbbf24;
+    --color-warning-subtle: #2a2510;
+    --color-warning-bg: #2a2510;
+    --color-warning-border: #4a3a10;
+
+    --color-info: #60a5fa;
+    --color-info-dark: #3b82f6;
+    --color-info-darker: #60a5fa;
+    --color-info-subtle: #152040;
+    --color-info-bg: #152040;
+
+    --color-purple: #a78bfa;
+    --color-purple-light: #c4b5fd;
+    --color-purple-subtle: #2a1a4a;
+
+    --color-rose: #fb7185;
+
+    --color-nav-active-bg: #f59e0b;
+    --color-nav-active-fg: #18181b;
+    --color-nav-active-shadow: 0 1px 3px rgba(245, 158, 11, 0.25), 0 1px 2px rgba(0, 0, 0, 0.3);
+
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.4), 0 4px 6px rgba(0, 0, 0, 0.3);
+    --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.5), 0 8px 10px rgba(0, 0, 0, 0.3);
+
+    --color-focus: #818cf8;
+    --color-focus-ring: rgba(129, 140, 248, 0.3);
+    --focus-ring: 0 0 0 3px rgba(129, 140, 248, 0.3);
+
+    --scrollbar-thumb: rgba(255, 255, 255, 0.12);
+    --scrollbar-thumb-hover: rgba(255, 255, 255, 0.2);
+
+    --color-status-2xx: #4ade80;
+    --color-status-2xx-bg: #142a18;
+    --color-status-4xx: #fbbf24;
+    --color-status-4xx-bg: #2a2510;
+    --color-status-5xx: #f87171;
+    --color-status-5xx-bg: #2a1515;
+  }
+
   /* ——— Reset & Foundation ——— */
   :global(html), :global(body) {
     margin: 0;
     font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
-    background: #f4f5f7 !important;
-    color: #0f172a;
+    background: var(--color-bg-page) !important;
+    color: var(--color-fg);
     font-size: 14px;
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
@@ -143,8 +364,8 @@ function isActive(item) {
   /* Premium scrollbar */
   :global(::-webkit-scrollbar) { width: 6px; height: 6px; }
   :global(::-webkit-scrollbar-track) { background: transparent; }
-  :global(::-webkit-scrollbar-thumb) { background: rgba(0, 0, 0, 0.12); border-radius: 10px; }
-  :global(::-webkit-scrollbar-thumb:hover) { background: rgba(0, 0, 0, 0.2); }
+  :global(::-webkit-scrollbar-thumb) { background: var(--scrollbar-thumb); border-radius: 10px; }
+  :global(::-webkit-scrollbar-thumb:hover) { background: var(--scrollbar-thumb-hover); }
 
   .shell {
     display: flex;
@@ -155,8 +376,8 @@ function isActive(item) {
   /* ——— Sidebar ——— */
   .sidebar {
     width: 224px;
-    background: #fff;
-    border-right: 1px solid rgba(0, 0, 0, 0.06);
+    background: var(--color-bg);
+    border-right: 1px solid var(--color-border-alpha);
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
@@ -173,7 +394,7 @@ function isActive(item) {
     align-items: center;
     gap: 0.5rem;
     text-decoration: none;
-    color: #0f172a;
+    color: var(--color-fg);
   }
 
   .brand-mark {
@@ -213,13 +434,13 @@ function isActive(item) {
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: #94a3b8;
+    color: var(--color-muted-light);
     padding: 0.625rem 0.625rem 0.375rem;
   }
 
   .nav-divider {
     height: 1px;
-    background: rgba(0, 0, 0, 0.04);
+    background: var(--color-border-subtle-alpha);
     margin: 0.5rem 0.625rem;
   }
 
@@ -230,22 +451,22 @@ function isActive(item) {
     padding: 0.4375rem 0.625rem;
     font-size: 0.8125rem;
     font-weight: 500;
-    color: #64748b;
+    color: var(--color-muted);
     text-decoration: none;
     border-radius: 0.4375rem;
     transition: all 0.12s ease;
     position: relative;
 
     &:hover {
-      background: rgba(0, 0, 0, 0.03);
-      color: #334155;
+      background: var(--color-hover-overlay);
+      color: var(--color-fg-tertiary);
     }
 
     &.active {
-      background: #0f172a;
-      color: #fff;
+      background: var(--color-nav-active-bg);
+      color: var(--color-nav-active-fg);
       font-weight: 600;
-      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.15), 0 1px 3px -1px rgba(0, 0, 0, 0.1);
+      box-shadow: var(--color-nav-active-shadow);
     }
   }
 
@@ -267,7 +488,33 @@ function isActive(item) {
   /* ——— Footer ——— */
   .sidebar-footer {
     padding: 0.75rem 1rem;
-    border-top: 1px solid rgba(0, 0, 0, 0.04);
+    border-top: 1px solid var(--color-border-subtle-alpha);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .theme-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.375rem 0.5rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    font-family: inherit;
+    color: var(--color-muted);
+    background: var(--color-accent);
+    border: 1px solid var(--color-border);
+    border-radius: 0.4375rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover {
+      color: var(--color-fg);
+      background: var(--color-surface);
+      border-color: var(--color-muted-lightest);
+    }
   }
 
   .back-link {
@@ -276,10 +523,10 @@ function isActive(item) {
     gap: 0.375rem;
     font-size: 0.8125rem;
     font-weight: 500;
-    color: #94a3b8;
+    color: var(--color-muted-light);
     text-decoration: none;
     transition: color 0.12s;
-    &:hover { color: #334155; }
+    &:hover { color: var(--color-fg-tertiary); }
   }
 
   /* ——— Main ——— */
@@ -288,7 +535,7 @@ function isActive(item) {
     padding: 2rem 2.5rem;
     min-width: 0;
     overflow-y: auto;
-    background: #f4f5f7;
+    background: var(--color-bg-page);
   }
 
   /* ——— Responsive ——— */
@@ -300,7 +547,7 @@ function isActive(item) {
       align-items: center;
       padding: 0;
       border-right: none;
-      border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+      border-bottom: 1px solid var(--color-border-alpha);
       overflow-y: hidden;
       overflow-x: auto;
     }

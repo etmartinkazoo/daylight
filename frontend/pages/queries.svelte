@@ -251,14 +251,14 @@
   .page-title {
     font-size: 1.5rem;
     font-weight: 800;
-    color: #0f172a;
+    color: var(--color-fg);
     margin: 0;
     letter-spacing: -0.025em;
   }
 
   .page-subtitle {
     font-size: 0.8125rem;
-    color: #64748b;
+    color: var(--color-muted);
     margin: 0.25rem 0 0;
   }
 
@@ -277,8 +277,8 @@
   }
 
   .stat-card {
-    background: #fff;
-    border: 1px solid #e2e8f0;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
     border-radius: 0.75rem;
     padding: 1.25rem;
     display: flex;
@@ -289,26 +289,26 @@
   .stat-card-label {
     font-size: 0.8125rem;
     font-weight: 500;
-    color: #64748b;
+    color: var(--color-muted);
   }
 
   .stat-card-value {
     font-size: 1.75rem;
     font-weight: 700;
-    color: #0f172a;
+    color: var(--color-fg);
     letter-spacing: -0.02em;
     line-height: 1;
     font-variant-numeric: tabular-nums;
   }
 
   .stat-card-value.danger {
-    color: #ef4444;
+    color: var(--color-danger);
   }
 
   /* Cards */
   .card {
-    background: #fff;
-    border: 1px solid #e2e8f0;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
     border-radius: 0.75rem;
     overflow: hidden;
   }
@@ -318,19 +318,19 @@
     align-items: baseline;
     justify-content: space-between;
     padding: 1rem 1.25rem;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid var(--color-border);
   }
 
   .card-title {
     font-size: 0.9375rem;
     font-weight: 650;
-    color: #0f172a;
+    color: var(--color-fg);
     margin: 0;
   }
 
   .card-subtitle {
     font-size: 0.75rem;
-    color: #64748b;
+    color: var(--color-muted);
   }
 
   .card-body {
@@ -339,8 +339,8 @@
 
   /* Data Table */
   .data-table {
-    background: #fff;
-    border: 1px solid #e2e8f0;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
     border-radius: 0.75rem;
     overflow: hidden;
   }
@@ -354,8 +354,8 @@
     display: flex;
     align-items: center;
     padding: 0 1rem;
-    background: #f8fafc;
-    border-bottom: 1px solid #e2e8f0;
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
   }
 
   .th {
@@ -364,7 +364,7 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #64748b;
+    color: var(--color-muted);
   }
 
   .th-right {
@@ -377,7 +377,7 @@
     padding: 0 1rem;
     width: 100%;
     border: none;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--color-accent);
     background: none;
     font-family: inherit;
     cursor: pointer;
@@ -390,7 +390,7 @@
   }
 
   .table-row:hover {
-    background: #f8fafc;
+    background: var(--color-surface);
   }
 
   .td {
@@ -399,7 +399,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    color: #0f172a;
+    color: var(--color-fg);
   }
 
   .td-sql {
@@ -456,7 +456,7 @@
     justify-content: space-between;
     padding: 0.75rem 1.25rem;
     border: none;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--color-accent);
     background: none;
     font-family: inherit;
     cursor: pointer;
@@ -540,7 +540,7 @@
     display: flex;
     justify-content: space-between;
     padding: 0.5rem 0;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--color-accent);
     font-size: 0.8125rem;
   }
 

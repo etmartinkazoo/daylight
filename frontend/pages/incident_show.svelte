@@ -29,9 +29,9 @@
   }
 
   const severityColors = {
-    critical: "#ef4444",
-    warning: "#f59e0b",
-    info: "#3b82f6",
+    critical: "var(--color-danger)",
+    warning: "var(--color-warning)",
+    info: "var(--color-info)",
   };
 
   const statusBadgeStyles = {

@@ -180,7 +180,7 @@
       {#each yGridLines as gl}
         <line
           x1={padLeft} y1={gl.y} x2={width - padRight} y2={gl.y}
-          stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 3"
+          stroke="var(--color-border)" stroke-width="1" stroke-dasharray="3 3"
         />
         <text x={padLeft - 6} y={gl.y + 3.5} text-anchor="end" class="axis-label">{gl.label}</text>
       {/each}
@@ -204,11 +204,11 @@
       {#each deployMarkers as dm}
         <line
           x1={dm.x} y1={padTop} x2={dm.x} y2={padTop + chartH}
-          stroke="#ef4444" stroke-width="1" stroke-dasharray="4 3"
+          stroke="var(--color-danger)" stroke-width="1" stroke-dasharray="4 3"
         />
         <polygon
           points="{dm.x},{padTop - 2} {dm.x + 4},{padTop + 4} {dm.x},{padTop + 10} {dm.x - 4},{padTop + 4}"
-          fill="#ef4444"
+          fill="var(--color-danger)"
         />
         <title>{dm.version}</title>
       {/each}
@@ -217,7 +217,7 @@
       {#if hoverPoint}
         <line
           x1={hoverPoint.x} y1={padTop} x2={hoverPoint.x} y2={padTop + chartH}
-          stroke="#94a3b8" stroke-width="1"
+          stroke="var(--color-muted-light)" stroke-width="1"
         />
         <circle cx={hoverPoint.x} cy={hoverPoint.y} r="4" fill={color} />
         <circle cx={hoverPoint.x} cy={hoverPoint.y} r="6" fill={color} opacity="0.2" />

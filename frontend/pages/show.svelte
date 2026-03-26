@@ -184,19 +184,19 @@
     gap: 0.375rem;
     font-size: 0.8125rem;
     font-weight: 500;
-    color: #64748b;
+    color: var(--color-muted);
     text-decoration: none;
     transition: color 0.15s ease;
   }
 
   .back-link:hover {
-    color: #0f172a;
+    color: var(--color-fg);
   }
 
   /* Error header card */
   .error-card {
-    background: #fff;
-    border: 1px solid #e2e8f0;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
     border-radius: 0.75rem;
     overflow: hidden;
     display: flex;
@@ -220,7 +220,7 @@
   .error-class {
     font-size: 1.125rem;
     font-weight: 700;
-    color: #dc2626;
+    color: var(--color-danger-hover);
     margin: 0;
     word-break: break-word;
     flex: 1;
@@ -241,26 +241,26 @@
   }
 
   .status-open {
-    background: #fef2f2;
-    color: #dc2626;
-    border: 1px solid #fecaca;
+    background: var(--color-danger-subtle);
+    color: var(--color-danger-hover);
+    border: 1px solid var(--color-danger-border);
   }
 
   .status-resolved {
-    background: #f0fdf4;
-    color: #16a34a;
-    border: 1px solid #bbf7d0;
+    background: var(--color-success-subtle);
+    color: var(--color-success-dark);
+    border: 1px solid var(--color-success-border);
   }
 
   .status-ignored {
-    background: #f8fafc;
-    color: #94a3b8;
-    border: 1px solid #e2e8f0;
+    background: var(--color-surface);
+    color: var(--color-muted-light);
+    border: 1px solid var(--color-border);
   }
 
   .error-message {
     font-size: 0.875rem;
-    color: #64748b;
+    color: var(--color-muted);
     margin: 0;
     word-break: break-word;
     line-height: 1.5;
@@ -270,8 +270,8 @@
   .meta-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    border-top: 1px solid #f1f5f9;
-    border-bottom: 1px solid #f1f5f9;
+    border-top: 1px solid var(--color-accent);
+    border-bottom: 1px solid var(--color-accent);
   }
 
   .meta-item {
@@ -282,7 +282,7 @@
   }
 
   .meta-item:not(:last-child) {
-    border-right: 1px solid #f1f5f9;
+    border-right: 1px solid var(--color-accent);
   }
 
   .meta-label {
@@ -290,13 +290,13 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #94a3b8;
+    color: var(--color-muted-light);
   }
 
   .meta-value {
     font-size: 0.875rem;
     font-weight: 600;
-    color: #0f172a;
+    color: var(--color-fg);
   }
 
   @media (max-width: 540px) {
@@ -305,7 +305,7 @@
     }
     .meta-item:not(:last-child) {
       border-right: none;
-      border-bottom: 1px solid #f1f5f9;
+      border-bottom: 1px solid var(--color-accent);
     }
   }
 

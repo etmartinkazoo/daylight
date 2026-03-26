@@ -180,7 +180,7 @@
         </div>
         <div class="stat-card">
           <span class="stat-card-label">Performance</span>
-          <span class="stat-card-value" style="color: #f59e0b">{counts.performance || 0}</span>
+          <span class="stat-card-value" style="color: var(--color-warning)">{counts.performance || 0}</span>
         </div>
       </div>
       {#if totalErrors > 0}
@@ -429,8 +429,8 @@
     flex: 1;
   }
   .stat-card {
-    background: #fff;
-    border: 1px solid #e2e8f0;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
     border-radius: 0.75rem;
     padding: 1.25rem;
     display: flex;
@@ -439,30 +439,30 @@
     transition: border-color 0.15s, box-shadow 0.15s;
   }
   .stat-card:hover {
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    box-shadow: 0 1px 3px var(--color-border-subtle-alpha);
   }
   .stat-card-danger {
-    border-color: #fecaca;
+    border-color: var(--color-danger-border);
   }
   .stat-card-label {
     font-size: 0.8125rem;
     font-weight: 500;
-    color: #64748b;
+    color: var(--color-muted);
   }
   .stat-card-value {
     font-size: 1.75rem;
     font-weight: 700;
-    color: #0f172a;
+    color: var(--color-fg);
     letter-spacing: -0.02em;
     line-height: 1;
     font-variant-numeric: tabular-nums;
   }
-  .stat-value-danger { color: #ef4444; }
-  .stat-value-success { color: #22c55e; }
-  .stat-value-muted { color: #64748b; }
+  .stat-value-danger { color: var(--color-danger); }
+  .stat-value-success { color: var(--color-success); }
+  .stat-value-muted { color: var(--color-muted); }
   .stats-donut {
-    background: #fff;
-    border: 1px solid #e2e8f0;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
     border-radius: 0.75rem;
     padding: 1rem 1.25rem;
     display: flex;
@@ -475,7 +475,7 @@
   .ew-tabs {
     display: flex;
     gap: 0.25rem;
-    background: #f1f5f9;
+    background: var(--color-accent);
     border-radius: 0.5rem;
     padding: 0.25rem;
     width: fit-content;
@@ -487,18 +487,18 @@
     font-family: inherit;
     border: none;
     background: none;
-    color: #64748b;
+    color: var(--color-muted);
     cursor: pointer;
     border-radius: 0.375rem;
     transition: all 0.15s;
     white-space: nowrap;
   }
-  .ew-tab:hover { color: #0f172a; background: rgba(255, 255, 255, 0.5); }
+  .ew-tab:hover { color: var(--color-fg); background: var(--color-white-overlay); }
   .ew-tab.active {
-    color: #0f172a;
-    background: #fff;
+    color: var(--color-fg);
+    background: var(--color-bg);
     font-weight: 600;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 1px 2px var(--color-border-alpha);
   }
   .ew-tab-count {
     font-size: 0.6875rem;
@@ -518,7 +518,7 @@
     left: 0.75rem;
     top: 50%;
     transform: translateY(-50%);
-    color: #94a3b8;
+    color: var(--color-muted-light);
     pointer-events: none;
   }
   .ew-search-input {
@@ -526,19 +526,19 @@
     padding: 0.5625rem 0.75rem 0.5625rem 2.25rem;
     font-size: 0.8125rem;
     font-family: inherit;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--color-border);
     border-radius: 0.5rem;
-    background: #fff;
-    color: #0f172a;
+    background: var(--color-bg);
+    color: var(--color-fg);
     outline: none;
     transition: border-color 0.15s, box-shadow 0.15s;
     box-sizing: border-box;
   }
   .ew-search-input:focus {
-    border-color: #94a3b8;
+    border-color: var(--color-muted-light);
     box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.15);
   }
-  .ew-search-input::placeholder { color: #94a3b8; }
+  .ew-search-input::placeholder { color: var(--color-muted-light); }
 
   /* Bulk actions */
   .ew-bulk {
@@ -546,8 +546,8 @@
     align-items: center;
     gap: 0.75rem;
     padding: 0.625rem 1rem;
-    background: #0f172a;
-    color: #fff;
+    background: var(--color-fg);
+    color: var(--color-bg);
     border-radius: 0.75rem;
     box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
   }

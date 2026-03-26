@@ -319,24 +319,24 @@
   .jobs-page { display: flex; flex-direction: column; gap: 1.5rem; }
 
   .page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
-  .page-title { font-size: 1.375rem; font-weight: 700; color: #0f172a; margin: 0; letter-spacing: -0.02em; }
-  .page-subtitle { font-size: 0.8125rem; color: #64748b; margin: 0.25rem 0 0; }
+  .page-title { font-size: 1.375rem; font-weight: 700; color: var(--color-fg); margin: 0; letter-spacing: -0.02em; }
+  .page-subtitle { font-size: 0.8125rem; color: var(--color-muted); margin: 0.25rem 0 0; }
   .header-controls { display: flex; align-items: center; gap: 0.5rem; }
   .chart-section {
-    background: #fff;
-    border: 1px solid #e2e8f0;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
     border-radius: 0.75rem;
     padding: 1.25rem;
   }
 
   .section { display: flex; flex-direction: column; gap: 0.75rem; }
-  .section-title { font-size: 0.875rem; font-weight: 600; color: #0f172a; margin: 0; }
+  .section-title { font-size: 0.875rem; font-weight: 600; color: var(--color-fg); margin: 0; }
   .section-title-row { display: flex; align-items: center; gap: 0.5rem; }
   .failure-count {
     font-size: 0.6875rem;
     font-weight: 600;
-    color: #ef4444;
-    background: #fef2f2;
+    color: var(--color-danger);
+    background: var(--color-danger-subtle);
     padding: 0.125rem 0.5rem;
     border-radius: 9999px;
     font-variant-numeric: tabular-nums;
@@ -346,22 +346,22 @@
   .stats-row { display: flex; gap: 1rem; align-items: flex-start; }
   .stat-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; flex: 1; }
   .stat-card {
-    background: #fff;
-    border: 1px solid #e2e8f0;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
     border-radius: 0.75rem;
     padding: 1.25rem;
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
   }
-  .stat-card-label { font-size: 0.8125rem; font-weight: 500; color: #64748b; }
-  .stat-card-value { font-size: 1.75rem; font-weight: 700; color: #0f172a; letter-spacing: -0.02em; line-height: 1; font-variant-numeric: tabular-nums; }
-  .stat-card-danger { border-color: #fecaca; background: #fff5f5; }
-  .stat-card-danger .stat-card-value { color: #ef4444; }
+  .stat-card-label { font-size: 0.8125rem; font-weight: 500; color: var(--color-muted); }
+  .stat-card-value { font-size: 1.75rem; font-weight: 700; color: var(--color-fg); letter-spacing: -0.02em; line-height: 1; font-variant-numeric: tabular-nums; }
+  .stat-card-danger { border-color: var(--color-danger-border); background: var(--color-danger-bg); }
+  .stat-card-danger .stat-card-value { color: var(--color-danger); }
 
   .chart-card {
-    background: #fff;
-    border: 1px solid #e2e8f0;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
     border-radius: 0.75rem;
     padding: 1.25rem;
     display: flex;
@@ -373,8 +373,8 @@
   /* Solid Queue Cards */
   .sq-cards { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.75rem; }
   .sq-card {
-    background: #fff;
-    border: 1px solid #e2e8f0;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
     border-radius: 0.75rem;
     padding: 1rem;
     display: flex;
@@ -385,16 +385,16 @@
     transition: all 0.15s ease;
     font-family: inherit;
   }
-  .sq-card:hover { border-color: #cbd5e1; box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1); }
-  .sq-card-value { font-size: 1.25rem; font-weight: 700; color: #0f172a; font-variant-numeric: tabular-nums; line-height: 1; }
-  .sq-card-label { font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: #64748b; }
-  .sq-card-danger { border-color: #fecaca; background: #fff5f5; }
-  .sq-card-danger .sq-card-value { color: #ef4444; }
+  .sq-card:hover { border-color: var(--color-muted-lightest); box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1); }
+  .sq-card-value { font-size: 1.25rem; font-weight: 700; color: var(--color-fg); font-variant-numeric: tabular-nums; line-height: 1; }
+  .sq-card-label { font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-muted); }
+  .sq-card-danger { border-color: var(--color-danger-border); background: var(--color-danger-bg); }
+  .sq-card-danger .sq-card-value { color: var(--color-danger); }
 
   /* Tables */
   .table-container {
-    background: #fff;
-    border: 1px solid #e2e8f0;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
     border-radius: 0.75rem;
     overflow: hidden;
   }
@@ -402,8 +402,8 @@
     display: flex;
     align-items: center;
     padding: 0 1rem;
-    background: #f8fafc;
-    border-bottom: 1px solid #e2e8f0;
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
   }
   .th {
     padding: 0.625rem 0.5rem;
@@ -411,14 +411,14 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #64748b;
+    color: var(--color-muted);
   }
   .r { text-align: right; }
   .table-row {
     display: flex;
     align-items: center;
     padding: 0 1rem;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--color-accent);
     width: 100%;
     border-left: none;
     border-right: none;
@@ -430,20 +430,20 @@
     transition: background 0.1s ease;
   }
   .table-row:last-child { border-bottom: none; }
-  .table-row:hover { background: #f8fafc; }
+  .table-row:hover { background: var(--color-surface); }
   .td {
     padding: 0.5625rem 0.5rem;
     font-size: 0.8125rem;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    color: #334155;
+    color: var(--color-fg-tertiary);
   }
   .num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 500; }
-  .completed { color: #22c55e; }
-  .failed-val { color: #ef4444; font-weight: 600; }
-  .slow-val { color: #ef4444; font-weight: 600; }
-  .job-name { font-size: 0.8125rem; font-weight: 600; color: #0f172a; }
+  .completed { color: var(--color-success); }
+  .failed-val { color: var(--color-danger); font-weight: 600; }
+  .slow-val { color: var(--color-danger); font-weight: 600; }
+  .job-name { font-size: 0.8125rem; font-weight: 600; color: var(--color-fg); }
 
   /* Failure rows */
   .failure-row { border-left: 2px solid transparent; }

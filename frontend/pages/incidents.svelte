@@ -42,31 +42,31 @@
   ];
 
   const severityColors = {
-    critical: "#ef4444",
-    warning: "#f59e0b",
-    info: "#3b82f6",
+    critical: "var(--color-danger)",
+    warning: "var(--color-warning)",
+    info: "var(--color-info)",
   };
 
   const typeBadgeColors = {
-    "Error Spike": { bg: "#fef2f2", color: "#dc2626" },
-    "New Error": { bg: "#fef2f2", color: "#dc2626" },
-    "Latency Spike": { bg: "#fffbeb", color: "#d97706" },
-    "Failure Spike": { bg: "#fef2f2", color: "#dc2626" },
+    "Error Spike": { bg: "var(--color-danger-subtle)", color: "var(--color-danger-hover)" },
+    "New Error": { bg: "var(--color-danger-subtle)", color: "var(--color-danger-hover)" },
+    "Latency Spike": { bg: "var(--color-warning-subtle)", color: "var(--color-warning-dark)" },
+    "Failure Spike": { bg: "var(--color-danger-subtle)", color: "var(--color-danger-hover)" },
   };
 
   const statusBadgeStyles = {
-    open: { bg: "#fef2f2", color: "#dc2626" },
-    investigating: { bg: "#fffbeb", color: "#d97706" },
-    resolved: { bg: "#f0fdf4", color: "#16a34a" },
-    false_alarm: { bg: "#f1f5f9", color: "#64748b" },
+    open: { bg: "var(--color-danger-subtle)", color: "var(--color-danger-hover)" },
+    investigating: { bg: "var(--color-warning-subtle)", color: "var(--color-warning-dark)" },
+    resolved: { bg: "var(--color-success-subtle)", color: "var(--color-success-dark)" },
+    false_alarm: { bg: "var(--color-accent)", color: "var(--color-muted)" },
   };
 
   function getTypeBadge(type) {
-    return typeBadgeColors[type] || { bg: "#f1f5f9", color: "#64748b" };
+    return typeBadgeColors[type] || { bg: "var(--color-accent)", color: "var(--color-muted)" };
   }
 
   function getStatusBadge(s) {
-    return statusBadgeStyles[s] || { bg: "#f1f5f9", color: "#64748b" };
+    return statusBadgeStyles[s] || { bg: "var(--color-accent)", color: "var(--color-muted)" };
   }
 
   let allIncidents = $state(incidents);
@@ -119,7 +119,7 @@
     <div class="stat-cards">
       <div class="stat-card" class:stat-card-danger={counts.open > 0}>
         <span class="stat-card-label">Open</span>
-        <span class="stat-card-value" style="color: {counts.open > 0 ? '#ef4444' : '#0f172a'}">{counts.open || 0}</span>
+        <span class="stat-card-value" style="color: {counts.open > 0 ? 'var(--color-danger)' : 'var(--color-fg)'}">{counts.open || 0}</span>
       </div>
       <div class="stat-card stat-card-investigating">
         <span class="stat-card-label">
@@ -128,15 +128,15 @@
             <span class="pulse-dot"></span>
           {/if}
         </span>
-        <span class="stat-card-value" style="color: {counts.investigating > 0 ? '#d97706' : '#0f172a'}">{counts.investigating || 0}</span>
+        <span class="stat-card-value" style="color: {counts.investigating > 0 ? 'var(--color-warning-dark)' : 'var(--color-fg)'}">{counts.investigating || 0}</span>
       </div>
       <div class="stat-card">
         <span class="stat-card-label">Resolved</span>
-        <span class="stat-card-value" style="color: #22c55e">{counts.resolved || 0}</span>
+        <span class="stat-card-value" style="color: var(--color-success)">{counts.resolved || 0}</span>
       </div>
       <div class="stat-card">
         <span class="stat-card-label">False Alarm</span>
-        <span class="stat-card-value" style="color: #94a3b8">{counts.false_alarm || 0}</span>
+        <span class="stat-card-value" style="color: var(--color-muted-light)">{counts.false_alarm || 0}</span>
       </div>
     </div>
 
@@ -144,7 +144,7 @@
     {#if incident_series.length > 0}
       <InteractiveBarChart
         data={chartData}
-        series={[{ key: "incidents", label: "Incidents", color: "#f59e0b" }]}
+        series={[{ key: "incidents", label: "Incidents", color: "var(--color-warning)" }]}
         title="Incident Volume"
         description="Incidents detected over time"
         height={250}
@@ -167,7 +167,7 @@
     {#if allIncidents.length === 0}
       <div class="empty-state">
         <div class="empty-icon">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--color-muted-lightest)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
             <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
           </svg>
@@ -178,7 +178,7 @@
     {:else}
       <div class="incident-list">
         {#each allIncidents as incident (incident.id)}
-          {@const sevColor = severityColors[incident.severity] || "#64748b"}
+          {@const sevColor = severityColors[incident.severity] || "var(--color-muted)"}
           {@const typeBadge = getTypeBadge(incident.incident_type)}
           {@const statusBadge = getStatusBadge(incident.status)}
           <button
@@ -244,8 +244,8 @@
   .incidents-page { display: flex; flex-direction: column; gap: 1.5rem; }
 
   .page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
-  .page-title { font-size: 1.375rem; font-weight: 700; color: #0f172a; margin: 0; letter-spacing: -0.02em; }
-  .page-subtitle { font-size: 0.8125rem; color: #64748b; margin: 0.25rem 0 0; }
+  .page-title { font-size: 1.375rem; font-weight: 700; color: var(--color-fg); margin: 0; letter-spacing: -0.02em; }
+  .page-subtitle { font-size: 0.8125rem; color: var(--color-muted); margin: 0.25rem 0 0; }
 
   /* Stat Cards */
   .stat-cards {
@@ -254,8 +254,8 @@
     gap: 0.75rem;
   }
   .stat-card {
-    background: #fff;
-    border: 1px solid #e2e8f0;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
     border-radius: 0.75rem;
     padding: 1.25rem;
     display: flex;
@@ -264,20 +264,20 @@
     transition: box-shadow 0.15s ease;
   }
   .stat-card:hover {
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.06);
+    box-shadow: 0 1px 3px 0 var(--color-border-alpha);
   }
   .stat-card-danger {
-    border-color: #fecaca;
-    background: #fff5f5;
+    border-color: var(--color-danger-border);
+    background: var(--color-danger-bg);
   }
   .stat-card-investigating {
-    border-color: #fde68a;
-    background: #fffbeb;
+    border-color: var(--color-warning-border);
+    background: var(--color-warning-subtle);
   }
   .stat-card-label {
     font-size: 0.8125rem;
     font-weight: 500;
-    color: #64748b;
+    color: var(--color-muted);
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -285,7 +285,7 @@
   .stat-card-value {
     font-size: 1.75rem;
     font-weight: 700;
-    color: #0f172a;
+    color: var(--color-fg);
     letter-spacing: -0.02em;
     line-height: 1;
     font-variant-numeric: tabular-nums;
@@ -296,7 +296,7 @@
     width: 0.5rem;
     height: 0.5rem;
     border-radius: 50%;
-    background: #f59e0b;
+    background: var(--color-warning);
     display: inline-block;
     animation: pulse-glow 2s ease-in-out infinite;
   }
@@ -310,7 +310,7 @@
   .tabs {
     display: flex;
     gap: 0.125rem;
-    background: #f1f5f9;
+    background: var(--color-accent);
     border-radius: 0.5rem;
     padding: 0.1875rem;
   }
@@ -322,32 +322,32 @@
     border: none;
     border-radius: 0.375rem;
     background: transparent;
-    color: #64748b;
+    color: var(--color-muted);
     cursor: pointer;
     transition: all 0.15s ease;
     display: flex;
     align-items: center;
     gap: 0.375rem;
   }
-  .tab:hover { color: #0f172a; }
+  .tab:hover { color: var(--color-fg); }
   .tab.active {
-    background: #fff;
-    color: #0f172a;
+    background: var(--color-bg);
+    color: var(--color-fg);
     font-weight: 600;
     box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
   }
   .tab-count {
     font-size: 0.6875rem;
     font-weight: 600;
-    background: #e2e8f0;
-    color: #475569;
+    background: var(--color-border);
+    color: var(--color-fg-tertiary);
     padding: 0.0625rem 0.375rem;
     border-radius: 9999px;
     font-variant-numeric: tabular-nums;
   }
   .tab.active .tab-count {
-    background: #0f172a;
-    color: #fff;
+    background: var(--color-fg);
+    color: var(--color-bg);
   }
 
   /* Incident List */
@@ -361,8 +361,8 @@
   .incident-card {
     display: flex;
     align-items: stretch;
-    background: #fff;
-    border: 1px solid #e2e8f0;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
     border-radius: 0.75rem;
     overflow: hidden;
     cursor: pointer;
@@ -375,15 +375,15 @@
   .incident-card:hover {
     box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
     transform: translateY(-1px);
-    border-color: #cbd5e1;
+    border-color: var(--color-muted-lightest);
   }
   .incident-card-investigating {
-    border-color: #fde68a;
+    border-color: var(--color-warning-border);
     animation: border-pulse 3s ease-in-out infinite;
   }
   @keyframes border-pulse {
-    0%, 100% { border-color: #fde68a; }
-    50% { border-color: #f59e0b; }
+    0%, 100% { border-color: var(--color-warning-border); }
+    50% { border-color: var(--color-warning); }
   }
   .incident-card-critical {
     background: #fffbfb;
@@ -445,7 +445,7 @@
   .status-spinner {
     width: 0.5rem;
     height: 0.5rem;
-    border: 1.5px solid #d97706;
+    border: 1.5px solid var(--color-warning-dark);
     border-top-color: transparent;
     border-radius: 50%;
     display: inline-block;
@@ -457,7 +457,7 @@
 
   .incident-time {
     font-size: 0.75rem;
-    color: #94a3b8;
+    color: var(--color-muted-light);
     flex-shrink: 0;
     font-variant-numeric: tabular-nums;
   }
@@ -465,14 +465,14 @@
   .incident-title {
     font-size: 0.9375rem;
     font-weight: 650;
-    color: #0f172a;
+    color: var(--color-fg);
     margin: 0;
     line-height: 1.3;
   }
 
   .incident-summary {
     font-size: 0.8125rem;
-    color: #64748b;
+    color: var(--color-muted);
     margin: 0;
     line-height: 1.5;
     display: -webkit-box;
@@ -490,7 +490,7 @@
   .investigating-label {
     font-size: 0.75rem;
     font-weight: 600;
-    color: #d97706;
+    color: var(--color-warning-dark);
     display: inline-flex;
     align-items: center;
     gap: 0.375rem;
@@ -499,8 +499,8 @@
   .investigating-spinner {
     width: 0.75rem;
     height: 0.75rem;
-    border: 2px solid #fde68a;
-    border-top-color: #f59e0b;
+    border: 2px solid var(--color-warning-border);
+    border-top-color: var(--color-warning);
     border-radius: 50%;
     display: inline-block;
     animation: spin 0.8s linear infinite;
@@ -509,16 +509,16 @@
   .view-report {
     font-size: 0.8125rem;
     font-weight: 500;
-    color: #3b82f6;
+    color: var(--color-info);
   }
   .incident-card:hover .view-report {
-    color: #1d4ed8;
+    color: var(--color-info-darker);
     text-decoration: underline;
   }
 
   .incident-meta {
     font-size: 0.75rem;
-    color: #94a3b8;
+    color: var(--color-muted-light);
   }
 
   /* Empty State */
@@ -528,14 +528,14 @@
     align-items: center;
     justify-content: center;
     padding: 3rem 1rem;
-    background: #fff;
-    border: 1px solid #e2e8f0;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
     border-radius: 0.75rem;
     text-align: center;
   }
   .empty-icon { margin-bottom: 1rem; }
-  .empty-title { font-size: 0.9375rem; font-weight: 600; color: #0f172a; margin: 0; }
-  .empty-sub { font-size: 0.8125rem; color: #94a3b8; margin: 0.25rem 0 0; }
+  .empty-title { font-size: 0.9375rem; font-weight: 600; color: var(--color-fg); margin: 0; }
+  .empty-sub { font-size: 0.8125rem; color: var(--color-muted-light); margin: 0.25rem 0 0; }
 
   /* Responsive */
   @media (max-width: 768px) {

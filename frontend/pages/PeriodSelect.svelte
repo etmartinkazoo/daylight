@@ -21,7 +21,7 @@
 <style>
   .period-select {
     display: flex;
-    background: #f1f5f9;
+    background: var(--color-accent);
     border-radius: 0.5rem;
     padding: 0.1875rem;
     gap: 0.125rem;
@@ -35,14 +35,14 @@
     border: none;
     border-radius: 0.375rem;
     background: transparent;
-    color: #64748b;
+    color: var(--color-muted);
     cursor: pointer;
     transition: all 0.15s ease;
 
-    &:hover { color: #0f172a; }
+    &:hover { color: var(--color-fg); }
     &.active {
-      background: #fff;
-      color: #0f172a;
+      background: var(--color-bg);
+      color: var(--color-fg);
       box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
     }
   }

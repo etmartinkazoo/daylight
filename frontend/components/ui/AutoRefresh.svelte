@@ -42,19 +42,19 @@
     width: 0.5rem;
     height: 0.5rem;
     border-radius: 50%;
-    background: #22c55e;
+    background: var(--color-success);
     flex-shrink: 0;
     animation: pulse 2s ease-in-out infinite;
   }
 
   @keyframes pulse {
-    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgb(34 197 94 / 0.4); }
-    50% { opacity: 0.7; box-shadow: 0 0 0 4px rgb(34 197 94 / 0); }
+    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-success) 40%, transparent); }
+    50% { opacity: 0.7; box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-success) 0%, transparent); }
   }
 
   .pill-group {
     display: flex;
-    background: #f1f5f9;
+    background: var(--color-accent);
     border-radius: 0.5rem;
     padding: 0.1875rem;
     gap: 0.125rem;
@@ -68,14 +68,14 @@
     border: none;
     border-radius: 0.375rem;
     background: transparent;
-    color: #64748b;
+    color: var(--color-muted);
     cursor: pointer;
     transition: all 0.15s ease;
 
-    &:hover { color: #0f172a; }
+    &:hover { color: var(--color-fg); }
     &.active {
-      background: #fff;
-      color: #0f172a;
+      background: var(--color-bg);
+      color: var(--color-fg);
       box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
     }
   }

@@ -251,14 +251,14 @@
   .page-title {
     font-size: 1.5rem;
     font-weight: 800;
-    color: #0f172a;
+    color: var(--color-fg);
     margin: 0;
     letter-spacing: -0.025em;
   }
 
   .page-subtitle {
     font-size: 0.8125rem;
-    color: #64748b;
+    color: var(--color-muted);
     margin: 0.25rem 0 0;
   }
 
@@ -273,7 +273,7 @@
     gap: 0.25rem;
     font-size: 0.8125rem;
     font-weight: 500;
-    color: #64748b;
+    color: var(--color-muted);
     border: none;
     background: none;
     font-family: inherit;
@@ -282,7 +282,7 @@
     transition: color 0.15s;
   }
 
-  .back-btn:hover { color: #0f172a; }
+  .back-btn:hover { color: var(--color-fg); }
 
   .drilldown-header {
     display: flex;
@@ -294,14 +294,14 @@
   .route-title {
     font-size: 0.9375rem;
     font-weight: 600;
-    color: #0f172a;
+    color: var(--color-fg);
     margin: 0;
     font-family: "SF Mono", Monaco, Menlo, Consolas, monospace;
   }
 
   .drilldown-count {
     font-size: 0.75rem;
-    color: #64748b;
+    color: var(--color-muted);
     font-weight: 500;
   }
 
@@ -313,8 +313,8 @@
   }
 
   .stat-card {
-    background: #fff;
-    border: 1px solid #e2e8f0;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
     border-radius: 0.75rem;
     padding: 1.25rem;
     display: flex;
@@ -325,24 +325,24 @@
   .stat-card-label {
     font-size: 0.8125rem;
     font-weight: 500;
-    color: #64748b;
+    color: var(--color-muted);
   }
 
   .stat-card-value {
     font-size: 1.75rem;
     font-weight: 700;
-    color: #0f172a;
+    color: var(--color-fg);
     letter-spacing: -0.02em;
     line-height: 1;
     font-variant-numeric: tabular-nums;
   }
 
-  .stat-danger { color: #ef4444; }
+  .stat-danger { color: var(--color-danger); }
 
   /* Cards */
   .card {
-    background: #fff;
-    border: 1px solid #e2e8f0;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
     border-radius: 0.75rem;
     overflow: hidden;
   }
@@ -352,13 +352,13 @@
     align-items: baseline;
     justify-content: space-between;
     padding: 1rem 1.25rem;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid var(--color-border);
   }
 
   .card-title {
     font-size: 0.9375rem;
     font-weight: 650;
-    color: #0f172a;
+    color: var(--color-fg);
     margin: 0;
   }
 
