@@ -23,7 +23,7 @@ module Daylight
 
         begin
           configure_llm(api_key)
-          chat = RubyLLM.chat(model: "gemini-2.0-flash")
+          chat = RubyLLM.chat(model: "gemini-2.5-flash")
           response = chat.ask(prompt)
 
           investigation = response.content
