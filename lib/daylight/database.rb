@@ -344,6 +344,12 @@ module Daylight
           conn.add_index :daylight_logs, :trace_id rescue nil
         end
 
+        # Add trace_id to occurrences
+        if conn.table_exists?(:daylight_occurrences) && !conn.column_exists?(:daylight_occurrences, :trace_id)
+          conn.add_column :daylight_occurrences, :trace_id, :string
+          conn.add_index :daylight_occurrences, :trace_id rescue nil
+        end
+
         # Add user_id to occurrences
         if conn.table_exists?(:daylight_occurrences) && !conn.column_exists?(:daylight_occurrences, :user_id)
           conn.add_column :daylight_occurrences, :user_id, :string
