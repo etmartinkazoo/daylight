@@ -139,7 +139,7 @@
           <div class="th th-right" style="width:5rem"><SortableHeader column="max_duration" label="Max" /></div>
           <div class="th" style="flex:1">Source</div>
         </div>
-        {#each queries as q (q.normalized_sql)}
+        {#each queries as q, i (q.normalized_sql + ':' + i)}
           <button class="table-row" onclick={() => openQuery(q)}>
             <div class="td td-sql" style="flex:3">
               <span class="sql-text">{q.normalized_sql}</span>
