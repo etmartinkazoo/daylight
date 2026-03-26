@@ -7,6 +7,8 @@ module Daylight
 
     layout "daylight/application"
 
+    rescue_from StandardError, with: :render_daylight_error
+
     before_action :authenticate_daylight!
     after_action :maybe_enqueue_performance_scan
 
@@ -69,6 +71,23 @@ module Daylight
 
     def ensure_connected
       Database.ensure_connected!
+    end
+
+    def render_daylight_error(exception)
+      raise exception if Rails.env.test?
+
+      Rails.logger.error("[Daylight] #{exception.class}: #{exception.message}\n#{exception.backtrace&.first(10)&.join("\n")}")
+      render html: <<~HTML.html_safe, status: :internal_server_error, layout: false
+        <!DOCTYPE html>
+        <html><head><title>Daylight Error</title>
+        <style>body{font-family:system-ui,sans-serif;max-width:600px;margin:4rem auto;padding:0 1rem;color:#333}
+        h1{font-size:1.25rem}pre{background:#f5f5f5;padding:1rem;border-radius:0.5rem;overflow-x:auto;font-size:0.8125rem}</style>
+        </head><body>
+        <h1>Daylight encountered an error</h1>
+        <p>#{ERB::Util.html_escape(exception.message)}</p>
+        <p><a href="#{Daylight::Engine.routes.url_helpers.root_path}">Back to Daylight</a></p>
+        </body></html>
+      HTML
     end
 
     # Check at most once per minute if scans are due
