@@ -7,8 +7,11 @@
   import SortableHeader from "@/components/ui/SortableHeader.svelte";
   import EwSheet from "./EwSheet.svelte";
   import DonutChart from "@/components/charts/DonutChart.svelte";
+  import TimeSeriesChart from "@/components/charts/TimeSeriesChart.svelte";
+  import AutoRefresh from "@/components/ui/AutoRefresh.svelte";
+  import ExportButton from "@/components/ui/ExportButton.svelte";
 
-  let { errors = [], counts = {}, status = "open", query = "" } = $props();
+  let { errors = [], counts = {}, status = "open", query = "", error_series = [], unhandled_count = 0, deploys = [] } = $props();
   const pageStore = usePage();
   let base = $derived($pageStore.props?.base_path || "/daylight");
 
@@ -16,9 +19,19 @@
   let selectedIds = $state([]);
   let sheetOpen = $state(false);
   let sheetError = $state(null);
+  let refreshInterval = $state(0);
+  let handledFilter = $state("all");
 
-  function navigate(s, q) {
-    router.get(`${base}/errors`, { status: s, q: q || undefined }, { preserveState: true });
+  $effect(() => {
+    if (refreshInterval <= 0) return;
+    const id = setInterval(() => {
+      router.reload({ preserveState: true, preserveScroll: true });
+    }, refreshInterval);
+    return () => clearInterval(id);
+  });
+
+  function navigate(s, q, extra = {}) {
+    router.get(`${base}/errors`, { status: s, q: q || undefined, ...extra }, { preserveState: true });
   }
 
   function resolve(id) { router.patch(`${base}/errors/${id}`, { status: "resolved", filter_status: status }); }
@@ -105,6 +118,12 @@
 
 <DaylightLayout>
   <div class="ew-page">
+    <!-- Header actions -->
+    <div class="ew-header-actions">
+      <AutoRefresh bind:interval={refreshInterval} />
+      <ExportButton baseUrl={`${base}/errors/export`} />
+    </div>
+
     <!-- Stat cards + donut -->
     <div class="stats-row">
       <div class="stats-cards">
@@ -115,6 +134,10 @@
         <div class="stat-card">
           <span class="stat-card-label">Last 24h</span>
           <span class="stat-card-value">{last24hCount}</span>
+        </div>
+        <div class="stat-card" class:stat-card-danger={unhandled_count > 0}>
+          <span class="stat-card-label">Unhandled</span>
+          <span class="stat-card-value" class:stat-value-danger={unhandled_count > 0}>{unhandled_count}</span>
         </div>
         <div class="stat-card">
           <span class="stat-card-label">Resolved</span>
@@ -138,14 +161,38 @@
       {/if}
     </div>
 
+    <!-- Time Series Chart -->
+    {#if error_series.length > 0}
+      <div class="chart-section">
+        <TimeSeriesChart
+          data={error_series}
+          width={720}
+          height={180}
+          color="#ef4444"
+          label="Errors over time"
+          deploys={deploys}
+          showArea={true}
+        />
+      </div>
+    {/if}
+
     <!-- Tabs -->
-    <div class="ew-tabs">
-      {#each tabs as tab (tab.key)}
-        <button class="ew-tab" class:active={status === tab.key} onclick={() => navigate(tab.key, searchVal)}>
-          {tab.label}
-          {#if tab.key !== "all" && counts[tab.key]}<span class="ew-tab-count">{counts[tab.key]}</span>{/if}
+    <div class="ew-tabs-row">
+      <div class="ew-tabs">
+        {#each tabs as tab (tab.key)}
+          <button class="ew-tab" class:active={status === tab.key} onclick={() => navigate(tab.key, searchVal)}>
+            {tab.label}
+            {#if tab.key !== "all" && counts[tab.key]}<span class="ew-tab-count">{counts[tab.key]}</span>{/if}
+          </button>
+        {/each}
+      </div>
+      <div class="ew-pills">
+        <button class="ew-pill" class:active={handledFilter === "all"} onclick={() => { handledFilter = "all"; navigate(status, searchVal); }}>All</button>
+        <button class="ew-pill" class:active={handledFilter === "unhandled"} onclick={() => { handledFilter = "unhandled"; navigate(status, searchVal, { handled: false }); }}>
+          Unhandled
+          {#if unhandled_count > 0}<span class="ew-pill-count">{unhandled_count}</span>{/if}
         </button>
-      {/each}
+      </div>
     </div>
 
     <!-- Search -->
@@ -327,7 +374,7 @@
   }
   .stats-cards {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 0.75rem;
     flex: 1;
   }
@@ -627,4 +674,68 @@
   .occ-url { color: #334155; font-family: monospace; font-size: 0.6875rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .occ-route { color: #0f172a; font-weight: 500; }
   .occ-user { color: #94a3b8; margin-left: auto; flex-shrink: 0; }
+
+  /* Header actions */
+  .ew-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    justify-content: flex-end;
+  }
+
+  /* Tabs row with pills */
+  .ew-tabs-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  /* Handled/Unhandled pills */
+  .ew-pills {
+    display: flex;
+    gap: 0.25rem;
+    background: #f1f5f9;
+    border-radius: 0.5rem;
+    padding: 0.25rem;
+  }
+  .ew-pill {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    font-family: inherit;
+    border: none;
+    background: none;
+    color: #64748b;
+    cursor: pointer;
+    border-radius: 0.375rem;
+    transition: all 0.15s;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+  }
+  .ew-pill:hover { color: #0f172a; background: rgba(255, 255, 255, 0.5); }
+  .ew-pill.active {
+    color: #0f172a;
+    background: #fff;
+    font-weight: 600;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  }
+  .ew-pill-count {
+    font-size: 0.625rem;
+    font-weight: 700;
+    background: #fef2f2;
+    color: #ef4444;
+    padding: 0.0625rem 0.375rem;
+    border-radius: 9999px;
+  }
+
+  /* Chart section */
+  .chart-section {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+  }
 </style>

@@ -2,13 +2,17 @@
 
 module Daylight
   class HealthController < BaseController
+    include Daylight::TimeSeries
 
     def index
       render inertia: "daylight/health", props: {
         system: system_info,
         database: database_info,
         jobs: jobs_info,
-        errors: errors_info
+        errors: errors_info,
+        apdex: compute_apdex,
+        error_sparkline: error_sparkline,
+        request_sparkline: request_sparkline
       }
     end
 
@@ -123,6 +127,43 @@ module Daylight
       parts << "#{hours}h" if hours > 0
       parts << "#{mins}m" if mins > 0
       parts.empty? ? "< 1m" : parts.join(" ")
+    end
+
+    def compute_apdex
+      Daylight::Database.ensure_connected!
+      scope = Database::RequestRecord.where("occurred_at > ?", 24.hours.ago)
+      total = scope.count
+      return 1.0 if total == 0
+
+      satisfied = scope.where("duration_ms < 500").count
+      tolerating = scope.where("duration_ms >= 500 AND duration_ms < 2000").count
+      ((satisfied + tolerating * 0.5) / total.to_f).round(3)
+    rescue StandardError
+      nil
+    end
+
+    def error_sparkline
+      Daylight::Database.ensure_connected!
+      time_series_buckets(Database::OccurrenceRecord, "24h")
+    rescue StandardError
+      []
+    end
+
+    def request_sparkline
+      Daylight::Database.ensure_connected!
+      time_series_buckets(Database::RequestRecord, "24h")
+    rescue StandardError
+      []
+    end
+
+    def period_start(period)
+      case period
+      when "1h"  then 1.hour.ago
+      when "24h" then 24.hours.ago
+      when "7d"  then 7.days.ago
+      when "30d" then 30.days.ago
+      else 24.hours.ago
+      end
     end
 
     def read_proc_status(key)

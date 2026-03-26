@@ -1,7 +1,11 @@
 # frozen_string_literal: true
 
+require "csv"
+
 module Daylight
   class JobsController < BaseController
+    include Daylight::TimeSeries
+
     before_action :ensure_connected
 
     def index
@@ -114,8 +118,30 @@ module Daylight
           failed: scope.where(status: "failed").count
         },
         solid_queue: sq_stats,
+        volume_series: time_series_buckets(scope, period),
+        failure_series: time_series_buckets(scope.where(status: "failed"), period),
         **sort_props
       }
+    end
+
+    def export
+      period = params[:period] || "24h"
+      scope = Database::JobRecord.where("occurred_at > ?", period_start(period))
+      records = scope.order(occurred_at: :desc)
+
+      if params[:format] == "json"
+        render json: records.map { |j|
+          { id: j.id, job_class: j.job_class, queue: j.queue, status: j.status, duration_ms: j.duration_ms, error_class: j.error_class, error_message: j.error_message, occurred_at: j.occurred_at }
+        }
+      else
+        csv_data = CSV.generate do |csv|
+          csv << %w[id job_class queue status duration_ms error_class error_message occurred_at]
+          records.each do |j|
+            csv << [j.id, j.job_class, j.queue, j.status, j.duration_ms, j.error_class, j.error_message, j.occurred_at]
+          end
+        end
+        send_data csv_data, filename: "daylight-jobs-#{Date.current}.csv", type: "text/csv"
+      end
     end
 
     private

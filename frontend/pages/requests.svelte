@@ -8,10 +8,15 @@
   import PeriodSelect from "./PeriodSelect.svelte";
   import EwSheet from "./EwSheet.svelte";
   import BarList from "@/components/charts/BarList.svelte";
+  import Sparkline from "@/components/charts/Sparkline.svelte";
+  import TimeSeriesChart from "@/components/charts/TimeSeriesChart.svelte";
+  import AutoRefresh from "@/components/ui/AutoRefresh.svelte";
+  import ExportButton from "@/components/ui/ExportButton.svelte";
 
   let {
     endpoints = [], route_requests = [], selected_request = null,
-    selected_route = null, period = "24h", total_requests = 0
+    selected_route = null, period = "24h", total_requests = 0,
+    throughput_rpm = 0, apdex = null, latency_series = [], throughput_series = [], deploys = []
   } = $props();
   const pageStore = usePage();
   let base = $derived($pageStore.props?.base_path || "/daylight");
@@ -19,6 +24,17 @@
   let sheetOpen = $state(false);
   let sheetItem = $state(null);
   let sheetType = $state("endpoint");
+  let refreshInterval = $state(0);
+
+  $effect(() => {
+    if (refreshInterval <= 0) return;
+    const id = setInterval(() => {
+      router.reload({ preserveState: true, preserveScroll: true });
+    }, refreshInterval);
+    return () => clearInterval(id);
+  });
+
+  let apdexColor = $derived(apdex == null ? "#64748b" : apdex >= 0.9 ? "#22c55e" : apdex >= 0.7 ? "#f59e0b" : "#ef4444");
 
   function changePeriod(p) { router.get(`${base}/requests`, { period: p }, { preserveState: true }); }
   function fmt(ms) { if (ms == null) return "—"; return ms >= 1000 ? `${(ms / 1000).toFixed(1)}s` : `${Math.round(ms)}ms`; }
@@ -100,7 +116,9 @@
         <h1 class="page-title">Requests</h1>
         <p class="page-sub">{total_requests.toLocaleString()} requests in the last {period}</p>
       </div>
-      <div class="period-wrapper">
+      <div class="header-controls">
+        <AutoRefresh bind:interval={refreshInterval} />
+        <ExportButton baseUrl={`${base}/requests/export`} />
         <PeriodSelect value={period} onchange={changePeriod} />
       </div>
     </div>
@@ -148,7 +166,7 @@
     {:else}
       <!-- Stat cards + bar chart -->
       <div class="stats-row">
-        <div class="stats-grid">
+        <div class="stats-grid stats-grid-3col">
           <div class="stat-card">
             <span class="stat-card-label">Total Requests</span>
             <span class="stat-card-value">{statTotal.toLocaleString()}</span>
@@ -165,12 +183,38 @@
             <span class="stat-card-label">P95 Response Time</span>
             <span class="stat-card-value" class:stat-warn={statP95 > 500}>{fmt(statP95)}</span>
           </div>
+          <div class="stat-card">
+            <span class="stat-card-label">Throughput</span>
+            <span class="stat-card-value">{throughput_rpm}<span class="stat-unit"> req/min</span></span>
+          </div>
+          {#if apdex != null}
+            <div class="stat-card">
+              <span class="stat-card-label">Apdex</span>
+              <span class="stat-card-value" style="color: {apdexColor}">{apdex.toFixed(2)}</span>
+            </div>
+          {/if}
         </div>
         <div class="chart-card">
           <h3 class="chart-title">Slowest Endpoints</h3>
           <BarList items={topEndpoints} valueFormatter={fmt} color="#6366f1" />
         </div>
       </div>
+
+      <!-- Latency Time Series -->
+      {#if latency_series.length > 0}
+        <div class="chart-section">
+          <TimeSeriesChart
+            data={latency_series}
+            width={720}
+            height={180}
+            color="#6366f1"
+            label="Response time (ms)"
+            valueFormatter={fmt}
+            deploys={deploys}
+            showArea={true}
+          />
+        </div>
+      {/if}
 
       <!-- Level 1: Endpoints table -->
       <div class="table-container">
@@ -276,9 +320,10 @@
   .page-title { font-size: 1.375rem; font-weight: 700; color: #0f172a; margin: 0; letter-spacing: -0.01em; }
   .page-sub { font-size: 0.8125rem; color: #64748b; margin: 0.25rem 0 0; }
 
-  .period-wrapper {
+  .header-controls {
     display: flex;
     align-items: center;
+    gap: 0.5rem;
   }
 
   /* Stat cards + chart row */
@@ -527,5 +572,22 @@
     word-break: break-all;
     line-height: 1.5;
     border-radius: 0.375rem;
+  }
+
+  .stats-grid-3col {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .stat-unit {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #64748b;
+  }
+
+  .chart-section {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    padding: 1.25rem;
   }
 </style>

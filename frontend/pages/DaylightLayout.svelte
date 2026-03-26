@@ -11,6 +11,9 @@ let nav = $derived([
   { label: "Requests", href: `${base}/requests`, match: `${base}/requests`, icon: "requests" },
   { label: "Queries", href: `${base}/queries`, match: `${base}/queries`, icon: "queries" },
   { label: "Jobs", href: `${base}/jobs`, match: `${base}/jobs`, icon: "jobs" },
+  { label: "Logs", href: `${base}/logs`, match: `${base}/logs`, icon: "logs" },
+  { label: "HTTP", href: `${base}/http_requests`, match: `${base}/http_requests`, icon: "http" },
+  { label: "Cache", href: `${base}/cache`, match: `${base}/cache`, icon: "cache" },
   { label: "Health", href: `${base}/health`, match: `${base}/health`, icon: "health" },
   { label: "Settings", href: `${base}/settings`, match: `${base}/settings`, icon: "settings" },
 ]);
@@ -48,6 +51,12 @@ function isActive(item) {
               <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
             {:else if item.icon === "jobs"}
               <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 3h-8l-2 4h12z"/>
+            {:else if item.icon === "logs"}
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+            {:else if item.icon === "http"}
+              <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+            {:else if item.icon === "cache"}
+              <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/><path d="M21 5v4c0 1.66-4 3-9 3s-9-1.34-9-3V5"/>
             {:else if item.icon === "health"}
               <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
             {:else if item.icon === "settings"}

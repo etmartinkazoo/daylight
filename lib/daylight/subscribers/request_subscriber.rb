@@ -34,8 +34,18 @@ module Daylight
             Database::QueryRecord.where(id: query_ids).update_all(request_id: record.id)
           end
 
+          # Make request ID available to other subscribers
+          Thread.current[:daylight_current_request_id] = record.id
+
+          # Detect N+1 queries
+          query_patterns = Thread.current[:daylight_query_patterns]
+          if query_patterns&.any? { |_pattern, count| count >= 5 }
+            record.update_column(:n_plus_one, true)
+          end
+
           Thread.current[:daylight_query_count] = 0
           Thread.current[:daylight_query_ids] = []
+          Thread.current[:daylight_query_patterns] = Hash.new(0)
         rescue StandardError => e
           Rails.logger.debug "[Daylight] Request tracking failed: #{e.message}" if defined?(Rails)
         end

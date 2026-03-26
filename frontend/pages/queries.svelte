@@ -8,8 +8,10 @@
   import PeriodSelect from "./PeriodSelect.svelte";
   import EwSheet from "./EwSheet.svelte";
   import BarList from "@/components/charts/BarList.svelte";
+  import TimeSeriesChart from "@/components/charts/TimeSeriesChart.svelte";
+  import ExportButton from "@/components/ui/ExportButton.svelte";
 
-  let { queries = [], slowest = [], period = "24h", total_queries = 0 } = $props();
+  let { queries = [], slowest = [], period = "24h", total_queries = 0, volume_series = [], n_plus_one_requests = [] } = $props();
   const pageStore = usePage();
   let base = $derived($pageStore.props?.base_path || "/daylight");
 
@@ -43,7 +45,8 @@
         <h1 class="page-title">Slow Queries</h1>
         <p class="page-subtitle">Queries exceeding 50ms threshold in the last {period}</p>
       </div>
-      <div class="period-selector">
+      <div class="header-controls">
+        <ExportButton baseUrl={`${base}/queries/export`} />
         <PeriodSelect value={period} onchange={changePeriod} />
       </div>
     </div>
@@ -67,6 +70,49 @@
         <span class="stat-card-value danger">{fmt(maxDuration)}</span>
       </div>
     </div>
+
+    <!-- Volume Time Series -->
+    {#if volume_series.length > 0}
+      <div class="chart-section">
+        <TimeSeriesChart
+          data={volume_series}
+          width={720}
+          height={180}
+          color="#ef4444"
+          label="Query volume over time"
+          showArea={true}
+        />
+      </div>
+    {/if}
+
+    <!-- N+1 Query Suspects -->
+    {#if n_plus_one_requests.length > 0}
+      <div class="n-plus-one-section">
+        <div class="n-plus-one-header">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <h3 class="n-plus-one-title">N+1 Query Suspects</h3>
+        </div>
+        <div class="n-plus-one-table">
+          <div class="np1-thead">
+            <div class="np1-th" style="flex:2">Path</div>
+            <div class="np1-th" style="flex:1.5">Controller</div>
+            <div class="np1-th np1-th-right" style="width:5rem">Query Count</div>
+            <div class="np1-th np1-th-right" style="width:5rem">When</div>
+          </div>
+          {#each n_plus_one_requests as np (np.path + np.controller_action + np.occurred_at)}
+            <div class="np1-row">
+              <div class="np1-td" style="flex:2">
+                <span class="np1-warning-badge">N+1</span>
+                <span class="np1-path">{np.path}</span>
+              </div>
+              <div class="np1-td" style="flex:1.5"><span class="np1-controller">{np.controller_action || "—"}</span></div>
+              <div class="np1-td np1-td-num" style="width:5rem">{np.query_count}</div>
+              <div class="np1-td np1-td-num" style="width:5rem"><span class="np1-time">{timeAgo(np.occurred_at)} ago</span></div>
+            </div>
+          {/each}
+        </div>
+      </div>
+    {/if}
 
     <!-- Bar Chart -->
     {#if topQueries.length > 0}
@@ -188,7 +234,10 @@
     margin: 0.25rem 0 0;
   }
 
-  .period-selector {
+  .header-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     flex-shrink: 0;
   }
 
@@ -510,6 +559,102 @@
     line-height: 1.6;
     color: #334155;
   }
+
+  /* Chart section */
+  .chart-section {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+  }
+
+  /* N+1 Section */
+  .n-plus-one-section {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 0.75rem;
+    overflow: hidden;
+  }
+  .n-plus-one-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid #fde68a;
+  }
+  .n-plus-one-title {
+    font-size: 0.9375rem;
+    font-weight: 650;
+    color: #92400e;
+    margin: 0;
+  }
+  .n-plus-one-table {
+    background: #fff;
+  }
+  .np1-thead {
+    display: flex;
+    align-items: center;
+    padding: 0 1rem;
+    background: #fefce8;
+    border-bottom: 1px solid #fde68a;
+  }
+  .np1-th {
+    padding: 0.5rem 0.5rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #92400e;
+  }
+  .np1-th-right { text-align: right; }
+  .np1-row {
+    display: flex;
+    align-items: center;
+    padding: 0 1rem;
+    border-bottom: 1px solid #fef3c7;
+    transition: background 0.1s;
+  }
+  .np1-row:last-child { border-bottom: none; }
+  .np1-row:hover { background: #fefce8; }
+  .np1-td {
+    padding: 0.5rem 0.5rem;
+    font-size: 0.8125rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #334155;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .np1-td-num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+    justify-content: flex-end;
+  }
+  .np1-warning-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    padding: 0.125rem 0.4375rem;
+    border-radius: 9999px;
+    background: #fef3c7;
+    color: #d97706;
+    flex-shrink: 0;
+  }
+  .np1-path {
+    font-family: "SF Mono", Monaco, Menlo, Consolas, monospace;
+    font-size: 0.75rem;
+    color: #334155;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .np1-controller { font-size: 0.8125rem; color: #64748b; }
+  .np1-time { font-size: 0.75rem; color: #94a3b8; }
 
   /* Responsive */
   @media (max-width: 640px) {

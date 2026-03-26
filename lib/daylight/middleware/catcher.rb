@@ -16,7 +16,10 @@ module Daylight
         unless path.start_with?("/daylight") || Thread.current[THREAD_KEY]
           begin
             Thread.current[THREAD_KEY] = true
-            Daylight.track(error, context: build_context(env))
+            Daylight.track(error, context: build_context(env).merge(
+              handled: false,
+              source: "middleware"
+            ))
           rescue # rubocop:disable Lint/RescueWithoutErrorClass
             # Swallow ALL tracking failures
           ensure

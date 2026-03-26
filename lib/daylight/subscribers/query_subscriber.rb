@@ -18,6 +18,11 @@ module Daylight
           # Count all queries per request
           Thread.current[:daylight_query_count] = (Thread.current[:daylight_query_count] || 0) + 1
 
+          # Track normalized SQL patterns for N+1 detection
+          normalized = normalize_sql(payload[:sql])
+          Thread.current[:daylight_query_patterns] ||= Hash.new(0)
+          Thread.current[:daylight_query_patterns][normalized] += 1
+
           # Only store slow queries to keep DB small
           duration = event.duration
           next unless duration && duration >= SLOW_QUERY_THRESHOLD

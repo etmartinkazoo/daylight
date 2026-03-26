@@ -40,6 +40,17 @@ module Daylight
             completed_at: Time.current,
             occurred_at: Time.current
           )
+
+          # Link job failures to the errors dashboard
+          if exception
+            Daylight::Tracker.record(exception, context: {
+              handled: false,
+              source: "job",
+              job_class: job.class.name,
+              queue: job.queue_name,
+              job_id: job.job_id
+            })
+          end
         rescue StandardError
           # Never break the app
         end

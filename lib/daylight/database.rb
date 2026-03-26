@@ -25,6 +25,22 @@ module Daylight
       self.table_name = "daylight_jobs"
     end
 
+    class LogRecord < ActiveRecord::Base
+      self.table_name = "daylight_logs"
+    end
+
+    class DeployRecord < ActiveRecord::Base
+      self.table_name = "daylight_deploys"
+    end
+
+    class HttpRequestRecord < ActiveRecord::Base
+      self.table_name = "daylight_http_requests"
+    end
+
+    class CacheEventRecord < ActiveRecord::Base
+      self.table_name = "daylight_cache_events"
+    end
+
     class SettingRecord < ActiveRecord::Base
       self.table_name = "daylight_settings"
     end
@@ -49,7 +65,7 @@ module Daylight
           timeout: 5000
         }
 
-        [ErrorRecord, OccurrenceRecord, RequestRecord, QueryRecord, JobRecord, SettingRecord].each do |klass|
+        [ErrorRecord, OccurrenceRecord, RequestRecord, QueryRecord, JobRecord, LogRecord, DeployRecord, HttpRequestRecord, CacheEventRecord, SettingRecord].each do |klass|
           klass.establish_connection(config)
         end
 
@@ -161,6 +177,84 @@ module Daylight
           conn.add_index :daylight_jobs, :job_class
           conn.add_index :daylight_jobs, :occurred_at
           conn.add_index :daylight_jobs, :status
+        end
+
+        # Logs
+        unless conn.table_exists?(:daylight_logs)
+          conn.create_table :daylight_logs do |t|
+            t.string   :level, null: false         # debug, info, warn, error, fatal, unknown
+            t.text     :message, null: false
+            t.string   :controller_action
+            t.string   :request_path
+            t.datetime :occurred_at, null: false
+          end
+          conn.add_index :daylight_logs, :level
+          conn.add_index :daylight_logs, :occurred_at
+        end
+
+        # Deploys
+        unless conn.table_exists?(:daylight_deploys)
+          conn.create_table :daylight_deploys do |t|
+            t.string   :version, null: false
+            t.text     :description
+            t.string   :git_sha
+            t.string   :deployed_by
+            t.datetime :deployed_at, null: false
+          end
+          conn.add_index :daylight_deploys, :deployed_at
+        end
+
+        # HTTP Requests
+        unless conn.table_exists?(:daylight_http_requests)
+          conn.create_table :daylight_http_requests do |t|
+            t.string   :method
+            t.string   :url, null: false
+            t.string   :host
+            t.integer  :status_code
+            t.float    :duration_ms
+            t.string   :controller_action
+            t.string   :request_path
+            t.datetime :occurred_at, null: false
+          end
+          conn.add_index :daylight_http_requests, :host
+          conn.add_index :daylight_http_requests, :occurred_at
+          conn.add_index :daylight_http_requests, :duration_ms
+        end
+
+        # Cache Events
+        unless conn.table_exists?(:daylight_cache_events)
+          conn.create_table :daylight_cache_events do |t|
+            t.string   :event_type, null: false
+            t.string   :key
+            t.boolean  :hit
+            t.float    :duration_ms
+            t.string   :controller_action
+            t.string   :request_path
+            t.datetime :occurred_at, null: false
+          end
+          conn.add_index :daylight_cache_events, :event_type
+          conn.add_index :daylight_cache_events, :occurred_at
+        end
+
+        # Add n_plus_one column to requests if missing
+        if conn.table_exists?(:daylight_requests) && !conn.column_exists?(:daylight_requests, :n_plus_one)
+          conn.add_column :daylight_requests, :n_plus_one, :boolean
+        end
+
+        # Add request_id column to occurrences if missing
+        if conn.table_exists?(:daylight_occurrences) && !conn.column_exists?(:daylight_occurrences, :request_id)
+          conn.add_column :daylight_occurrences, :request_id, :integer
+          conn.add_index :daylight_occurrences, :request_id rescue nil
+        end
+
+        # Add handled/source columns to errors if missing (migration for existing DBs)
+        if conn.table_exists?(:daylight_errors)
+          unless conn.column_exists?(:daylight_errors, :handled)
+            conn.add_column :daylight_errors, :handled, :boolean
+          end
+          unless conn.column_exists?(:daylight_errors, :source)
+            conn.add_column :daylight_errors, :source, :string
+          end
         end
 
         # Settings (single row, key-value)

@@ -237,6 +237,7 @@
     flex-direction: column;
     height: 100%;
     min-height: 300px;
+    padding: 0.75rem 1rem 1rem;
   }
 
   .ew-ai-model-row {

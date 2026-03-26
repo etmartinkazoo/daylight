@@ -3,8 +3,10 @@
   import DaylightLayout from "./DaylightLayout.svelte";
   import EwSheet from "./EwSheet.svelte";
   import DonutChart from "@/components/charts/DonutChart.svelte";
+  import Sparkline from "@/components/charts/Sparkline.svelte";
+  import AreaChart from "@/components/charts/AreaChart.svelte";
 
-  let { system = {}, database = {}, jobs = {}, errors = {} } = $props();
+  let { system = {}, database = {}, jobs = {}, errors = {}, apdex = null, error_sparkline = [], request_sparkline = [] } = $props();
   const pageStore = usePage();
   let base = $derived($pageStore.props?.base_path || "/daylight");
 
@@ -22,6 +24,8 @@
     sheetData = f;
     sheetOpen = true;
   }
+
+  let apdexColor = $derived(apdex == null ? "#64748b" : apdex >= 0.9 ? "#22c55e" : apdex >= 0.7 ? "#f59e0b" : "#ef4444");
 
   let errorChartSegments = $derived([
     { value: errors.open ?? 0, color: "#ef4444", label: "Open" },
@@ -131,6 +135,20 @@
     <div class="section">
       <h2 class="section-title">Performance Overview</h2>
 
+      <!-- Apdex -->
+      {#if apdex != null}
+        <div class="subsection">
+          <h3 class="subsection-title">Application Performance</h3>
+          <div class="apdex-card" style="border-color: {apdexColor}20">
+            <span class="apdex-label">Apdex Score</span>
+            <span class="apdex-value" style="color: {apdexColor}">{apdex.toFixed(2)}</span>
+            <span class="apdex-desc">
+              {#if apdex >= 0.9}Excellent{:else if apdex >= 0.7}Fair{:else}Poor{/if}
+            </span>
+          </div>
+        </div>
+      {/if}
+
       <!-- Errors -->
       <div class="subsection">
         <h3 class="subsection-title">Errors</h3>
@@ -152,6 +170,11 @@
               <span class="stat-card-label">Open Errors</span>
               <span class="stat-card-value" class:err-value={errors.open > 0}>{errors.open ?? 0}</span>
               <span class="stat-card-description">Currently unresolved</span>
+              {#if error_sparkline.length >= 2}
+                <div class="sparkline-container">
+                  <AreaChart data={error_sparkline} width={120} height={32} color="#ef4444" />
+                </div>
+              {/if}
             </div>
             <div class="stat-card">
               <span class="stat-card-label">Last 24 Hours</span>
@@ -194,6 +217,11 @@
               <span class="stat-card-label">Ready</span>
               <span class="stat-card-value">{jobs.ready ?? 0}</span>
               <span class="stat-card-description">Queued for processing</span>
+              {#if request_sparkline.length >= 2}
+                <div class="sparkline-container">
+                  <AreaChart data={request_sparkline} width={120} height={32} color="#3b82f6" />
+                </div>
+              {/if}
             </div>
             <div class="stat-card">
               <span class="stat-card-label">Scheduled</span>
@@ -630,5 +658,43 @@
     word-break: break-all;
     margin: 0;
     color: #dc2626;
+  }
+
+  /* Apdex card */
+  .apdex-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.375rem;
+    max-width: 200px;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  }
+  .apdex-label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: #64748b;
+  }
+  .apdex-value {
+    font-size: 2.5rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .apdex-desc {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  /* Sparkline container */
+  .sparkline-container {
+    margin-top: 0.25rem;
   }
 </style>

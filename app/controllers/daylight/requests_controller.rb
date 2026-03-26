@@ -1,7 +1,11 @@
 # frozen_string_literal: true
 
+require "csv"
+
 module Daylight
   class RequestsController < BaseController
+    include Daylight::TimeSeries
+
     before_action :ensure_connected
 
     def index
@@ -77,15 +81,48 @@ module Daylight
         end
       end
 
+      total = scope.count
+      minutes_in_period = ((Time.current - period_start(period)) / 60.0)
+      throughput_rpm = minutes_in_period > 0 ? (total.to_f / minutes_in_period).round(2) : 0
+
+      # Apdex calculation (threshold 500ms)
+      satisfied = scope.where("duration_ms < 500").count
+      tolerating = scope.where("duration_ms >= 500 AND duration_ms < 2000").count
+      frustrated = scope.where("duration_ms >= 2000").count
+      apdex = total > 0 ? ((satisfied + tolerating * 0.5) / total.to_f).round(3) : 1.0
+
       render inertia: "daylight/requests", props: {
         endpoints: endpoints,
         route_requests: route_requests,
         selected_request: selected_request,
         selected_route: params[:route],
         period: period,
-        total_requests: scope.count,
+        total_requests: total,
+        throughput_rpm: throughput_rpm,
+        apdex: apdex,
+        latency_series: time_series_avg(scope, period, value_column: :duration_ms),
+        throughput_series: time_series_buckets(scope, period),
+        deploys: deploys_in_period(period),
         **sort_props
       }
+    end
+
+    def export
+      period = params[:period] || "24h"
+      scope = Database::RequestRecord.where("occurred_at > ?", period_start(period))
+      records = scope.order(occurred_at: :desc)
+
+      if params[:format] == "json"
+        render json: records.map { |r| serialize_request(r) }
+      else
+        csv_data = CSV.generate do |csv|
+          csv << %w[id method path route_pattern controller_action status_code duration_ms db_duration_ms view_duration_ms query_count ip occurred_at]
+          records.each do |r|
+            csv << [r.id, r.method, r.path, r.route_pattern, r.controller_action, r.status_code, r.duration_ms, r.db_duration_ms, r.view_duration_ms, r.query_count, r.ip, r.occurred_at]
+          end
+        end
+        send_data csv_data, filename: "daylight-requests-#{Date.current}.csv", type: "text/csv"
+      end
     end
 
     private

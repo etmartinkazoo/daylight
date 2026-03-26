@@ -1,7 +1,10 @@
 # frozen_string_literal: true
 
+require "csv"
+
 module Daylight
   class QueriesController < BaseController
+    include Daylight::TimeSeries
 
     before_action :ensure_connected
 
@@ -48,20 +51,54 @@ module Daylight
         }
       end
 
+      # N+1 requests in period
+      n_plus_one_requests = Database::RequestRecord
+        .where("occurred_at > ?", period_start(period))
+        .where(n_plus_one: true)
+        .order(occurred_at: :desc)
+        .limit(20)
+        .map do |r|
+          {
+            id: r.id,
+            path: r.path,
+            controller_action: r.controller_action,
+            query_count: r.query_count,
+            occurred_at: r.occurred_at
+          }
+        end
+
       render inertia: "daylight/queries", props: {
         queries: queries,
         slowest: slowest,
         period: period,
         total_queries: scope.count,
+        volume_series: time_series_buckets(scope, period),
+        n_plus_one_requests: n_plus_one_requests,
         **sort_props
       }
     end
 
-    private
+    def export
+      period = params[:period] || "24h"
+      scope = Database::QueryRecord.where("occurred_at > ?", period_start(period))
+      records = scope.order(occurred_at: :desc)
 
-    def ensure_connected
-      Database.ensure_connected!
+      if params[:format] == "json"
+        render json: records.map { |q|
+          { id: q.id, sql: q.sql, normalized_sql: q.normalized_sql, duration_ms: q.duration_ms, source_location: q.source_location, controller_action: q.controller_action, request_path: q.request_path, occurred_at: q.occurred_at }
+        }
+      else
+        csv_data = CSV.generate do |csv|
+          csv << %w[id sql normalized_sql duration_ms source_location controller_action request_path occurred_at]
+          records.each do |q|
+            csv << [q.id, q.sql, q.normalized_sql, q.duration_ms, q.source_location, q.controller_action, q.request_path, q.occurred_at]
+          end
+        end
+        send_data csv_data, filename: "daylight-queries-#{Date.current}.csv", type: "text/csv"
+      end
     end
+
+    private
 
     def period_start(period)
       case period

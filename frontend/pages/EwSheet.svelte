@@ -28,9 +28,22 @@
     if (open) activeTab = "info";
   });
 
+  // Escape to close + Cmd/Ctrl+Shift+A to toggle
   $effect(() => {
-    if (!open) return;
-    function onKey(e) { if (e.key === "Escape") close(); }
+    function onKey(e) {
+      if (e.key === "Escape" && open) { close(); return; }
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === "a") {
+        e.preventDefault();
+        if (open) {
+          if (activeTab === "ai") close();
+          else switchToAi();
+        } else {
+          open = true;
+          // Switch to AI tab on next tick after open sets activeTab to "info"
+          setTimeout(() => switchToAi(), 0);
+        }
+      }
+    }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   });
@@ -54,7 +67,7 @@
       </button>
     </div>
 
-    <div class="ew-sheet-body">
+    <div class="ew-sheet-body" class:ew-sheet-body-ai={activeTab === "ai"}>
       {#if activeTab === "info"}
         {@render children()}
       {:else}
@@ -162,5 +175,10 @@
     padding: 1.5rem;
     display: flex;
     flex-direction: column;
+  }
+
+  .ew-sheet-body-ai {
+    padding: 0;
+    overflow: hidden;
   }
 </style>

@@ -3,6 +3,9 @@
 require "daylight/subscribers/request_subscriber"
 require "daylight/subscribers/query_subscriber"
 require "daylight/subscribers/job_subscriber"
+require "daylight/subscribers/log_subscriber"
+require "daylight/subscribers/http_subscriber"
+require "daylight/subscribers/cache_subscriber"
 
 module Daylight
   class Engine < ::Rails::Engine
@@ -41,6 +44,9 @@ module Daylight
       Daylight::Subscribers::RequestSubscriber.attach!
       Daylight::Subscribers::QuerySubscriber.attach!
       Daylight::Subscribers::JobSubscriber.attach!
+      Daylight::Subscribers::LogSubscriber.attach!
+      Daylight::Subscribers::HttpSubscriber.attach!
+      Daylight::Subscribers::CacheSubscriber.attach!
     end
 
     initializer "daylight.error_reporter" do
@@ -54,8 +60,8 @@ module Daylight
     def report(error, handled:, severity:, context: {}, source: nil)
       Daylight::Tracker.record(error, context: context.merge(
         handled: handled,
-        severity: severity,
-        source: source
+        severity: severity.to_s,
+        source: source || "rails_error_reporter"
       ))
     end
   end

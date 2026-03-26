@@ -8,8 +8,10 @@
   import PeriodSelect from "./PeriodSelect.svelte";
   import EwSheet from "./EwSheet.svelte";
   import DonutChart from "@/components/charts/DonutChart.svelte";
+  import TimeSeriesChart from "@/components/charts/TimeSeriesChart.svelte";
+  import ExportButton from "@/components/ui/ExportButton.svelte";
 
-  let { job_classes = [], failures = [], period = "24h", totals = {}, solid_queue = null } = $props();
+  let { job_classes = [], failures = [], period = "24h", totals = {}, solid_queue = null, volume_series = [], failure_series = [] } = $props();
   const pageStore = usePage();
   let base = $derived($pageStore.props?.base_path || "/daylight");
 
@@ -65,7 +67,10 @@
         <h1 class="page-title">Jobs</h1>
         <p class="page-subtitle">Background job monitoring and performance</p>
       </div>
-      <PeriodSelect value={period} onchange={changePeriod} />
+      <div class="header-controls">
+        <ExportButton baseUrl={`${base}/jobs/export`} />
+        <PeriodSelect value={period} onchange={changePeriod} />
+      </div>
     </div>
 
     <!-- Stat Cards + Donut Chart -->
@@ -100,6 +105,32 @@
         </div>
       {/if}
     </div>
+
+    <!-- Job Volume Time Series -->
+    {#if volume_series.length > 0}
+      <div class="chart-section">
+        <TimeSeriesChart
+          data={volume_series}
+          width={720}
+          height={180}
+          color="#3b82f6"
+          label="Job volume over time"
+          showArea={true}
+        />
+        {#if failure_series.length > 0}
+          <div style="margin-top: 0.75rem;">
+            <TimeSeriesChart
+              data={failure_series}
+              width={720}
+              height={100}
+              color="#ef4444"
+              label="Failures over time"
+              showArea={true}
+            />
+          </div>
+        {/if}
+      </div>
+    {/if}
 
     <!-- Solid Queue Status -->
     {#if solid_queue}
@@ -266,6 +297,13 @@
   .page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
   .page-title { font-size: 1.375rem; font-weight: 700; color: #0f172a; margin: 0; letter-spacing: -0.02em; }
   .page-subtitle { font-size: 0.8125rem; color: #64748b; margin: 0.25rem 0 0; }
+  .header-controls { display: flex; align-items: center; gap: 0.5rem; }
+  .chart-section {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+  }
 
   .section { display: flex; flex-direction: column; gap: 0.75rem; }
   .section-title { font-size: 0.875rem; font-weight: 600; color: #0f172a; margin: 0; }

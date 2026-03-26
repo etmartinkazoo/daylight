@@ -1,5 +1,5 @@
 <script>
-  import { useForm, usePage } from "@inertiajs/svelte";
+  import { useForm, usePage, router } from "@inertiajs/svelte";
   import DaylightLayout from "./DaylightLayout.svelte";
   import Button from "@/components/ui/Button.svelte";
 
@@ -22,6 +22,44 @@
   function handleSubmit(e) {
     e.preventDefault();
     $form.patch(`${base}/settings`, { preserveScroll: true });
+  }
+
+  let cleanupRunning = $state(false);
+  let cleanupDone = $state(false);
+  let testNotifRunning = $state(false);
+  let testNotifDone = $state(false);
+
+  function runCleanup() {
+    cleanupRunning = true;
+    cleanupDone = false;
+    router.post(`${base}/settings/cleanup`, {}, {
+      preserveScroll: true,
+      onSuccess: () => { cleanupRunning = false; cleanupDone = true; },
+      onError: () => { cleanupRunning = false; },
+    });
+  }
+
+  function sendTestNotification() {
+    testNotifRunning = true;
+    testNotifDone = false;
+    router.post(`${base}/settings/test_notification`, {}, {
+      preserveScroll: true,
+      onSuccess: () => { testNotifRunning = false; testNotifDone = true; },
+      onError: () => { testNotifRunning = false; },
+    });
+  }
+
+  function formatKeyDate(dateStr) {
+    if (!dateStr) return "";
+    const d = new Date(dateStr);
+    const now = new Date();
+    const diff = now - d;
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return "just now";
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: d.getFullYear() !== now.getFullYear() ? "numeric" : undefined });
   }
 </script>
 
@@ -74,6 +112,18 @@
             <input id="slack_webhook_url" type="url" class="form-input" placeholder="https://hooks.slack.com/services/..." bind:value={$form["settings[slack_webhook_url]"]} />
             <p class="form-hint">Incoming webhook URL for Slack notifications.</p>
           </div>
+
+          <div class="form-field">
+            <div class="cleanup-row">
+              <Button variant="outline" type="button" disabled={testNotifRunning} onclick={sendTestNotification}>
+                {testNotifRunning ? "Sending..." : "Send Test Notification"}
+              </Button>
+              {#if testNotifDone}
+                <span class="saved-badge">Test notification sent</span>
+              {/if}
+            </div>
+            <p class="form-hint">Send a test notification to verify your email and Slack settings.</p>
+          </div>
         </div>
       </div>
 
@@ -112,6 +162,18 @@
             </div>
             <p class="form-hint">Occurrences, requests, queries, and job records older than this are purged.</p>
           </div>
+
+          <div class="form-field">
+            <div class="cleanup-row">
+              <Button variant="outline" type="button" disabled={cleanupRunning} onclick={runCleanup}>
+                {cleanupRunning ? "Running..." : "Run Cleanup Now"}
+              </Button>
+              {#if cleanupDone}
+                <span class="saved-badge">Cleanup complete</span>
+              {/if}
+            </div>
+            <p class="form-hint">Immediately purge data older than the retention period.</p>
+          </div>
         </div>
       </div>
 
@@ -123,7 +185,15 @@
         </div>
         <div class="section-body">
           <div class="form-field">
-            <label class="form-label" for="gemini_api_key">Gemini API Key</label>
+            <div class="form-label-row">
+              <label class="form-label" for="gemini_api_key">Gemini API Key</label>
+              {#if settings.gemini_api_key}
+                <span class="key-saved-badge">
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3.5 8.5l3 3 6-6"/></svg>
+                  Saved{#if settings.gemini_api_key_saved_at}&nbsp;&middot;&nbsp;{formatKeyDate(settings.gemini_api_key_saved_at)}{/if}
+                </span>
+              {/if}
+            </div>
             <input id="gemini_api_key" type="password" class="form-input" placeholder={settings.gemini_api_key ? "Key saved — leave blank to keep" : "Enter API key"} bind:value={$form["settings[gemini_api_key]"]} autocomplete="off" />
             <p class="form-hint">Used by the AI tab to analyze errors, queries, and requests. Get a key at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>.</p>
           </div>
@@ -242,6 +312,26 @@
     color: #0f172a;
   }
 
+  .form-label-row {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+  }
+
+  .key-saved-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.125rem 0.5rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: #16a34a;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 9999px;
+    white-space: nowrap;
+  }
+
   .form-input {
     width: 100%;
     padding: 0.5rem 0.75rem;
@@ -357,5 +447,11 @@
     background: #f0fdf4;
     border: 1px solid #bbf7d0;
     border-radius: 9999px;
+  }
+
+  .cleanup-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
   }
 </style>

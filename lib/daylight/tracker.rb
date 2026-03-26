@@ -19,6 +19,11 @@ module Daylight
         req_url = context.delete(:request_url) || context.delete("request_url")
         req_method = context.delete(:request_method) || context.delete("request_method")
 
+        # Extract error classification fields
+        handled = context.delete(:handled)
+        severity = context.delete(:severity)
+        source = context.delete(:source)
+
         # Also capture controller/action from thread locals (set by subscriber)
         controller_action = Thread.current[:daylight_controller_action]
         context[:controller_action] = controller_action if controller_action
@@ -32,6 +37,9 @@ module Daylight
             backtrace_summary: backtrace.first(10).join("\n"),
             occurrences_count: 1,
             status: "open",
+            severity: severity || "error",
+            handled: handled,
+            source: source,
             first_seen_at: now,
             last_seen_at: now
           )
@@ -40,11 +48,17 @@ module Daylight
           err.last_seen_at = now
           err.message = error.message.truncate(1000)
           err.status = "open" if err.status == "resolved"
+          # Update handled to false if we ever see it unhandled (worst case wins)
+          err.handled = false if handled == false
+          err.source = source if source.present?
         end
+
+        was_new = err.new_record?
+        was_reopened = !err.new_record? && err.status_changed? && err.status == "open"
 
         err.save!
 
-        Database::OccurrenceRecord.create!(
+        occurrence = Database::OccurrenceRecord.create!(
           error_id: err.id,
           backtrace: backtrace.first(30).join("\n"),
           context: context.to_json,
@@ -52,6 +66,17 @@ module Daylight
           request_method: req_method,
           occurred_at: now
         )
+
+        # Link occurrence to current request
+        current_request_id = Thread.current[:daylight_current_request_id]
+        if current_request_id
+          Database::OccurrenceRecord.where(id: occurrence.id).update_all(request_id: current_request_id)
+        end
+
+        # Notify on new errors or re-opened errors
+        if was_new || was_reopened
+          Notifier.notify(err) rescue nil
+        end
 
         err
       rescue StandardError => e
