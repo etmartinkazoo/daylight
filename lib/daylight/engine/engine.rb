@@ -6,6 +6,8 @@ require "daylight/subscribers/job_subscriber"
 require "daylight/subscribers/log_subscriber"
 require "daylight/subscribers/http_subscriber"
 require "daylight/subscribers/cache_subscriber"
+require "daylight/subscribers/scheduled_task_subscriber"
+require "daylight/subscribers/mail_subscriber"
 
 module Daylight
   class Engine < ::Rails::Engine
@@ -34,10 +36,13 @@ module Daylight
     initializer "daylight.subscribers", after: :load_config_initializers do
       ActiveSupport.on_load(:action_controller) do
         before_action do
+          Daylight::TraceContext.start!
+          Daylight::Sampler.start_request_sampling!
           Thread.current[:daylight_controller_action] = "#{self.class.name}##{action_name}"
           Thread.current[:daylight_request_path] = request.path
           Thread.current[:daylight_query_count] = 0
           Thread.current[:daylight_query_ids] = []
+          Thread.current[:daylight_http_request_ids] = []
         end
       end
 
@@ -47,6 +52,8 @@ module Daylight
       Daylight::Subscribers::LogSubscriber.attach!
       Daylight::Subscribers::HttpSubscriber.attach!
       Daylight::Subscribers::CacheSubscriber.attach!
+      Daylight::Subscribers::ScheduledTaskSubscriber.attach!
+      Daylight::Subscribers::MailSubscriber.attach!
     end
 
     initializer "daylight.error_reporter" do

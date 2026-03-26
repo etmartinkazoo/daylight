@@ -19,6 +19,9 @@ module Daylight
         req_url = context.delete(:request_url) || context.delete("request_url")
         req_method = context.delete(:request_method) || context.delete("request_method")
 
+        # Extract user_id from context
+        user_id = context[:user_id]&.to_s
+
         # Extract error classification fields
         handled = context.delete(:handled)
         severity = context.delete(:severity)
@@ -64,6 +67,8 @@ module Daylight
           context: context.to_json,
           request_url: req_url&.to_s&.truncate(2000),
           request_method: req_method,
+          user_id: user_id,
+          trace_id: TraceContext.current,
           occurred_at: now
         )
 
@@ -71,6 +76,12 @@ module Daylight
         current_request_id = Thread.current[:daylight_current_request_id]
         if current_request_id
           Database::OccurrenceRecord.where(id: occurrence.id).update_all(request_id: current_request_id)
+        end
+
+        # Update affected_users_count on the error
+        if user_id.present?
+          count = Database::OccurrenceRecord.where(error_id: err.id).where.not(user_id: nil).distinct.count(:user_id)
+          err.update_column(:affected_users_count, count)
         end
 
         # Notify on new errors or re-opened errors

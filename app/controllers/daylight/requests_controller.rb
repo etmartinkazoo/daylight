@@ -73,10 +73,38 @@ module Daylight
         if params[:request_id].present?
           req = Database::RequestRecord.find_by(id: params[:request_id])
           if req
+            trace_id = req.try(:trace_id)
             queries = Database::QueryRecord.where(request_id: req.id).order(:occurred_at).map do |q|
               { id: q.id, sql: q.sql, duration_ms: q.duration_ms, source_location: q.source_location }
             end
-            selected_request = serialize_request(req).merge(queries: queries)
+
+            waterfall = []
+            if trace_id.present?
+              # Queries
+              Database::QueryRecord.where(trace_id: trace_id).order(:occurred_at).each do |q|
+                waterfall << { type: "query", duration_ms: q.duration_ms, detail: q.normalized_sql || q.sql&.truncate(200), source: q.source_location, occurred_at: q.occurred_at }
+              end
+              # HTTP calls
+              Database::HttpRequestRecord.where(trace_id: trace_id).order(:occurred_at).each do |h|
+                waterfall << { type: "http", duration_ms: h.duration_ms, detail: "#{h.method} #{h.url&.truncate(200)}", status_code: h.status_code, occurred_at: h.occurred_at }
+              end
+              # Cache events
+              Database::CacheEventRecord.where(trace_id: trace_id).order(:occurred_at).each do |c|
+                waterfall << { type: "cache", duration_ms: c.duration_ms, detail: "#{c.event_type} #{c.key&.truncate(100)}", hit: c.hit, occurred_at: c.occurred_at }
+              end
+              # Logs
+              Database::LogRecord.where(trace_id: trace_id).order(:occurred_at).each do |l|
+                waterfall << { type: "log", detail: l.message&.truncate(200), level: l.level, occurred_at: l.occurred_at }
+              end
+              # Exceptions
+              Database::OccurrenceRecord.where(trace_id: trace_id).order(:occurred_at).each do |o|
+                err = Database::ErrorRecord.find_by(id: o.error_id)
+                waterfall << { type: "exception", detail: "#{err&.error_class}: #{err&.message&.truncate(150)}", error_id: o.error_id, occurred_at: o.occurred_at }
+              end
+              waterfall.sort_by! { |e| e[:occurred_at] }
+            end
+
+            selected_request = serialize_request(req).merge(queries: queries, waterfall: waterfall, trace_id: trace_id)
           end
         end
       end

@@ -14,6 +14,8 @@ let nav = $derived([
   { label: "Logs", href: `${base}/logs`, match: `${base}/logs`, icon: "logs" },
   { label: "HTTP", href: `${base}/http_requests`, match: `${base}/http_requests`, icon: "http" },
   { label: "Cache", href: `${base}/cache`, match: `${base}/cache`, icon: "cache" },
+  { label: "Scheduled", href: `${base}/scheduled_tasks`, match: `${base}/scheduled_tasks`, icon: "scheduled" },
+  { label: "Mail", href: `${base}/mail_events`, match: `${base}/mail_events`, icon: "mail" },
   { label: "Health", href: `${base}/health`, match: `${base}/health`, icon: "health" },
   { label: "Settings", href: `${base}/settings`, match: `${base}/settings`, icon: "settings" },
 ]);
@@ -57,6 +59,10 @@ function isActive(item) {
               <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
             {:else if item.icon === "cache"}
               <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/><path d="M21 5v4c0 1.66-4 3-9 3s-9-1.34-9-3V5"/>
+            {:else if item.icon === "scheduled"}
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            {:else if item.icon === "mail"}
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
             {:else if item.icon === "health"}
               <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
             {:else if item.icon === "settings"}

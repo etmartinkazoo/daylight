@@ -26,6 +26,7 @@ module Daylight
           # Only store slow queries to keep DB small
           duration = event.duration
           next unless duration && duration >= SLOW_QUERY_THRESHOLD
+          next unless Daylight::Sampler.request_sampled?
 
           Database.ensure_connected!
           record = Database::QueryRecord.create!(
@@ -35,6 +36,7 @@ module Daylight
             source_location: extract_source(caller_locations),
             controller_action: Thread.current[:daylight_controller_action],
             request_path: Thread.current[:daylight_request_path],
+            trace_id: Daylight::TraceContext.current,
             occurred_at: Time.current
           )
 

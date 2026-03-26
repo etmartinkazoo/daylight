@@ -81,7 +81,7 @@
   .ew-sheet-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.4);
+    background: rgba(0, 0, 0, 0.25);
     backdrop-filter: blur(2px);
     z-index: 100;
     animation: ew-fade 0.2s ease;
@@ -94,11 +94,11 @@
     top: 0;
     right: 0;
     bottom: 0;
-    width: 540px;
-    max-width: 90vw;
-    background: #fff;
-    border-left: 1px solid #e2e8f0;
-    box-shadow: -8px 0 30px rgba(0, 0, 0, 0.08);
+    width: 100%;
+    max-width: 28rem;
+    background: var(--color-bg, #fff);
+    box-shadow: var(--shadow-xl, 0 8px 16px rgba(0, 0, 0, 0.04), 0 16px 40px -8px rgba(0, 0, 0, 0.1));
+    border-radius: var(--radius-lg, 0.75rem) 0 0 var(--radius-lg, 0.75rem);
     z-index: 101;
     display: flex;
     flex-direction: column;
@@ -111,15 +111,15 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 1rem 1.5rem;
-    border-bottom: 1px solid #e2e8f0;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--color-border, rgba(226, 232, 240, 0.6));
     flex-shrink: 0;
   }
 
   .ew-sheet-title {
     font-size: 0.9375rem;
     font-weight: 700;
-    color: #0f172a;
+    color: var(--color-fg, #0f172a);
     margin: 0;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -127,46 +127,47 @@
   }
 
   .ew-sheet-close {
-    width: 2rem;
-    height: 2rem;
+    width: 1.75rem;
+    height: 1.75rem;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1.25rem;
     border: none;
     background: none;
-    color: #94a3b8;
+    color: var(--color-muted, #64748b);
     cursor: pointer;
     flex-shrink: 0;
-    border-radius: 0.375rem;
-    transition: all 0.15s ease;
-    &:hover { background: #f1f5f9; color: #0f172a; }
+    border-radius: var(--radius-sm, 0.375rem);
+    transition: all 0.1s;
+    &:hover { background: var(--color-accent, #f1f5f9); color: var(--color-fg, #0f172a); }
   }
 
   .ew-sheet-tabs {
     display: flex;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid var(--color-border, rgba(226, 232, 240, 0.6));
     flex-shrink: 0;
-    padding: 0 1.5rem;
-    gap: 0.5rem;
   }
 
   .ew-sheet-tab {
-    padding: 0.625rem 0.75rem;
-    font-size: 0.8125rem;
-    font-weight: 500;
+    flex: 1;
+    padding: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
     font-family: inherit;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
     border: none;
     background: none;
-    color: #64748b;
+    color: var(--color-muted, #64748b);
     cursor: pointer;
     text-align: center;
     border-bottom: 2px solid transparent;
     margin-bottom: -1px;
     transition: all 0.15s ease;
 
-    &:hover { color: #0f172a; }
-    &.active { color: #0f172a; border-bottom-color: #0f172a; font-weight: 600; }
+    &:hover { color: var(--color-fg, #0f172a); }
+    &.active { color: var(--color-primary, #4f46e5); border-bottom-color: var(--color-primary, #4f46e5); }
   }
 
   .ew-sheet-body {

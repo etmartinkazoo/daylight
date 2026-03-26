@@ -10,6 +10,8 @@ Daylight::Engine.routes.draw do
   resources :requests, only: [:index]
   resources :queries, only: [:index]
   resources :jobs, only: [:index]
+  resources :scheduled_tasks, only: [:index]
+  resources :mail_events, only: [:index]
   resources :logs, only: [:index]
   resources :deploys, only: [:index, :create]
   resources :http_requests, only: [:index]
@@ -20,7 +22,7 @@ Daylight::Engine.routes.draw do
   get :health, to: "health#index"
 
   # Export endpoints
-  %w[errors requests queries jobs logs].each do |resource|
+  %w[errors requests queries jobs logs scheduled_tasks mail_events].each do |resource|
     get "#{resource}/export", to: "#{resource}#export", as: "#{resource}_export"
   end
 

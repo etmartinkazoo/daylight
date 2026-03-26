@@ -21,6 +21,11 @@ module Daylight
       when "false" then scope = scope.where(handled: false)
       end
 
+      case params[:severity]
+      when "error" then scope = scope.where(severity: "error")
+      when "performance" then scope = scope.where(severity: "performance")
+      end
+
       if params[:q].present?
         term = "%#{params[:q]}%"
         scope = scope.where("error_class LIKE ? OR message LIKE ?", term, term)
@@ -34,6 +39,7 @@ module Daylight
         resolved: Database::ErrorRecord.where(status: "resolved").count,
         ignored: Database::ErrorRecord.where(status: "ignored").count,
         unhandled: Database::ErrorRecord.where(handled: false).count,
+        performance: Database::ErrorRecord.where(severity: "performance", status: "open").count,
         total: Database::ErrorRecord.count
       }
 
@@ -142,6 +148,10 @@ module Daylight
         severity: e.severity,
         handled: e.try(:handled),
         source: e.try(:source),
+        affected_users_count: e.try(:affected_users_count) || 0,
+        avg_duration_ms: e.try(:avg_duration_ms),
+        max_duration_ms: e.try(:max_duration_ms),
+        threshold_exceeded_count: e.try(:threshold_exceeded_count) || 0,
         first_seen_at: e.first_seen_at,
         last_seen_at: e.last_seen_at,
         recent_occurrences: recent

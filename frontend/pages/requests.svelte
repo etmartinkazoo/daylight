@@ -290,8 +290,33 @@
           <div class="dl-row"><dt>Time</dt><dd>{formatTime(sheetItem.occurred_at)}</dd></div>
         </dl>
 
-        <!-- Request Timeline: queries that ran during this request -->
-        {#if sheetItem.queries?.length > 0}
+        <!-- Waterfall Timeline -->
+        {#if sheetItem.waterfall?.length > 0}
+          <h4 class="sheet-sub">Request Timeline ({sheetItem.waterfall.length} events)</h4>
+          <div class="waterfall">
+            {#each sheetItem.waterfall as evt, i}
+              <div class="wf-item">
+                <div class="wf-type-badge wf-type-{evt.type}">{evt.type}</div>
+                <div class="wf-detail">
+                  <span class="wf-text">{evt.detail}</span>
+                  {#if evt.duration_ms}
+                    <span class="wf-duration" class:wf-slow={evt.duration_ms > 100}>{fmt(evt.duration_ms)}</span>
+                  {/if}
+                </div>
+                {#if evt.status_code}
+                  <span class="status-badge {sc(evt.status_code)}">{evt.status_code}</span>
+                {/if}
+                {#if evt.type === "cache"}
+                  <span class="wf-cache-badge" class:hit={evt.hit} class:miss={!evt.hit}>{evt.hit ? "HIT" : "MISS"}</span>
+                {/if}
+                {#if evt.type === "log"}
+                  <span class="wf-log-level wf-level-{evt.level}">{evt.level}</span>
+                {/if}
+              </div>
+            {/each}
+          </div>
+        {:else if sheetItem.queries?.length > 0}
+          <!-- Fallback: query timeline -->
           <h4 class="sheet-sub">Query Timeline ({sheetItem.queries.length})</h4>
           <div class="timeline">
             {#each sheetItem.queries as q (q.id)}
@@ -590,4 +615,86 @@
     border-radius: 0.75rem;
     padding: 1.25rem;
   }
+
+  /* Waterfall Timeline */
+  .waterfall {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border-left: 2px solid #e2e8f0;
+    margin-left: 0.25rem;
+    padding-left: 0.75rem;
+  }
+  .wf-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4375rem 0;
+    border-bottom: 1px solid #f8fafc;
+  }
+  .wf-item:last-child { border-bottom: none; }
+  .wf-type-badge {
+    font-size: 0.5625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.125rem 0.375rem;
+    border-radius: 9999px;
+    flex-shrink: 0;
+    background: #f1f5f9;
+    color: #64748b;
+  }
+  .wf-type-query { background: #dbeafe; color: #1d4ed8; }
+  .wf-type-http { background: #ede9fe; color: #7c3aed; }
+  .wf-type-cache { background: #dcfce7; color: #15803d; }
+  .wf-type-log { background: #fef3c7; color: #b45309; }
+  .wf-type-exception { background: #fee2e2; color: #dc2626; }
+  .wf-detail {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+    min-width: 0;
+  }
+  .wf-text {
+    font-size: 0.75rem;
+    color: #334155;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: "SF Mono", Monaco, Menlo, Consolas, monospace;
+  }
+  .wf-duration {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: #0f172a;
+    flex-shrink: 0;
+  }
+  .wf-slow { color: #ef4444; }
+  .wf-cache-badge {
+    font-size: 0.5625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 0.0625rem 0.375rem;
+    border-radius: 9999px;
+    flex-shrink: 0;
+  }
+  .wf-cache-badge.hit { background: #dcfce7; color: #15803d; }
+  .wf-cache-badge.miss { background: #fee2e2; color: #dc2626; }
+  .wf-log-level {
+    font-size: 0.5625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 0.0625rem 0.375rem;
+    border-radius: 9999px;
+    flex-shrink: 0;
+    background: #f1f5f9;
+    color: #64748b;
+  }
+  .wf-level-warn { background: #fef3c7; color: #b45309; }
+  .wf-level-error { background: #fee2e2; color: #dc2626; }
+  .wf-level-fatal { background: #fee2e2; color: #dc2626; }
+  .wf-level-info { background: #dbeafe; color: #1d4ed8; }
+  .wf-level-debug { background: #f1f5f9; color: #64748b; }
 </style>

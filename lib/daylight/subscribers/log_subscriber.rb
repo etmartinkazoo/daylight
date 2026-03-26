@@ -46,6 +46,8 @@ module Daylight
           # Skip blank messages
           return if message.blank?
 
+          return unless Daylight::Sampler.request_sampled?
+
           level_name = LogSubscriber::LEVEL_NAMES[severity] || "unknown"
 
           Database.ensure_connected!
@@ -54,6 +56,7 @@ module Daylight
             message: message.truncate(2000),
             controller_action: Thread.current[:daylight_controller_action],
             request_path: Thread.current[:daylight_request_path],
+            trace_id: Daylight::TraceContext.current,
             occurred_at: Time.current
           )
         rescue StandardError

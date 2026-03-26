@@ -16,6 +16,7 @@ module Daylight
           slow_request_threshold_ms: settings["slow_request_threshold_ms"] || "500",
           slow_query_threshold_ms: settings["slow_query_threshold_ms"] || "50",
           retention_days: settings["retention_days"] || "30",
+          sample_rate: settings["sample_rate"] || "1.0",
           ai_context_notes: settings["ai_context_notes"] || "",
           gemini_api_key: settings["gemini_api_key"].present? ? "••••••••" : "",
           gemini_api_key_saved_at: settings["gemini_api_key_saved_at"]
@@ -28,7 +29,7 @@ module Daylight
         github_repo_url github_default_branch
         notification_emails slack_webhook_url
         slow_request_threshold_ms slow_query_threshold_ms
-        retention_days ai_context_notes
+        retention_days sample_rate ai_context_notes
         gemini_api_key
       ]
 

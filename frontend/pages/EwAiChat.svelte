@@ -245,18 +245,20 @@
     align-items: center;
     gap: 0.5rem;
     padding-bottom: 0.5rem;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid var(--color-border, rgba(226, 232, 240, 0.6));
     margin-bottom: 0.5rem;
   }
 
   .ew-ai-model-select {
-    padding: 0.25rem 1.25rem 0.25rem 0.5rem;
+    padding: 0.1875rem 1.25rem 0.1875rem 0.375rem;
     font-size: 0.6875rem;
     font-weight: 500;
     font-family: inherit;
-    border: 1px solid #e5e7eb;
-    background: #fff;
-    color: #374151;
+    border: 1px solid var(--color-border, rgba(226, 232, 240, 0.6));
+    border-radius: var(--radius-sm, 0.375rem);
+    background: var(--color-bg, #fff);
+    color: var(--color-fg, #0f172a);
+    box-shadow: var(--shadow-xs, 0 1px 2px rgba(0, 0, 0, 0.03));
     outline: none;
     cursor: pointer;
     appearance: none;
@@ -264,6 +266,7 @@
     background-repeat: no-repeat;
     background-position: right 0.375rem center;
 
+    &:focus { border-color: var(--color-focus, #6366f1); box-shadow: 0 0 0 2px var(--color-focus-ring, rgba(99, 102, 241, 0.2)); }
     &:disabled { opacity: 0.6; cursor: not-allowed; }
   }
 
@@ -272,12 +275,14 @@
     font-weight: 500;
     font-family: inherit;
     padding: 0.25rem 0.5rem;
-    border: 1px solid #e5e7eb;
-    background: #fff;
-    color: #6b7280;
+    border: 1px solid var(--color-border, rgba(226, 232, 240, 0.6));
+    border-radius: var(--radius-sm, 0.375rem);
+    background: var(--color-bg, #fff);
+    color: var(--color-muted, #64748b);
     cursor: pointer;
     margin-left: auto;
+    transition: all 0.1s;
 
-    &:hover { background: #f3f4f6; }
+    &:hover { background: var(--color-accent, #f1f5f9); color: var(--color-fg, #0f172a); }
   }
 </style>

@@ -17,6 +17,7 @@
     "settings[retention_days]": settings.retention_days || "30",
     "settings[ai_context_notes]": settings.ai_context_notes || "",
     "settings[gemini_api_key]": settings.gemini_api_key || "",
+    "settings[sample_rate]": settings.sample_rate || "1.0",
   });
 
   function handleSubmit(e) {
@@ -173,6 +174,24 @@
               {/if}
             </div>
             <p class="form-hint">Immediately purge data older than the retention period.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sampling -->
+      <div class="section-card">
+        <div class="section-header">
+          <h2 class="section-title">Sampling</h2>
+          <p class="section-desc">Control how much data Daylight captures. Exceptions are always captured at 100%.</p>
+        </div>
+        <div class="section-body">
+          <div class="form-field">
+            <label class="form-label" for="sample_rate">Global Sample Rate</label>
+            <div class="input-group">
+              <input id="sample_rate" type="number" step="0.1" min="0" max="1" class="form-input input-group-input" bind:value={$form["settings[sample_rate]"]} />
+              <span class="input-suffix">0-1.0</span>
+            </div>
+            <p class="form-hint">1.0 = capture everything, 0.5 = capture 50% of requests. Exceptions are always captured regardless of this setting.</p>
           </div>
         </div>
       </div>

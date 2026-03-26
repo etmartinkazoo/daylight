@@ -35,9 +35,10 @@ module Daylight
     def database_info
       info = {}
 
-      # Main app DB
+      # Main app DB — use ApplicationRecord to respect multi-tenancy
       begin
-        conn = ActiveRecord::Base.connection
+        app_base = defined?(ApplicationRecord) ? ApplicationRecord : ActiveRecord::Base
+        conn = app_base.connection
         info[:adapter] = conn.adapter_name
         if conn.adapter_name.downcase.include?("sqlite")
           db_path = conn.instance_variable_get(:@config)&.dig(:database)

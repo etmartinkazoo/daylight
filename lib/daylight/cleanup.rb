@@ -23,10 +23,12 @@ module Daylight
         end
 
         # Optional tables (check if table exists)
-        %w[http_requests cache_events].each do |name|
+        %w[http_requests cache_events scheduled_tasks mail_events].each do |name|
           klass = case name
                   when "http_requests" then Database::HttpRequestRecord
                   when "cache_events" then Database::CacheEventRecord
+                  when "scheduled_tasks" then Database::ScheduledTaskRecord
+                  when "mail_events" then Database::MailEventRecord
                   end
 
           if klass.connection.table_exists?(klass.table_name)

@@ -19,6 +19,7 @@ module Daylight
             key = payload[:key]&.to_s
             next if key.blank?
             next if key.start_with?("daylight")
+            next unless Daylight::Sampler.sample?(:cache)
 
             hit = payload[:hit] if event_type == "read"
 
@@ -30,6 +31,7 @@ module Daylight
               duration_ms: event.duration&.round(2),
               controller_action: Thread.current[:daylight_controller_action],
               request_path: Thread.current[:daylight_request_path],
+              trace_id: Daylight::TraceContext.current,
               occurred_at: Time.current
             )
           rescue StandardError

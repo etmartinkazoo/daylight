@@ -11,7 +11,7 @@
   import AutoRefresh from "@/components/ui/AutoRefresh.svelte";
   import ExportButton from "@/components/ui/ExportButton.svelte";
 
-  let { errors = [], counts = {}, status = "open", query = "", error_series = [], unhandled_count = 0, deploys = [] } = $props();
+  let { errors = [], counts = {}, status = "open", query = "", error_series = [], unhandled_count = 0, deploys = [], performance = 0 } = $props();
   const pageStore = usePage();
   let base = $derived($pageStore.props?.base_path || "/daylight");
 
@@ -21,6 +21,7 @@
   let sheetError = $state(null);
   let refreshInterval = $state(0);
   let handledFilter = $state("all");
+  let severityFilter = $state("");
 
   $effect(() => {
     if (refreshInterval <= 0) return;
@@ -31,7 +32,7 @@
   });
 
   function navigate(s, q, extra = {}) {
-    router.get(`${base}/errors`, { status: s, q: q || undefined, ...extra }, { preserveState: true });
+    router.get(`${base}/errors`, { status: s, q: q || undefined, severity: severityFilter || undefined, ...extra }, { preserveState: true });
   }
 
   function resolve(id) { router.patch(`${base}/errors/${id}`, { status: "resolved", filter_status: status }); }
@@ -147,6 +148,10 @@
           <span class="stat-card-label">Ignored</span>
           <span class="stat-card-value stat-value-muted">{counts.ignored || 0}</span>
         </div>
+        <div class="stat-card">
+          <span class="stat-card-label">Performance</span>
+          <span class="stat-card-value" style="color: #f59e0b">{counts.performance || 0}</span>
+        </div>
       </div>
       {#if totalErrors > 0}
         <div class="stats-donut">
@@ -191,6 +196,12 @@
         <button class="ew-pill" class:active={handledFilter === "unhandled"} onclick={() => { handledFilter = "unhandled"; navigate(status, searchVal, { handled: false }); }}>
           Unhandled
           {#if unhandled_count > 0}<span class="ew-pill-count">{unhandled_count}</span>{/if}
+        </button>
+      </div>
+      <div class="ew-pills">
+        <button class="ew-pill" class:active={!severityFilter} onclick={() => { severityFilter = ""; navigate(status, searchVal); }}>All Types</button>
+        <button class="ew-pill" class:active={severityFilter === "performance"} onclick={() => { severityFilter = "performance"; navigate(status, searchVal); }}>
+          Performance {#if counts.performance}<span class="ew-pill-count">{counts.performance}</span>{/if}
         </button>
       </div>
     </div>
@@ -244,9 +255,21 @@
             </div>
             <button class="ew-cell ew-cell-btn" style="flex:2" onclick={() => openSheet(error)}>
               <span class="ew-error-class">{error.error_class}</span>
-              <span class="ew-error-msg">{error.message}</span>
+              {#if error.severity === "performance"}
+                <span class="ew-perf-info">avg: {error.avg_duration_ms ?? "—"}ms, max: {error.max_duration_ms ?? "—"}ms, exceeded: {error.exceeded_count ?? 0} times</span>
+              {:else}
+                <span class="ew-error-msg">{error.message}</span>
+              {/if}
             </button>
-            <div class="ew-cell" style="width:4rem;text-align:center"><span class="ew-count-badge">{error.occurrences_count}</span></div>
+            <div class="ew-cell" style="width:4rem;text-align:center">
+              <span class="ew-count-badge">{error.occurrences_count}</span>
+              {#if error.affected_users_count > 0}
+                <span class="ew-users-badge">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  {error.affected_users_count}
+                </span>
+              {/if}
+            </div>
             <div class="ew-cell" style="width:5.5rem">
               <span class="ew-status" class:ew-status-open={error.status === "open"} class:ew-status-resolved={error.status === "resolved"} class:ew-status-ignored={error.status === "ignored"}>{error.status}</span>
             </div>
@@ -374,7 +397,7 @@
   }
   .stats-cards {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(6, 1fr);
     gap: 0.75rem;
     flex: 1;
   }
@@ -605,6 +628,25 @@
   .ew-status.ew-status-resolved { background: #f0fdf4; color: #16a34a; }
   .ew-status.ew-status-ignored { background: #f1f5f9; color: #94a3b8; }
   .ew-time { font-size: 0.75rem; color: #64748b; }
+  .ew-users-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.125rem;
+    font-size: 0.5625rem;
+    font-weight: 600;
+    color: #64748b;
+    margin-left: 0.25rem;
+  }
+  .ew-perf-info {
+    font-size: 0.6875rem;
+    color: #f59e0b;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+  }
 
   /* Empty state */
   .ew-empty {

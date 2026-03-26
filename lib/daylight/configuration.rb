@@ -2,7 +2,8 @@
 
 module Daylight
   class Configuration
-    attr_accessor :database_path, :ignored_exceptions, :auto_capture, :context_builder, :log_capture_level
+    attr_accessor :database_path, :ignored_exceptions, :auto_capture, :context_builder, :log_capture_level,
+                  :sample_rate, :sample_rates, :always_capture_exceptions
 
     def initialize
       @database_path = nil # resolved at boot from Rails.root
@@ -15,6 +16,9 @@ module Daylight
       @auto_capture = true   # install middleware automatically
       @context_builder = nil # proc that returns a hash, called per-request
       @log_capture_level = 2 # Logger::WARN — capture warn, error, fatal, unknown
+      @sample_rate = 1.0
+      @sample_rates = {}
+      @always_capture_exceptions = true
     end
 
     def resolved_database_path

@@ -41,6 +41,14 @@ module Daylight
       self.table_name = "daylight_cache_events"
     end
 
+    class ScheduledTaskRecord < ActiveRecord::Base
+      self.table_name = "daylight_scheduled_tasks"
+    end
+
+    class MailEventRecord < ActiveRecord::Base
+      self.table_name = "daylight_mail_events"
+    end
+
     class SettingRecord < ActiveRecord::Base
       self.table_name = "daylight_settings"
     end
@@ -65,7 +73,7 @@ module Daylight
           timeout: 5000
         }
 
-        [ErrorRecord, OccurrenceRecord, RequestRecord, QueryRecord, JobRecord, LogRecord, DeployRecord, HttpRequestRecord, CacheEventRecord, SettingRecord].each do |klass|
+        [ErrorRecord, OccurrenceRecord, RequestRecord, QueryRecord, JobRecord, LogRecord, DeployRecord, HttpRequestRecord, CacheEventRecord, ScheduledTaskRecord, MailEventRecord, SettingRecord].each do |klass|
           klass.establish_connection(config)
         end
 
@@ -254,6 +262,107 @@ module Daylight
           end
           unless conn.column_exists?(:daylight_errors, :source)
             conn.add_column :daylight_errors, :source, :string
+          end
+        end
+
+        # Scheduled Tasks
+        unless conn.table_exists?(:daylight_scheduled_tasks)
+          conn.create_table :daylight_scheduled_tasks do |t|
+            t.string   :task_class, null: false
+            t.string   :command
+            t.string   :frequency
+            t.string   :status, null: false
+            t.float    :duration_ms
+            t.string   :error_class
+            t.text     :error_message
+            t.string   :trace_id
+            t.datetime :occurred_at, null: false
+          end
+          conn.add_index :daylight_scheduled_tasks, :task_class
+          conn.add_index :daylight_scheduled_tasks, :occurred_at
+          conn.add_index :daylight_scheduled_tasks, :trace_id rescue nil
+        end
+
+        # Mail Events
+        unless conn.table_exists?(:daylight_mail_events)
+          conn.create_table :daylight_mail_events do |t|
+            t.string   :event_type, null: false
+            t.string   :mailer_class, null: false
+            t.string   :action_name
+            t.text     :recipients
+            t.string   :channel
+            t.string   :subject
+            t.string   :status, null: false
+            t.float    :duration_ms
+            t.text     :error_message
+            t.string   :trace_id
+            t.datetime :occurred_at, null: false
+          end
+          conn.add_index :daylight_mail_events, :mailer_class
+          conn.add_index :daylight_mail_events, :occurred_at
+          conn.add_index :daylight_mail_events, :trace_id rescue nil
+        end
+
+        # Add trace_id to requests
+        if conn.table_exists?(:daylight_requests) && !conn.column_exists?(:daylight_requests, :trace_id)
+          conn.add_column :daylight_requests, :trace_id, :string
+          conn.add_index :daylight_requests, :trace_id rescue nil
+        end
+
+        # Add trace_id to queries
+        if conn.table_exists?(:daylight_queries) && !conn.column_exists?(:daylight_queries, :trace_id)
+          conn.add_column :daylight_queries, :trace_id, :string
+          conn.add_index :daylight_queries, :trace_id rescue nil
+        end
+
+        # Add trace_id to jobs
+        if conn.table_exists?(:daylight_jobs) && !conn.column_exists?(:daylight_jobs, :trace_id)
+          conn.add_column :daylight_jobs, :trace_id, :string
+          conn.add_index :daylight_jobs, :trace_id rescue nil
+        end
+
+        # Add trace_id and request_id to http_requests
+        if conn.table_exists?(:daylight_http_requests) && !conn.column_exists?(:daylight_http_requests, :trace_id)
+          conn.add_column :daylight_http_requests, :trace_id, :string
+          conn.add_index :daylight_http_requests, :trace_id rescue nil
+        end
+
+        if conn.table_exists?(:daylight_http_requests) && !conn.column_exists?(:daylight_http_requests, :request_id)
+          conn.add_column :daylight_http_requests, :request_id, :integer
+          conn.add_index :daylight_http_requests, :request_id rescue nil
+        end
+
+        # Add trace_id to cache_events
+        if conn.table_exists?(:daylight_cache_events) && !conn.column_exists?(:daylight_cache_events, :trace_id)
+          conn.add_column :daylight_cache_events, :trace_id, :string
+          conn.add_index :daylight_cache_events, :trace_id rescue nil
+        end
+
+        # Add trace_id to logs
+        if conn.table_exists?(:daylight_logs) && !conn.column_exists?(:daylight_logs, :trace_id)
+          conn.add_column :daylight_logs, :trace_id, :string
+          conn.add_index :daylight_logs, :trace_id rescue nil
+        end
+
+        # Add user_id to occurrences
+        if conn.table_exists?(:daylight_occurrences) && !conn.column_exists?(:daylight_occurrences, :user_id)
+          conn.add_column :daylight_occurrences, :user_id, :string
+          conn.add_index :daylight_occurrences, :user_id rescue nil
+        end
+
+        # Add monitoring columns to errors
+        if conn.table_exists?(:daylight_errors)
+          unless conn.column_exists?(:daylight_errors, :affected_users_count)
+            conn.add_column :daylight_errors, :affected_users_count, :integer, default: 0
+          end
+          unless conn.column_exists?(:daylight_errors, :avg_duration_ms)
+            conn.add_column :daylight_errors, :avg_duration_ms, :float
+          end
+          unless conn.column_exists?(:daylight_errors, :max_duration_ms)
+            conn.add_column :daylight_errors, :max_duration_ms, :float
+          end
+          unless conn.column_exists?(:daylight_errors, :threshold_exceeded_count)
+            conn.add_column :daylight_errors, :threshold_exceeded_count, :integer, default: 0
           end
         end
 

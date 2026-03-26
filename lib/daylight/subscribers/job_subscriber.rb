@@ -9,12 +9,14 @@ module Daylight
           event = ActiveSupport::Notifications::Event.new(*args)
           job = event.payload[:job]
           next if job.class.name&.start_with?("Daylight")
+          next unless Daylight::Sampler.sample?(:jobs)
 
           Database.ensure_connected!
           Database::JobRecord.create!(
             job_class: job.class.name,
             queue: job.queue_name,
             status: "queued",
+            trace_id: Daylight::TraceContext.current,
             enqueued_at: Time.current,
             occurred_at: Time.current
           )
@@ -29,6 +31,9 @@ module Daylight
           exception = event.payload[:exception_object]
           next if job.class.name&.start_with?("Daylight")
 
+          Daylight::TraceContext.start! # Each job gets its own trace
+          next unless Daylight::Sampler.sample?(:jobs)
+
           Database.ensure_connected!
           Database::JobRecord.create!(
             job_class: job.class.name,
@@ -37,6 +42,7 @@ module Daylight
             duration_ms: event.duration&.round(2),
             error_class: exception&.class&.name,
             error_message: exception&.message&.truncate(1000),
+            trace_id: Daylight::TraceContext.current,
             completed_at: Time.current,
             occurred_at: Time.current
           )
