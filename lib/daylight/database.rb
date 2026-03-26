@@ -49,6 +49,10 @@ module Daylight
       self.table_name = "daylight_mail_events"
     end
 
+    class IncidentRecord < ActiveRecord::Base
+      self.table_name = "daylight_incidents"
+    end
+
     class SettingRecord < ActiveRecord::Base
       self.table_name = "daylight_settings"
     end
@@ -73,7 +77,7 @@ module Daylight
           timeout: 5000
         }
 
-        [ErrorRecord, OccurrenceRecord, RequestRecord, QueryRecord, JobRecord, LogRecord, DeployRecord, HttpRequestRecord, CacheEventRecord, ScheduledTaskRecord, MailEventRecord, SettingRecord].each do |klass|
+        [ErrorRecord, OccurrenceRecord, RequestRecord, QueryRecord, JobRecord, LogRecord, DeployRecord, HttpRequestRecord, CacheEventRecord, ScheduledTaskRecord, MailEventRecord, IncidentRecord, SettingRecord].each do |klass|
           klass.establish_connection(config)
         end
 
@@ -370,6 +374,28 @@ module Daylight
           unless conn.column_exists?(:daylight_errors, :threshold_exceeded_count)
             conn.add_column :daylight_errors, :threshold_exceeded_count, :integer, default: 0
           end
+        end
+
+        # Incidents
+        unless conn.table_exists?(:daylight_incidents)
+          conn.create_table :daylight_incidents do |t|
+            t.string   :incident_type, null: false
+            t.string   :title, null: false
+            t.text     :summary
+            t.string   :status, default: "open", null: false
+            t.string   :severity, default: "warning", null: false
+            t.text     :trigger_data
+            t.text     :investigation
+            t.integer  :related_error_id
+            t.integer  :related_deploy_id
+            t.datetime :started_at, null: false
+            t.datetime :resolved_at
+            t.datetime :occurred_at, null: false
+            t.timestamps
+          end
+          conn.add_index :daylight_incidents, :status
+          conn.add_index :daylight_incidents, :occurred_at
+          conn.add_index :daylight_incidents, :incident_type
         end
 
         # Settings (single row, key-value)

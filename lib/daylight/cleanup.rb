@@ -39,6 +39,11 @@ module Daylight
         # Deploys
         results["deploys"] = Database::DeployRecord.where("deployed_at < ?", cutoff).delete_all
 
+        # Incidents
+        if Database::IncidentRecord.connection.table_exists?(Database::IncidentRecord.table_name)
+          results["incidents"] = Database::IncidentRecord.where("occurred_at < ?", cutoff).delete_all
+        end
+
         # Errors: delete errors with no remaining occurrences and last_seen_at < cutoff
         orphaned_errors = Database::ErrorRecord
           .where("last_seen_at < ?", cutoff)

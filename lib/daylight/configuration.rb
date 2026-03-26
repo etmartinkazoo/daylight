@@ -4,7 +4,9 @@ module Daylight
   class Configuration
     attr_accessor :database_path, :ignored_exceptions, :auto_capture, :context_builder, :log_capture_level,
                   :sample_rate, :sample_rates, :always_capture_exceptions,
-                  :username, :password
+                  :username, :password,
+                  :anomaly_detection_enabled, :anomaly_error_spike_threshold,
+                  :anomaly_latency_spike_threshold, :anomaly_check_interval
 
     def initialize
       @database_path = nil # resolved at boot from Rails.root
@@ -22,6 +24,10 @@ module Daylight
       @always_capture_exceptions = true
       @username = nil
       @password = nil
+      @anomaly_detection_enabled = true
+      @anomaly_error_spike_threshold = 3.0
+      @anomaly_latency_spike_threshold = 3.0
+      @anomaly_check_interval = 60
     end
 
     def resolved_database_path

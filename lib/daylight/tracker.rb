@@ -89,6 +89,9 @@ module Daylight
           Notifier.notify(err) rescue nil
         end
 
+        # Check for anomalies (rate-limited internally)
+        AnomalyDetector.check! rescue nil
+
         err
       rescue StandardError => e
         # Never let error tracking break the app

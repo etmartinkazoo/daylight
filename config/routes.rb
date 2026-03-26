@@ -16,6 +16,7 @@ Daylight::Engine.routes.draw do
   resources :deploys, only: [:index, :create]
   resources :http_requests, only: [:index]
   resources :cache, only: [:index]
+  resources :incidents, only: [:index, :show, :update]
 
   get  :settings, to: "settings#index"
   patch :settings, to: "settings#update"
