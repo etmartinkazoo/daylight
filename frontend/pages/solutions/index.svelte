@@ -1,5 +1,5 @@
 <script>
-  import { router, usePage } from "@inertiajs/svelte";
+  import { router } from "@inertiajs/svelte";
   import DaylightLayout from "../DaylightLayout.svelte";
   import Button from "@/components/ui/Button.svelte";
   import InfiniteScroll from "@/components/ui/InfiniteScroll.svelte";
@@ -14,11 +14,8 @@
     last_scan_count,
     last_scan_error,
     github_configured,
+    base_path: base = "/daylight",
   } = $props();
-
-  const pageStore = usePage();
-  let base = $derived(pageStore.props?.base_path || "/daylight");
-
   let generating = $state(false);
 
   function changeStatus(s) {

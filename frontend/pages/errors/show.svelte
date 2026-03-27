@@ -1,13 +1,11 @@
 <script>
-  import { router, usePage } from "@inertiajs/svelte";
+  import { router } from "@inertiajs/svelte";
   import DaylightLayout from "../DaylightLayout.svelte";
   import Badge from "@/components/ui/Badge.svelte";
   import Button from "@/components/ui/Button.svelte";
   import Table from "@/components/ui/Table.svelte";
 
-  let { error = {}, occurrences = [] } = $props();
-  const pageStore = usePage();
-  let base = $derived(pageStore.props?.base_path || "/daylight");
+  let { error = {}, occurrences = [], base_path: base = "/daylight" } = $props();
 
   function updateStatus(status) {
     router.patch(`${base}/errors/${error.id}`, { status, filter_status: "open" });

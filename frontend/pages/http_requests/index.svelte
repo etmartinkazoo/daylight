@@ -1,5 +1,5 @@
 <script>
-  import { router, usePage } from "@inertiajs/svelte";
+  import { router } from "@inertiajs/svelte";
   import DaylightLayout from "../DaylightLayout.svelte";
   import PeriodSelect from "../PeriodSelect.svelte";
   import EwSheet from "../errors/EwSheet.svelte";
@@ -10,10 +10,10 @@
   let {
     hosts = [], host_requests = [], selected_host = null,
     period = "24h", total_http_requests = 0, volume_series = [],
-    page = 1, has_more = false
+    page = 1, has_more = false,
+    base_path: base = "/daylight",
+    sort_column = null, sort_direction = null,
   } = $props();
-  const pageStore = usePage();
-  let base = $derived(pageStore.props?.base_path || "/daylight");
 
   let sheetOpen = $state(false);
   let sheetItem = $state(null);
@@ -187,9 +187,9 @@
         <div class="data-table">
           <div class="table-header">
             <div class="th" style="flex:2">Host</div>
-            <div class="th th-right" style="width:5rem"><SortableHeader column="total" label="Requests" /></div>
-            <div class="th th-right" style="width:5rem"><SortableHeader column="avg_duration" label="Avg" /></div>
-            <div class="th th-right" style="width:5rem"><SortableHeader column="max_duration" label="Max" /></div>
+            <div class="th th-right" style="width:5rem"><SortableHeader column="total" label="Requests" {sort_column} {sort_direction} /></div>
+            <div class="th th-right" style="width:5rem"><SortableHeader column="avg_duration" label="Avg" {sort_column} {sort_direction} /></div>
+            <div class="th th-right" style="width:5rem"><SortableHeader column="max_duration" label="Max" {sort_column} {sort_direction} /></div>
             <div class="th th-right" style="width:4.5rem">Errors</div>
           </div>
           {#each allHosts as host, i (host.host + ':' + i)}

@@ -1,5 +1,5 @@
 <script>
-  import { router, usePage } from "@inertiajs/svelte";
+  import { router } from "@inertiajs/svelte";
   import DaylightLayout from "../DaylightLayout.svelte";
   import Badge from "@/components/ui/Badge.svelte";
   import Button from "@/components/ui/Button.svelte";
@@ -11,9 +11,7 @@
   import ExportButton from "@/components/ui/ExportButton.svelte";
   import InfiniteScroll from "@/components/ui/InfiniteScroll.svelte";
 
-  let { mailers = [], events = [], totals = {}, period = "24h", volume_series = [], page = 1, has_more = false } = $props();
-  const pageStore = usePage();
-  let base = $derived(pageStore.props?.base_path || "/daylight");
+  let { mailers = [], events = [], totals = {}, period = "24h", volume_series = [], page = 1, has_more = false, base_path: base = "/daylight", sort_column = null, sort_direction = null } = $props();
 
   let sheetOpen = $state(false);
   let sheetItem = $state(null);
@@ -126,10 +124,10 @@
         <div class="table-container">
           <div class="table-header">
             <div class="th" style="flex:2">Mailer Class</div>
-            <div class="th r" style="width:4rem"><SortableHeader column="total" label="Total" /></div>
-            <div class="th r" style="width:5rem"><SortableHeader column="delivered_count" label="Delivered" /></div>
-            <div class="th r" style="width:4rem"><SortableHeader column="failed_count" label="Failed" /></div>
-            <div class="th r" style="width:5rem"><SortableHeader column="avg_duration" label="Avg" /></div>
+            <div class="th r" style="width:4rem"><SortableHeader column="total" label="Total" {sort_column} {sort_direction} /></div>
+            <div class="th r" style="width:5rem"><SortableHeader column="delivered_count" label="Delivered" {sort_column} {sort_direction} /></div>
+            <div class="th r" style="width:4rem"><SortableHeader column="failed_count" label="Failed" {sort_column} {sort_direction} /></div>
+            <div class="th r" style="width:5rem"><SortableHeader column="avg_duration" label="Avg" {sort_column} {sort_direction} /></div>
           </div>
           {#each allMailers as ml, i (ml.mailer_class + ':' + i)}
             <button class="table-row" onclick={() => openMailer(ml)}>

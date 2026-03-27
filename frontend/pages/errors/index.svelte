@@ -1,5 +1,5 @@
 <script>
-  import { router, usePage } from "@inertiajs/svelte";
+  import { router } from "@inertiajs/svelte";
   import DaylightLayout from "../DaylightLayout.svelte";
   import Button from "@/components/ui/Button.svelte";
   import Table from "@/components/ui/Table.svelte";
@@ -26,9 +26,9 @@
     query = "",
     error_series = [],
     unhandled_count = 0,
+    base_path: base = "/daylight",
+    sort_column = null, sort_direction = null,
   } = $props();
-  const pageStore = usePage();
-  let base = $derived(pageStore.props?.base_path || "/daylight");
 
   let searchVal = $state(query || "");
   $effect(() => { searchVal = query || ""; });
@@ -183,10 +183,10 @@
                 <th style="width: 2rem;">
                   <input type="checkbox" checked={allSelected} onchange={() => allSelected ? (selectedIds = []) : (selectedIds = selectAllIds(errors))} />
                 </th>
-                <th><SortableHeader column="error_class" label="Error" /></th>
-                <th style="text-align:center; width: 5rem;"><SortableHeader column="occurrences_count" label="Count" /></th>
+                <th><SortableHeader column="error_class" label="Error" {sort_column} {sort_direction} /></th>
+                <th style="text-align:center; width: 5rem;"><SortableHeader column="occurrences_count" label="Count" {sort_column} {sort_direction} /></th>
                 <th style="width: 6.5rem;">Status</th>
-                <th style="width: 8rem;"><SortableHeader column="last_seen_at" label="Last Seen" /></th>
+                <th style="width: 8rem;"><SortableHeader column="last_seen_at" label="Last Seen" {sort_column} {sort_direction} /></th>
                 <th style="width: 6rem;"></th>
               </tr>
             </thead>

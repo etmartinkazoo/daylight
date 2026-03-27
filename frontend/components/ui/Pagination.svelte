@@ -1,13 +1,7 @@
 <script>
-import { router, usePage } from "@inertiajs/svelte";
+import { router } from "@inertiajs/svelte";
 
-const pageStore = usePage();
-$effect(() => {
-  page = $pageStore;
-});
-let page = $pageStore;
-
-let pagination = $derived(page.props.pagination);
+let { pagination = null } = $props();
 let currentPage = $derived(pagination?.current_page || 1);
 let totalPages = $derived(pagination?.total_pages || 1);
 let totalCount = $derived(pagination?.total_count || 0);

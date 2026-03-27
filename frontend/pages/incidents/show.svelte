@@ -1,11 +1,9 @@
 <script>
-  import { router, usePage } from "@inertiajs/svelte";
+  import { router } from "@inertiajs/svelte";
   import DaylightLayout from "../DaylightLayout.svelte";
   import { markdownToHtml } from "@/lib/markdown.js";
 
-  let { incident = {}, related_error = null, related_deploy = null } = $props();
-  const pageStore = usePage();
-  let base = $derived(pageStore.props?.base_path || "/daylight");
+  let { incident = {}, related_error = null, related_deploy = null, base_path: base = "/daylight" } = $props();
 
   function updateStatus(newStatus) {
     router.patch(`${base}/incidents/${incident.id}`, { status: newStatus });

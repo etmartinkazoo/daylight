@@ -1,5 +1,5 @@
 <script>
-  import { router, usePage, InfiniteScroll } from "@inertiajs/svelte";
+  import { router, InfiniteScroll } from "@inertiajs/svelte";
   import DaylightLayout from "../DaylightLayout.svelte";
   import PeriodSelect from "../PeriodSelect.svelte";
   import IncidentCard from "./IncidentCard.svelte";
@@ -9,9 +9,7 @@
   import { HugeiconsIcon } from "@hugeicons/svelte";
   import { Alert02Icon } from "@hugeicons/core-free-icons";
 
-  let { incidents = [], counts = {}, status = "all", period = "24h", incident_series = [] } = $props();
-  const pageStore = usePage();
-  let base = $derived(pageStore.props?.base_path || "/daylight");
+  let { incidents = [], counts = {}, status = "all", period = "24h", incident_series = [], base_path: base = "/daylight" } = $props();
 
   function changePeriod(p) {
     router.get(`${base}/incidents`, { period: p, status }, { preserveState: true });

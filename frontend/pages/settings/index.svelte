@@ -1,13 +1,11 @@
 <script>
-  import { useForm, usePage, router } from "@inertiajs/svelte";
+  import { useForm, router } from "@inertiajs/svelte";
   import DaylightLayout from "../DaylightLayout.svelte";
   import Button from "@/components/ui/Button.svelte";
   import { getNotificationSound, setNotificationSound, previewSound, soundOptions } from "@/lib/notification-sounds.js";
 
-  let { settings = {}, performance_issues = [], security_issues = [] } = $props();
+  let { settings = {}, performance_issues = [], security_issues = [], base_path: base = "/daylight" } = $props();
   let selectedSound = $state(getNotificationSound());
-  const pageStore = usePage();
-  let base = $derived(pageStore.props?.base_path || "/daylight");
 
   let form = useForm({
     "settings[github_repo_url]": settings.github_repo_url || "",

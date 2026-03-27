@@ -1,5 +1,5 @@
 <script>
-  import { router, usePage } from "@inertiajs/svelte";
+  import { router } from "@inertiajs/svelte";
   import DaylightLayout from "../DaylightLayout.svelte";
   import Badge from "@/components/ui/Badge.svelte";
   import Button from "@/components/ui/Button.svelte";
@@ -13,9 +13,7 @@
   import ExportButton from "@/components/ui/ExportButton.svelte";
   import InfiniteScroll from "@/components/ui/InfiniteScroll.svelte";
 
-  let { queries = [], slowest = [], period = "24h", total_queries = 0, volume_series = [], n_plus_one_requests = [], page = 1, has_more = false } = $props();
-  const pageStore = usePage();
-  let base = $derived(pageStore.props?.base_path || "/daylight");
+  let { queries = [], slowest = [], period = "24h", total_queries = 0, volume_series = [], n_plus_one_requests = [], page = 1, has_more = false, base_path: base = "/daylight", sort_column = null, sort_direction = null } = $props();
 
   let sheetOpen = $state(false);
   let sheetItem = $state(null);
@@ -163,9 +161,9 @@
       <div class="data-table">
         <div class="table-header">
           <div class="th" style="flex:3">Query</div>
-          <div class="th th-right" style="width:4rem"><SortableHeader column="total" label="Count" /></div>
-          <div class="th th-right" style="width:5rem"><SortableHeader column="avg_duration" label="Avg" /></div>
-          <div class="th th-right" style="width:5rem"><SortableHeader column="max_duration" label="Max" /></div>
+          <div class="th th-right" style="width:4rem"><SortableHeader column="total" label="Count" {sort_column} {sort_direction} /></div>
+          <div class="th th-right" style="width:5rem"><SortableHeader column="avg_duration" label="Avg" {sort_column} {sort_direction} /></div>
+          <div class="th th-right" style="width:5rem"><SortableHeader column="max_duration" label="Max" {sort_column} {sort_direction} /></div>
           <div class="th" style="flex:1">Source</div>
         </div>
         {#each allQueries as q, i (q.normalized_sql + ':' + i)}

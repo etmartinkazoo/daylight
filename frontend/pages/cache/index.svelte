@@ -1,5 +1,5 @@
 <script>
-  import { router, usePage } from "@inertiajs/svelte";
+  import { router } from "@inertiajs/svelte";
   import DaylightLayout from "../DaylightLayout.svelte";
   import PeriodSelect from "../PeriodSelect.svelte";
   import EwSheet from "../errors/EwSheet.svelte";
@@ -8,9 +8,7 @@
   import DonutChart from "@/components/charts/DonutChart.svelte";
   import InfiniteScroll from "@/components/ui/InfiniteScroll.svelte";
 
-  let { stats = {}, patterns = [], period = "24h", total_events = 0, volume_series = [], page = 1, has_more = false } = $props();
-  const pageStore = usePage();
-  let base = $derived(pageStore.props?.base_path || "/daylight");
+  let { stats = {}, patterns = [], period = "24h", total_events = 0, volume_series = [], page = 1, has_more = false, base_path: base = "/daylight", sort_column = null, sort_direction = null } = $props();
 
   let sheetOpen = $state(false);
   let sheetItem = $state(null);
@@ -152,10 +150,10 @@
       <div class="data-table">
         <div class="table-header">
           <div class="th" style="flex:3">Key Pattern</div>
-          <div class="th th-right" style="width:5rem"><SortableHeader column="reads" label="Reads" /></div>
-          <div class="th th-right" style="width:5rem"><SortableHeader column="writes" label="Writes" /></div>
+          <div class="th th-right" style="width:5rem"><SortableHeader column="reads" label="Reads" {sort_column} {sort_direction} /></div>
+          <div class="th th-right" style="width:5rem"><SortableHeader column="writes" label="Writes" {sort_column} {sort_direction} /></div>
           <div class="th th-right" style="width:5.5rem">Hit Rate</div>
-          <div class="th th-right" style="width:5rem"><SortableHeader column="avg_duration" label="Avg" /></div>
+          <div class="th th-right" style="width:5rem"><SortableHeader column="avg_duration" label="Avg" {sort_column} {sort_direction} /></div>
         </div>
         {#each allPatterns as p, i (p.key_pattern + ':' + i)}
           <button class="table-row" onclick={() => openPattern(p)}>

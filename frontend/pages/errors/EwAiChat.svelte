@@ -9,8 +9,8 @@
   let { context = "", appContext = "" } = $props();
 
   const pageStore = usePage();
-  let aiModels = $derived(pageStore.props.aiModels || []);
-  let defaultAiModel = $derived(pageStore.props.defaultAiModel || "");
+  let aiModels = $derived($pageStore.props.aiModels || []);
+  let defaultAiModel = $derived($pageStore.props.defaultAiModel || "");
   let selectedModel = $state("");
 
   $effect(() => {

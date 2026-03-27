@@ -1,16 +1,11 @@
 <script>
-  import { router, usePage } from "@inertiajs/svelte";
+  import { router } from "@inertiajs/svelte";
   import DaylightLayout from "../DaylightLayout.svelte";
   import Button from "@/components/ui/Button.svelte";
   import { markdownToHtml } from "@/lib/markdown.js";
   import { playNotificationSound } from "@/lib/notification-sounds.js";
 
-  let { solution = {}, messages: initialMessages = [], source_issue = null, github_configured = false } = $props();
-  const pageStore = usePage();
-  let base = $derived(pageStore.props?.base_path || "/daylight");
-
-  let aiModels = $derived(pageStore.props?.aiModels || []);
-  let defaultAiModel = $derived(pageStore.props?.defaultAiModel || "");
+  let { solution = {}, messages: initialMessages = [], source_issue = null, github_configured = false, base_path: base = "/daylight", aiModels = [], defaultAiModel = "" } = $props();
   let selectedModel = $state("");
 
   $effect(() => {

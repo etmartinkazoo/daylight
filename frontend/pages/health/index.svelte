@@ -1,14 +1,11 @@
 <script>
-  import { usePage } from "@inertiajs/svelte";
   import DaylightLayout from "../DaylightLayout.svelte";
   import EwSheet from "../errors/EwSheet.svelte";
   import DonutChart from "@/components/charts/DonutChart.svelte";
   import Sparkline from "@/components/charts/Sparkline.svelte";
   import AreaChart from "@/components/charts/AreaChart.svelte";
 
-  let { system = {}, database = {}, jobs = {}, errors = {}, apdex = null, error_sparkline = [], request_sparkline = [] } = $props();
-  const pageStore = usePage();
-  let base = $derived(pageStore.props?.base_path || "/daylight");
+  let { system = {}, database = {}, jobs = {}, errors = {}, apdex = null, error_sparkline = [], request_sparkline = [], base_path: base = "/daylight" } = $props();
 
   let sheetOpen = $state(false);
   let sheetTitle = $state("");

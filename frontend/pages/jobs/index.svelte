@@ -1,5 +1,5 @@
 <script>
-  import { router, usePage } from "@inertiajs/svelte";
+  import { router } from "@inertiajs/svelte";
   import DaylightLayout from "../DaylightLayout.svelte";
   import Badge from "@/components/ui/Badge.svelte";
   import Button from "@/components/ui/Button.svelte";
@@ -13,9 +13,7 @@
   import ExportButton from "@/components/ui/ExportButton.svelte";
   import InfiniteScroll from "@/components/ui/InfiniteScroll.svelte";
 
-  let { job_classes = [], failures = [], period = "24h", totals = {}, solid_queue = null, volume_series = [], failure_series = [], page = 1, has_more = false } = $props();
-  const pageStore = usePage();
-  let base = $derived(pageStore.props?.base_path || "/daylight");
+  let { job_classes = [], failures = [], period = "24h", totals = {}, solid_queue = null, volume_series = [], failure_series = [], page = 1, has_more = false, base_path: base = "/daylight", sort_column = null, sort_direction = null } = $props();
 
   let sheetOpen = $state(false);
   let sheetItem = $state(null);
@@ -191,12 +189,12 @@
         <div class="table-container">
           <div class="table-header">
             <div class="th" style="flex:2">Job Class</div>
-            <div class="th r" style="width:4rem"><SortableHeader column="total" label="Total" /></div>
-            <div class="th r" style="width:4.5rem"><SortableHeader column="completed_count" label="Done" /></div>
-            <div class="th r" style="width:4rem"><SortableHeader column="failed_count" label="Failed" /></div>
+            <div class="th r" style="width:4rem"><SortableHeader column="total" label="Total" {sort_column} {sort_direction} /></div>
+            <div class="th r" style="width:4.5rem"><SortableHeader column="completed_count" label="Done" {sort_column} {sort_direction} /></div>
+            <div class="th r" style="width:4rem"><SortableHeader column="failed_count" label="Failed" {sort_column} {sort_direction} /></div>
             <div class="th r" style="width:4.5rem">Queued</div>
-            <div class="th r" style="width:5rem"><SortableHeader column="avg_duration" label="Avg" /></div>
-            <div class="th r" style="width:5rem"><SortableHeader column="max_duration" label="Max" /></div>
+            <div class="th r" style="width:5rem"><SortableHeader column="avg_duration" label="Avg" {sort_column} {sort_direction} /></div>
+            <div class="th r" style="width:5rem"><SortableHeader column="max_duration" label="Max" {sort_column} {sort_direction} /></div>
           </div>
           {#each allJobClasses as jc, i (jc.job_class + ':' + i)}
             <button class="table-row" onclick={() => openClass(jc)}>

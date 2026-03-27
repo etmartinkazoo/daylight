@@ -1,16 +1,10 @@
 <script>
-import { router, usePage } from "@inertiajs/svelte";
+import { router } from "@inertiajs/svelte";
 
-let { column, label, class: className = "" } = $props();
+let { column, label, class: className = "", sort_column = null, sort_direction = null } = $props();
 
-const pageStore = usePage();
-$effect(() => {
-  page = $pageStore;
-});
-let page = $pageStore;
-
-let currentSort = $derived(page.props.sort_column);
-let currentDir = $derived(page.props.sort_direction);
+let currentSort = $derived(sort_column);
+let currentDir = $derived(sort_direction);
 let isActive = $derived(currentSort === column);
 
 function handleClick() {

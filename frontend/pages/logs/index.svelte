@@ -1,5 +1,5 @@
 <script>
-  import { router, usePage } from "@inertiajs/svelte";
+  import { router } from "@inertiajs/svelte";
   import DaylightLayout from "../DaylightLayout.svelte";
   import PeriodSelect from "../PeriodSelect.svelte";
   import EwSheet from "../errors/EwSheet.svelte";
@@ -7,9 +7,7 @@
   import AreaChart from "@/components/charts/AreaChart.svelte";
   import InfiniteScroll from "@/components/ui/InfiniteScroll.svelte";
 
-  let { logs = [], counts = {}, period = "24h", level = null, total_logs = 0, volume_series = [], page = 1, has_more = false } = $props();
-  const pageStore = usePage();
-  let base = $derived(pageStore.props?.base_path || "/daylight");
+  let { logs = [], counts = {}, period = "24h", level = null, total_logs = 0, volume_series = [], page = 1, has_more = false, base_path: base = "/daylight", sort_column = null, sort_direction = null } = $props();
 
   let sheetOpen = $state(false);
   let sheetItem = $state(null);

@@ -1,5 +1,5 @@
 <script>
-  import { router, usePage } from "@inertiajs/svelte";
+  import { router } from "@inertiajs/svelte";
   import DaylightLayout from "../DaylightLayout.svelte";
   import Badge from "@/components/ui/Badge.svelte";
   import Button from "@/components/ui/Button.svelte";
@@ -19,10 +19,10 @@
     endpoints = [], route_requests = [], selected_request = null,
     selected_route = null, period = "24h", total_requests = 0,
     throughput_rpm = 0, apdex = null, latency_series = [], throughput_series = [], deploys = [],
-    page = 1, has_more = false
+    page = 1, has_more = false,
+    base_path: base = "/daylight",
+    sort_column = null, sort_direction = null,
   } = $props();
-  const pageStore = usePage();
-  let base = $derived(pageStore.props?.base_path || "/daylight");
 
   let sheetOpen = $state(false);
   let sheetItem = $state(null);
@@ -280,13 +280,13 @@
           <thead>
             <tr>
               <th class="th" style="width:auto">Route</th>
-              <th class="th r" style="width:4rem"><SortableHeader column="total" label="Reqs" /></th>
-              <th class="th r" style="width:5rem"><SortableHeader column="avg_duration" label="Avg" /></th>
+              <th class="th r" style="width:4rem"><SortableHeader column="total" label="Reqs" {sort_column} {sort_direction} /></th>
+              <th class="th r" style="width:5rem"><SortableHeader column="avg_duration" label="Avg" {sort_column} {sort_direction} /></th>
               <th class="th r" style="width:5rem">P95</th>
-              <th class="th r" style="width:5rem"><SortableHeader column="max_duration" label="Max" /></th>
-              <th class="th c" style="width:3.5rem"><SortableHeader column="ok_count" label="2xx" /></th>
-              <th class="th c" style="width:3.5rem"><SortableHeader column="client_error_count" label="4xx" /></th>
-              <th class="th c" style="width:3.5rem"><SortableHeader column="server_error_count" label="5xx" /></th>
+              <th class="th r" style="width:5rem"><SortableHeader column="max_duration" label="Max" {sort_column} {sort_direction} /></th>
+              <th class="th c" style="width:3.5rem"><SortableHeader column="ok_count" label="2xx" {sort_column} {sort_direction} /></th>
+              <th class="th c" style="width:3.5rem"><SortableHeader column="client_error_count" label="4xx" {sort_column} {sort_direction} /></th>
+              <th class="th c" style="width:3.5rem"><SortableHeader column="server_error_count" label="5xx" {sort_column} {sort_direction} /></th>
             </tr>
           </thead>
           <tbody>
