@@ -4,6 +4,7 @@
   import { onDestroy } from "svelte";
   import AiChatMessages from "@/components/ai-chat/AiChatMessages.svelte";
   import AiChatInput from "@/components/ai-chat/AiChatInput.svelte";
+  import { playNotificationSound } from "@/lib/notification-sounds.js";
 
   let { context = "", appContext = "" } = $props();
 
@@ -71,11 +72,14 @@
             toolCalls = [];
             thinkingStream = "";
             thinkingDone = false;
+            requestAnimationFrame(() => inputComp?.focus?.());
+            playNotificationSound();
           } else if (data.type === "error") {
             messages = [...messages, { role: "assistant", content: data.error }];
             streaming = "";
             sending = false;
             toolCalls = [];
+            requestAnimationFrame(() => inputComp?.focus?.());
           }
         }
       }

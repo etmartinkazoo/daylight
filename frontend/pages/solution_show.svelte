@@ -3,6 +3,7 @@
   import DaylightLayout from "./DaylightLayout.svelte";
   import Button from "@/components/ui/Button.svelte";
   import { markdownToHtml } from "@/lib/markdown.js";
+  import { playNotificationSound } from "@/lib/notification-sounds.js";
 
   let { solution = {}, messages: initialMessages = [], source_issue = null, github_configured = false } = $props();
   const pageStore = usePage();
@@ -21,6 +22,7 @@
   let sending = $state(false);
   let proposedFixHtml = $derived(markdownToHtml(solution.proposed_fix));
   let messagesContainer = $state(null);
+  let chatTextarea = $state(null);
 
   function scrollToBottom() {
     if (messagesContainer) {
@@ -112,6 +114,7 @@
           content: data.message.content,
           created_at: data.message.created_at || new Date().toISOString(),
         }];
+        playNotificationSound();
       }
 
       if (data.proposed_fix) {
@@ -126,6 +129,7 @@
       }];
     } finally {
       sending = false;
+      requestAnimationFrame(() => chatTextarea?.focus());
     }
   }
 
@@ -294,6 +298,7 @@
           <textarea
             class="chat-textarea"
             placeholder="Ask about this solution..."
+            bind:this={chatTextarea}
             bind:value={chatInput}
             onkeydown={handleKeydown}
             disabled={sending}

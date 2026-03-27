@@ -1,6 +1,7 @@
 import { usePage } from "@inertiajs/svelte";
 import { consumer } from "@/utils/cable";
 import { onDestroy } from "svelte";
+import { playNotificationSound } from "@/lib/notification-sounds.js";
 
 export function useAiChat({ autoSubscribe = false } = {}) {
   const pageStore = usePage();
@@ -136,6 +137,8 @@ export function useAiChat({ autoSubscribe = false } = {}) {
             streaming = "";
             sending = false;
             scrollToBottom();
+            requestAnimationFrame(() => inputEl?.focus());
+            playNotificationSound();
           } else if (data.type === "error") {
             messages = [
               ...messages,
@@ -143,6 +146,7 @@ export function useAiChat({ autoSubscribe = false } = {}) {
             ];
             streaming = "";
             sending = false;
+            requestAnimationFrame(() => inputEl?.focus());
           }
         },
       },

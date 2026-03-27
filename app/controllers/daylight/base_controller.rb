@@ -77,17 +77,25 @@ module Daylight
       raise exception if Rails.env.test?
 
       Rails.logger.error("[Daylight] #{exception.class}: #{exception.message}\n#{exception.backtrace&.first(10)&.join("\n")}")
-      render html: <<~HTML.html_safe, status: :internal_server_error, layout: false
-        <!DOCTYPE html>
-        <html><head><title>Daylight Error</title>
-        <style>body{font-family:system-ui,sans-serif;max-width:600px;margin:4rem auto;padding:0 1rem;color:#333}
-        h1{font-size:1.25rem}pre{background:#f5f5f5;padding:1rem;border-radius:0.5rem;overflow-x:auto;font-size:0.8125rem}</style>
-        </head><body>
-        <h1>Daylight encountered an error</h1>
-        <p>#{ERB::Util.html_escape(exception.message)}</p>
-        <p><a href="#{Daylight::Engine.routes.url_helpers.root_path}">Back to Daylight</a></p>
-        </body></html>
-      HTML
+
+      if request.headers["X-Inertia"]
+        flash[:error] = "Something went wrong: #{exception.message}"
+        redirect_back fallback_location: root_path
+      else
+        render html: <<~HTML.html_safe, status: :internal_server_error, layout: false
+          <!DOCTYPE html>
+          <html><head><title>Daylight Error</title>
+          <style>body{font-family:system-ui,sans-serif;max-width:600px;margin:4rem auto;padding:0 1rem;color:#333}
+          h1{font-size:1.25rem}</style>
+          </head><body>
+          <h1>Daylight encountered an error</h1>
+          <p>#{ERB::Util.html_escape(exception.message)}</p>
+          <p><a href="#{root_path}">Back to Daylight</a></p>
+          </body></html>
+        HTML
+      end
+    rescue StandardError
+      render plain: "Daylight error: #{exception.message}", status: :internal_server_error, layout: false
     end
 
     # Check at most once per minute if scans are due

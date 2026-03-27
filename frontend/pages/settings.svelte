@@ -2,8 +2,10 @@
   import { useForm, usePage, router } from "@inertiajs/svelte";
   import DaylightLayout from "./DaylightLayout.svelte";
   import Button from "@/components/ui/Button.svelte";
+  import { getNotificationSound, setNotificationSound, previewSound, soundOptions } from "@/lib/notification-sounds.js";
 
   let { settings = {}, performance_issues = [], security_issues = [] } = $props();
+  let selectedSound = $state(getNotificationSound());
   const pageStore = usePage();
   let base = $derived($pageStore.props?.base_path || "/daylight");
 
@@ -229,6 +231,23 @@
             <label class="form-label" for="slack_webhook_url">Slack Webhook URL</label>
             <input id="slack_webhook_url" type="url" class="form-input" placeholder="https://hooks.slack.com/services/..." bind:value={$form["settings[slack_webhook_url]"]} />
             <p class="form-hint">Incoming webhook URL for Slack notifications.</p>
+          </div>
+
+          <div class="form-field">
+            <label class="form-label">Chat Notification Sound</label>
+            <div class="sound-options">
+              {#each soundOptions as opt (opt.value)}
+                <button
+                  type="button"
+                  class="sound-option"
+                  class:active={selectedSound === opt.value}
+                  onclick={() => { selectedSound = opt.value; setNotificationSound(opt.value); if (opt.value !== "none") previewSound(opt.value); }}
+                >
+                  {opt.label}
+                </button>
+              {/each}
+            </div>
+            <p class="form-hint">Sound played when AI chat responses complete.</p>
           </div>
 
           <div class="form-field">
@@ -971,6 +990,30 @@
     background: var(--color-success-subtle);
     border: 1px solid var(--color-success-border);
     border-radius: 9999px;
+  }
+
+  .sound-options {
+    display: flex;
+    gap: 0.375rem;
+  }
+  .sound-option {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    font-family: inherit;
+    border: 1px solid var(--color-border);
+    border-radius: 0.375rem;
+    background: var(--color-bg);
+    color: var(--color-muted);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .sound-option:hover { color: var(--color-fg); border-color: var(--color-muted-lightest); }
+  .sound-option.active {
+    background: var(--color-primary-subtle, var(--color-accent));
+    color: var(--color-primary, var(--color-fg));
+    border-color: var(--color-primary, var(--color-fg));
+    font-weight: 600;
   }
 
   .cleanup-row {
