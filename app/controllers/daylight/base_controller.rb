@@ -4,6 +4,9 @@ module Daylight
   class BaseController < ActionController::Base
     include InertiaRails::Controller
     include Daylight::Sortable
+    include Pagy::Backend
+
+    protect_from_forgery with: :exception
 
     layout "daylight/application"
 

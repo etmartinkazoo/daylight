@@ -26,7 +26,7 @@ module Daylight
       @_sort_column = col
       @_sort_direction = dir
 
-      scope.reorder(Arel.sql("#{col} #{dir}"))
+      scope.reorder(col => dir)
     end
 
     # For aggregated/grouped queries, returns a SQL ORDER BY expression.

@@ -9,7 +9,7 @@
   "dependencies": {
     "@hugeicons/core-free-icons": "^4.0.0",
     "@hugeicons/svelte": "^1.1.2",
-    "@inertiajs/svelte": "^2.0.0",
+    "@inertiajs/svelte": "^3.0.0",
     "@rails/actioncable": "^8.0.0",
     "svelte": "^5.0.0"
   },

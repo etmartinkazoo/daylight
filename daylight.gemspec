@@ -17,4 +17,6 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ruby_llm", ">= 1.12"
   spec.add_dependency "brakeman"
   spec.add_dependency "bullet"
+  spec.add_dependency "pagy"
+  spec.add_dependency "inertia_rails"
 end

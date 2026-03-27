@@ -30,38 +30,34 @@ module Daylight
         term = "%#{params[:q]}%"
         scope = scope.where("error_class LIKE ? OR message LIKE ?", term, term)
       end
+scope = apply_sort(scope, default: "last_seen_at", allowed: %w[error_class occurrences_count last_seen_at first_seen_at], direction: "desc")
 
-      scope = apply_sort(scope, default: "last_seen_at", allowed: %w[error_class occurrences_count last_seen_at first_seen_at], direction: "desc")
+pagy, errors = pagy(scope, limit: 50)
 
-      page = (params[:page] || 1).to_i
-      per_page = 50
-      errors = scope.limit(per_page + 1).offset((page - 1) * per_page).map { |e| serialize_error(e) }
-      has_more = errors.length > per_page
-      errors = errors.first(per_page)
-      counts = {
-        open: Database::ErrorRecord.where(status: "open").count,
-        resolved: Database::ErrorRecord.where(status: "resolved").count,
-        ignored: Database::ErrorRecord.where(status: "ignored").count,
-        unhandled: Database::ErrorRecord.where(handled: false).count,
-        performance: Database::ErrorRecord.where(severity: "performance", status: "open").count,
-        total: Database::ErrorRecord.count
-      }
+counts = {
+  open: Database::ErrorRecord.where(status: "open").count,
+  resolved: Database::ErrorRecord.where(status: "resolved").count,
+  ignored: Database::ErrorRecord.where(status: "ignored").count,
+  unhandled: Database::ErrorRecord.where(handled: false).count,
+  performance: Database::ErrorRecord.where(severity: "performance", status: "open").count,
+  total: Database::ErrorRecord.count,
+  last_24h: Database::ErrorRecord.where("last_seen_at > ?", 24.hours.ago).count
+}
 
-      occurrence_scope = Database::OccurrenceRecord.where("occurred_at > ?", period_start(period))
+occurrence_scope = Database::OccurrenceRecord.where("occurred_at > ?", period_start(period))
 
-      render inertia: "daylight/index", props: {
-        errors: errors,
-        counts: counts,
-        status: status,
-        period: period,
-        query: params[:q],
-        page: page,
-        has_more: has_more,
-        error_series: time_series_buckets(occurrence_scope, period),
-        **sort_props
-      }
-    end
-
+render inertia: "daylight/index", props: {
+  errors: InertiaRails.scroll(pagy) { errors.map { |e| serialize_error(e) } },
+  counts: counts,
+  status: status,
+  query: params[:q] || "",
+  unhandled_count: counts[:unhandled],
+  performance: counts[:performance],
+  error_series: time_series_buckets(occurrence_scope, period),
+  deploys: deploys_in_period(period),
+  **sort_props
+}
+end
     def show
       error = Database::ErrorRecord.find(params[:id])
       occurrences = Database::OccurrenceRecord
@@ -158,9 +154,11 @@ module Daylight
         avg_duration_ms: e.try(:avg_duration_ms),
         max_duration_ms: e.try(:max_duration_ms),
         threshold_exceeded_count: e.try(:threshold_exceeded_count) || 0,
-        first_seen_at: e.first_seen_at,
-        last_seen_at: e.last_seen_at,
-        recent_occurrences: recent
+        first_seen_at: format_timestamp(e.first_seen_at),
+        last_seen_at: format_timestamp(e.last_seen_at),
+        last_seen_ago: helpers.time_ago_in_words(e.last_seen_at) + " ago",
+        recent_occurrences: recent,
+        ai_context: build_ai_context(e, recent)
       }
     end
 
@@ -171,8 +169,37 @@ module Daylight
         context: (JSON.parse(o.context) rescue {}),
         request_url: o.request_url,
         request_method: o.request_method,
-        occurred_at: o.occurred_at
+        occurred_at: format_timestamp(o.occurred_at)
       }
+    end
+
+    def format_timestamp(time)
+      return "" if time.nil?
+      time.strftime("%b %-d, %Y, %I:%M %p")
+    end
+
+    def build_ai_context(error, recent_occurrences)
+      lines = [
+        "Error: #{error.error_class}",
+        "Message: #{error.message}",
+        "Occurrences: #{error.occurrences_count}",
+        "Status: #{error.status}",
+        "First seen: #{error.first_seen_at}",
+        "Last seen: #{error.last_seen_at}"
+      ]
+      lines << "\nBacktrace:\n#{error.backtrace_summary}" if error.backtrace_summary.present?
+
+      occ = recent_occurrences.first
+      if occ
+        lines << "\nLast request: #{occ[:request_method]} #{occ[:request_url]}" if occ[:request_url].present?
+        ctx = occ[:context] || {}
+        lines << "Route: #{ctx["route"]}" if ctx["route"].present?
+        lines << "Controller: #{ctx["controller_action"]}" if ctx["controller_action"].present?
+        lines << "Tenant: #{ctx["tenant"]}" if ctx["tenant"].present?
+        lines << "User: #{ctx["user_name"]}" if ctx["user_name"].present?
+      end
+
+      lines.join("\n")
     end
   end
 end

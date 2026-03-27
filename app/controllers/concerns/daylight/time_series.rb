@@ -20,7 +20,7 @@ module Daylight
 
       # Use strftime to bucket timestamps
       rows = scope
-        .where("#{column} > ?", start_time)
+        .where(column => start_time..)
         .group(Arel.sql("strftime('#{fmt}', #{column})"))
         .count
 
@@ -37,7 +37,7 @@ module Daylight
       fmt = config[:format]
 
       rows = scope
-        .where("#{time_column} > ?", start_time)
+        .where(time_column => start_time..)
         .group(Arel.sql("strftime('#{fmt}', #{time_column})"))
         .average(value_column)
 
@@ -50,7 +50,7 @@ module Daylight
     def deploys_in_period(period)
       start_time = period_start(period)
       Database::DeployRecord
-        .where("deployed_at > ?", start_time)
+        .where(deployed_at: start_time..)
         .order(deployed_at: :desc)
         .map do |d|
           { t: d.deployed_at.iso8601, version: d.version, sha: d.git_sha }
