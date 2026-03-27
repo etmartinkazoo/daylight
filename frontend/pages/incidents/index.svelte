@@ -35,11 +35,11 @@
 <svelte:head><title>Incident Autopsies — Daylight</title></svelte:head>
 
 <DaylightLayout>
-  <div class="page">
-    <div class="page-header">
+  <div class="dl-page">
+    <div class="dl-page-header">
       <div>
-        <h1 class="page-title">Incident Autopsies</h1>
-        <p class="page-subtitle">AI-investigated incidents and anomaly reports</p>
+        <h1 class="dl-page-title">Incident Autopsies</h1>
+        <p class="dl-page-subtitle">AI-investigated incidents and anomaly reports</p>
       </div>
       <PeriodSelect value={period} onchange={changePeriod} />
     </div>
@@ -90,33 +90,6 @@
 </DaylightLayout>
 
 <style>
-  .page {
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-  }
-
-  .page-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 1rem;
-  }
-
-  .page-title {
-    font-size: 1.375rem;
-    font-weight: 700;
-    color: var(--color-fg);
-    margin: 0;
-    letter-spacing: -0.02em;
-  }
-
-  .page-subtitle {
-    font-size: 0.8125rem;
-    color: var(--color-muted);
-    margin: 0.25rem 0 0;
-  }
-
   .stats-cards {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -147,6 +120,5 @@
 
   @media (max-width: 768px) {
     .stats-cards { grid-template-columns: repeat(2, 1fr); }
-    .page-header { flex-direction: column; }
   }
 </style>

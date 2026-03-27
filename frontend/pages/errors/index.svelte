@@ -99,7 +99,7 @@
 <svelte:head><title>Daylight</title></svelte:head>
 
 <DaylightLayout>
-  <div class="page">
+  <div class="dl-page">
     <div class="header-actions">
       <AutoRefresh bind:interval={refreshInterval} />
       <ExportButton baseUrl={`${base}/errors/export`} />
@@ -175,7 +175,7 @@
         </p>
       </div>
     {:else}
-      <div class="data-table">
+      <div class="dl-data-table">
         <InfiniteScroll data="errors" itemsElement="#errors-tbody" startElement="#errors-thead">
           <Table>
             <thead id="errors-thead">
@@ -211,117 +211,35 @@
 <ErrorSheet bind:open={sheetOpen} error={sheetError} onstatuschange={updateStatus} />
 
 <style>
-  .page {
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-  }
-
-  .header-actions {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    justify-content: flex-end;
-  }
+  .header-actions { display: flex; align-items: center; gap: 0.5rem; justify-content: flex-end; }
 
   .stats-row {
-    display: flex;
-    align-items: stretch;
-    gap: 1.25rem;
-
-    .stats-cards {
-      display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      gap: 0.75rem;
-      flex: 1;
-    }
-
-    .stats-donut {
-      background: var(--color-bg);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg);
-      padding: 1rem 1.25rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
+    display: flex; align-items: stretch; gap: 1.25rem;
+    .stats-cards { display: grid; grid-template-columns: repeat(6, 1fr); gap: 0.75rem; flex: 1; }
+    .stats-donut { background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 1rem 1.25rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
   }
 
-  :global(.search-form) {
-    display: flex;
-  }
+  :global(.search-form) { display: flex; }
 
   .search-wrapper {
-    position: relative;
-    flex: 1;
-
+    position: relative; flex: 1;
     :global(.input) { padding-left: 2.25rem; }
-
-    span {
-      position: absolute;
-      left: 0.75rem;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--color-muted-light);
-      pointer-events: none;
-      display: flex;
-    }
-  }
-
-  .data-table {
-    background: var(--color-bg);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
+    span { position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: var(--color-muted-light); pointer-events: none; display: flex; }
   }
 
   .empty {
-    text-align: center;
-    padding: 4rem 1rem;
-    background: var(--color-bg);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.75rem;
-
+    text-align: center; padding: 4rem 1rem; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--radius-lg); display: flex; flex-direction: column; align-items: center; gap: 0.75rem;
     span { color: var(--color-muted-light); }
     p:first-of-type { font-size: 1rem; font-weight: 600; color: var(--color-fg); margin: 0; }
     p:last-of-type { font-size: 0.8125rem; color: var(--color-muted); margin: 0; }
   }
 
   .pills {
-    display: flex;
-    gap: 0.25rem;
-    background: var(--color-accent);
-    border-radius: 0.5rem;
-    padding: 0.25rem;
-
-    :global(a) {
-      padding: 0.375rem 0.75rem;
-      font-size: 0.75rem;
-      font-weight: 500;
-      color: var(--color-muted);
-      border-radius: 0.375rem;
-      transition: all 0.15s;
-      white-space: nowrap;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.375rem;
-
+    display: flex; gap: 0.25rem; background: var(--color-accent); border-radius: 0.5rem; padding: 0.25rem;
+    :global(a) { padding: 0.375rem 0.75rem; font-size: 0.75rem; font-weight: 500; color: var(--color-muted); border-radius: 0.375rem; transition: all 0.15s; white-space: nowrap; display: inline-flex; align-items: center; gap: 0.375rem;
       &:hover { color: var(--color-fg); background: var(--color-white-overlay); }
       &.active { color: var(--color-fg); background: var(--color-bg); font-weight: 600; box-shadow: 0 1px 2px var(--color-border-alpha); }
     }
-
-    span {
-      font-size: 0.625rem;
-      font-weight: 700;
-      background: var(--color-danger-subtle);
-      color: var(--color-danger);
-      padding: 0.0625rem 0.375rem;
-      border-radius: 9999px;
-    }
+    span { font-size: 0.625rem; font-weight: 700; background: var(--color-danger-subtle); color: var(--color-danger); padding: 0.0625rem 0.375rem; border-radius: 9999px; }
   }
 </style>

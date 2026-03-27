@@ -10,6 +10,7 @@
   import TimeSeriesChart from "@/components/charts/TimeSeriesChart.svelte";
   import ExportButton from "@/components/ui/ExportButton.svelte";
   import InfiniteScroll from "@/components/ui/InfiniteScroll.svelte";
+  import { fmt, timeAgo, formatTime } from "@/lib/formatters.js";
 
   let { mailers = [], events = [], totals = {}, period = "24h", volume_series = [], page = 1, has_more = false, base_path: base = "/daylight", sort_column = null, sort_direction = null } = $props();
 
@@ -18,9 +19,6 @@
   let sheetType = $state("mailer");
 
   function changePeriod(p) { router.get(`${base}/mail_events`, { period: p }, { preserveState: true }); }
-  function fmt(ms) { if (ms == null) return "—"; return ms >= 1000 ? `${(ms / 1000).toFixed(1)}s` : `${Math.round(ms)}ms`; }
-  function timeAgo(d) { if (!d) return ""; const m = Math.floor((Date.now() - new Date(d).getTime()) / 60000); if (m < 1) return "now"; if (m < 60) return `${m}m`; const h = Math.floor(m / 60); return h < 24 ? `${h}h` : `${Math.floor(h / 24)}d`; }
-  function formatTime(d) { if (!d) return ""; return new Date(d).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit" }); }
 
   function openMailer(ml) { sheetItem = ml; sheetType = "mailer"; sheetOpen = true; }
   function openEvent(ev) { sheetItem = ev; sheetType = "event"; sheetOpen = true; }
@@ -70,12 +68,12 @@
 <svelte:head><title>Mail & Notifications — Daylight</title></svelte:head>
 
 <DaylightLayout>
-  <div class="mail-page">
+  <div class="dl-page">
     <!-- Header -->
-    <div class="page-header">
+    <div class="dl-page-header">
       <div>
-        <h1 class="page-title">Mail & Notifications</h1>
-        <p class="page-subtitle">Email and notification delivery monitoring</p>
+        <h1 class="dl-page-title">Mail & Notifications</h1>
+        <p class="dl-page-subtitle">Email and notification delivery monitoring</p>
       </div>
       <div class="header-controls">
         <ExportButton baseUrl={`${base}/mail_events/export`} />
@@ -84,7 +82,7 @@
     </div>
 
     <!-- Stat Cards -->
-    <div class="stat-cards">
+    <div class="dl-stat-grid">
       <div class="stat-card">
         <span class="stat-card-label">Total Sent</span>
         <span class="stat-card-value">{totals.total || 0}</span>
@@ -121,21 +119,21 @@
     {#if allMailers.length > 0}
       <div class="section">
         <h2 class="section-title">Mailer Classes</h2>
-        <div class="table-container">
-          <div class="table-header">
-            <div class="th" style="flex:2">Mailer Class</div>
-            <div class="th r" style="width:4rem"><SortableHeader column="total" label="Total" {sort_column} {sort_direction} /></div>
-            <div class="th r" style="width:5rem"><SortableHeader column="delivered_count" label="Delivered" {sort_column} {sort_direction} /></div>
-            <div class="th r" style="width:4rem"><SortableHeader column="failed_count" label="Failed" {sort_column} {sort_direction} /></div>
-            <div class="th r" style="width:5rem"><SortableHeader column="avg_duration" label="Avg" {sort_column} {sort_direction} /></div>
+        <div class="dl-data-table">
+          <div class="dl-table-header">
+            <div class="dl-th" style="flex:2">Mailer Class</div>
+            <div class="dl-th dl-th-right" style="width:4rem"><SortableHeader column="total" label="Total" {sort_column} {sort_direction} /></div>
+            <div class="dl-th dl-th-right" style="width:5rem"><SortableHeader column="delivered_count" label="Delivered" {sort_column} {sort_direction} /></div>
+            <div class="dl-th dl-th-right" style="width:4rem"><SortableHeader column="failed_count" label="Failed" {sort_column} {sort_direction} /></div>
+            <div class="dl-th dl-th-right" style="width:5rem"><SortableHeader column="avg_duration" label="Avg" {sort_column} {sort_direction} /></div>
           </div>
           {#each allMailers as ml, i (ml.mailer_class + ':' + i)}
-            <button class="table-row" onclick={() => openMailer(ml)}>
-              <div class="td" style="flex:2"><span class="mailer-name">{ml.mailer_class}</span></div>
-              <div class="td num" style="width:4rem">{ml.total}</div>
-              <div class="td num delivered" style="width:5rem">{ml.delivered_count}</div>
-              <div class="td num" style="width:4rem" class:failed-val={ml.failed_count > 0}>{ml.failed_count}</div>
-              <div class="td num" style="width:5rem">{fmt(ml.avg_duration)}</div>
+            <button class="dl-table-row" onclick={() => openMailer(ml)}>
+              <div class="dl-td" style="flex:2"><span class="mailer-name">{ml.mailer_class}</span></div>
+              <div class="dl-td dl-td-num" style="width:4rem">{ml.total}</div>
+              <div class="dl-td dl-td-num delivered" style="width:5rem">{ml.delivered_count}</div>
+              <div class="dl-td dl-td-num" style="width:4rem" class:failed-val={ml.failed_count > 0}>{ml.failed_count}</div>
+              <div class="dl-td dl-td-num" style="width:5rem">{fmt(ml.avg_duration)}</div>
             </button>
           {/each}
           <InfiniteScroll loading={loadingMore} hasMore={has_more} onLoadMore={loadMore} />
@@ -147,29 +145,29 @@
     {#if events.length > 0}
       <div class="section">
         <h2 class="section-title">Recent Events</h2>
-        <div class="table-container">
-          <div class="table-header">
-            <div class="th" style="flex:1.5">Mailer</div>
-            <div class="th" style="flex:1">Subject</div>
-            <div class="th" style="width:5rem">Status</div>
-            <div class="th" style="width:4rem">Channel</div>
-            <div class="th r" style="width:5.5rem">When</div>
+        <div class="dl-data-table">
+          <div class="dl-table-header">
+            <div class="dl-th" style="flex:1.5">Mailer</div>
+            <div class="dl-th" style="flex:1">Subject</div>
+            <div class="dl-th" style="width:5rem">Status</div>
+            <div class="dl-th" style="width:4rem">Channel</div>
+            <div class="dl-th dl-th-right" style="width:5.5rem">When</div>
           </div>
           {#each events as ev (ev.id)}
-            <button class="table-row" onclick={() => openEvent(ev)}>
-              <div class="td" style="flex:1.5">
+            <button class="dl-table-row" onclick={() => openEvent(ev)}>
+              <div class="dl-td" style="flex:1.5">
                 <span class="event-mailer">{ev.mailer_class || "Unknown"}</span>
               </div>
-              <div class="td" style="flex:1">
+              <div class="dl-td" style="flex:1">
                 <span class="event-subject">{ev.subject || "—"}</span>
               </div>
-              <div class="td" style="width:5rem">
+              <div class="dl-td" style="width:5rem">
                 <span class="event-status" class:status-delivered={ev.status === "delivered"} class:status-failed={ev.status === "failed"}>{ev.status || "—"}</span>
               </div>
-              <div class="td" style="width:4rem">
+              <div class="dl-td" style="width:4rem">
                 <span class="event-channel">{ev.channel || "email"}</span>
               </div>
-              <div class="td r" style="width:5.5rem">
+              <div class="dl-td dl-td-num" style="width:5.5rem">
                 <span class="event-time">{timeAgo(ev.occurred_at)}</span>
               </div>
             </button>
@@ -192,25 +190,25 @@
 
 <EwSheet bind:open={sheetOpen} title={sheetTitle} aiContext={sheetAi}>
   {#if sheetItem}
-    <div class="sheet-detail">
+    <div class="dl-sheet-detail">
       {#if sheetType === "mailer"}
-        <dl class="dl">
-          <div class="dl-row"><dt>Mailer Class</dt><dd>{sheetItem.mailer_class}</dd></div>
-          <div class="dl-row"><dt>Total</dt><dd>{sheetItem.total}</dd></div>
-          <div class="dl-row"><dt>Delivered</dt><dd class="ok">{sheetItem.delivered_count}</dd></div>
-          <div class="dl-row"><dt>Failed</dt><dd class:err={sheetItem.failed_count > 0}>{sheetItem.failed_count}</dd></div>
-          <div class="dl-row"><dt>Avg Duration</dt><dd>{fmt(sheetItem.avg_duration)}</dd></div>
+        <dl class="dl-dl">
+          <div class="dl-dl-row"><dt>Mailer Class</dt><dd>{sheetItem.mailer_class}</dd></div>
+          <div class="dl-dl-row"><dt>Total</dt><dd>{sheetItem.total}</dd></div>
+          <div class="dl-dl-row"><dt>Delivered</dt><dd class="ok">{sheetItem.delivered_count}</dd></div>
+          <div class="dl-dl-row"><dt>Failed</dt><dd class:err={sheetItem.failed_count > 0}>{sheetItem.failed_count}</dd></div>
+          <div class="dl-dl-row"><dt>Avg Duration</dt><dd>{fmt(sheetItem.avg_duration)}</dd></div>
         </dl>
 
       {:else}
-        <dl class="dl">
-          <div class="dl-row"><dt>Mailer Class</dt><dd>{sheetItem.mailer_class}</dd></div>
-          <div class="dl-row"><dt>Subject</dt><dd>{sheetItem.subject || "—"}</dd></div>
-          <div class="dl-row"><dt>Recipients</dt><dd>{sheetItem.recipients || "—"}</dd></div>
-          <div class="dl-row"><dt>Channel</dt><dd><span class="channel-badge">{sheetItem.channel || "email"}</span></dd></div>
-          <div class="dl-row"><dt>Status</dt><dd><span class="event-status" class:status-delivered={sheetItem.status === "delivered"} class:status-failed={sheetItem.status === "failed"}>{sheetItem.status || "—"}</span></dd></div>
-          {#if sheetItem.duration_ms}<div class="dl-row"><dt>Duration</dt><dd>{fmt(sheetItem.duration_ms)}</dd></div>{/if}
-          <div class="dl-row"><dt>Time</dt><dd>{formatTime(sheetItem.occurred_at)}</dd></div>
+        <dl class="dl-dl">
+          <div class="dl-dl-row"><dt>Mailer Class</dt><dd>{sheetItem.mailer_class}</dd></div>
+          <div class="dl-dl-row"><dt>Subject</dt><dd>{sheetItem.subject || "—"}</dd></div>
+          <div class="dl-dl-row"><dt>Recipients</dt><dd>{sheetItem.recipients || "—"}</dd></div>
+          <div class="dl-dl-row"><dt>Channel</dt><dd><span class="channel-badge">{sheetItem.channel || "email"}</span></dd></div>
+          <div class="dl-dl-row"><dt>Status</dt><dd><span class="event-status" class:status-delivered={sheetItem.status === "delivered"} class:status-failed={sheetItem.status === "failed"}>{sheetItem.status || "—"}</span></dd></div>
+          {#if sheetItem.duration_ms}<div class="dl-dl-row"><dt>Duration</dt><dd>{fmt(sheetItem.duration_ms)}</dd></div>{/if}
+          <div class="dl-dl-row"><dt>Time</dt><dd>{formatTime(sheetItem.occurred_at)}</dd></div>
         </dl>
         {#if sheetItem.error_message}
           <h4 class="sheet-sub">Error</h4>
@@ -222,13 +220,10 @@
 </EwSheet>
 
 <style>
-  /* Page layout */
-  .mail-page { display: flex; flex-direction: column; gap: 1.5rem; }
-
-  .page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
-  .page-title { font-size: 1.375rem; font-weight: 700; color: var(--color-fg); margin: 0; letter-spacing: -0.02em; }
-  .page-subtitle { font-size: 0.8125rem; color: var(--color-muted); margin: 0.25rem 0 0; }
   .header-controls { display: flex; align-items: center; gap: 0.5rem; }
+  .section { display: flex; flex-direction: column; gap: 0.75rem; }
+  .section-title { font-size: 0.875rem; font-weight: 600; color: var(--color-fg); margin: 0; }
+
   .chart-section {
     background: var(--color-bg);
     border: 1px solid var(--color-border);
@@ -236,11 +231,7 @@
     padding: 1.25rem;
   }
 
-  .section { display: flex; flex-direction: column; gap: 0.75rem; }
-  .section-title { font-size: 0.875rem; font-weight: 600; color: var(--color-fg); margin: 0; }
-
   /* Stat Cards */
-  .stat-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; }
   .stat-card {
     background: var(--color-bg);
     border: 1px solid var(--color-border);
@@ -255,55 +246,7 @@
   .stat-card-danger { border-color: var(--color-danger-border); background: var(--color-danger-bg); }
   .stat-card-danger .stat-card-value { color: var(--color-danger); }
 
-  /* Tables */
-  .table-container {
-    background: var(--color-bg);
-    border: 1px solid var(--color-border);
-    border-radius: 0.75rem;
-    overflow: hidden;
-  }
-  .table-header {
-    display: flex;
-    align-items: center;
-    padding: 0 1rem;
-    background: var(--color-surface);
-    border-bottom: 1px solid var(--color-border);
-  }
-  .th {
-    padding: 0.625rem 0.5rem;
-    font-size: 0.6875rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--color-muted);
-  }
-  .r { text-align: right; }
-  .table-row {
-    display: flex;
-    align-items: center;
-    padding: 0 1rem;
-    border-bottom: 1px solid var(--color-accent);
-    width: 100%;
-    border-left: none;
-    border-right: none;
-    border-top: none;
-    background: none;
-    font-family: inherit;
-    cursor: pointer;
-    text-align: left;
-    transition: background 0.1s ease;
-  }
-  .table-row:last-child { border-bottom: none; }
-  .table-row:hover { background: var(--color-surface); }
-  .td {
-    padding: 0.5625rem 0.5rem;
-    font-size: 0.8125rem;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    color: var(--color-fg-tertiary);
-  }
-  .num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 500; }
+  /* Table cell variants */
   .delivered { color: var(--color-success); }
   .failed-val { color: var(--color-danger); font-weight: 600; }
   .mailer-name { font-size: 0.8125rem; font-weight: 600; color: var(--color-fg); }
@@ -313,63 +256,35 @@
 
   /* Status badges */
   .event-status {
-    font-size: 0.6875rem;
-    font-weight: 600;
-    text-transform: capitalize;
-    padding: 0.125rem 0.5rem;
-    border-radius: 9999px;
-    background: var(--color-accent);
-    color: var(--color-muted);
+    font-size: 0.6875rem; font-weight: 600; text-transform: capitalize;
+    padding: 0.125rem 0.5rem; border-radius: 9999px;
+    background: var(--color-accent); color: var(--color-muted);
   }
   .status-delivered { background: var(--color-status-2xx-bg); color: var(--color-status-2xx); }
   .status-failed { background: var(--color-status-5xx-bg); color: var(--color-danger-hover); }
 
   .event-channel {
-    font-size: 0.6875rem;
-    color: var(--color-muted);
-    background: var(--color-accent);
-    padding: 0.125rem 0.5rem;
-    border-radius: 0.25rem;
+    font-size: 0.6875rem; color: var(--color-muted);
+    background: var(--color-accent); padding: 0.125rem 0.5rem; border-radius: 0.25rem;
   }
-
   .channel-badge {
-    font-size: 0.6875rem;
-    color: var(--color-muted);
-    padding: 0.125rem 0.5rem;
-    background: var(--color-accent);
-    border-radius: 0.25rem;
+    font-size: 0.6875rem; color: var(--color-muted);
+    padding: 0.125rem 0.5rem; background: var(--color-accent); border-radius: 0.25rem;
   }
 
-  /* Empty state */
-  .empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 3rem 1rem;
-    background: var(--color-bg);
-    border: 1px solid var(--color-border);
-    border-radius: 0.75rem;
-    text-align: center;
-  }
-  .empty-icon { margin-bottom: 1rem; }
-  .empty-title { font-size: 0.9375rem; font-weight: 600; color: var(--color-fg); margin: 0; }
-  .empty-sub { font-size: 0.8125rem; color: var(--color-muted-light); margin: 0.25rem 0 0; }
-
-  /* Sheet styles */
-  .sheet-detail { display: flex; flex-direction: column; gap: 1rem; }
-  .dl { display: flex; flex-direction: column; margin: 0; }
-  .dl-row { display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--color-accent); font-size: 0.8125rem; }
-  .dl-row:last-child { border-bottom: none; }
-  .dl-row dt { color: var(--color-muted); font-weight: 500; }
-  .dl-row dd { color: var(--color-fg); font-weight: 500; margin: 0; }
+  /* Sheet extras */
   .ok { color: var(--color-success); }
   .err { color: var(--color-danger); font-weight: 600; }
   .sheet-sub { font-size: 0.6875rem; font-weight: 600; color: var(--color-muted-light); text-transform: uppercase; letter-spacing: 0.04em; margin: 0; }
   .sheet-pre { font-size: 0.6875rem; font-family: "SF Mono", Monaco, Menlo, monospace; background: var(--color-danger-subtle); padding: 0.75rem; border: 1px solid var(--color-danger-border); border-radius: 0.5rem; overflow-x: auto; white-space: pre-wrap; word-break: break-all; margin: 0; color: var(--color-danger); line-height: 1.6; }
 
-  /* Responsive */
-  @media (max-width: 768px) {
-    .stat-cards { grid-template-columns: repeat(2, 1fr); }
+  /* Empty state */
+  .empty-state {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 3rem 1rem; background: var(--color-bg);
+    border: 1px solid var(--color-border); border-radius: 0.75rem; text-align: center;
   }
+  .empty-icon { margin-bottom: 1rem; }
+  .empty-title { font-size: 0.9375rem; font-weight: 600; color: var(--color-fg); margin: 0; }
+  .empty-sub { font-size: 0.8125rem; color: var(--color-muted-light); margin: 0.25rem 0 0; }
 </style>

@@ -3,6 +3,9 @@
   import DaylightLayout from "../DaylightLayout.svelte";
   import Button from "@/components/ui/Button.svelte";
   import { getNotificationSound, setNotificationSound, previewSound, soundOptions } from "@/lib/notification-sounds.js";
+  import { timeAgo } from "@/lib/formatters.js";
+  import PerformanceIssues from "./PerformanceIssues.svelte";
+  import SecurityIssues from "./SecurityIssues.svelte";
 
   let { settings = {}, performance_issues = [], security_issues = [], base_path: base = "/daylight" } = $props();
   let selectedSound = $state(getNotificationSound());
@@ -104,90 +107,15 @@
     const mins = Math.max(0, Math.round((expires - new Date()) / 60000));
     return mins;
   });
-
-  function dismissIssue(id, status) {
-    router.patch(`${base}/settings/performance_issues/${id}`, { new_status: status }, { preserveScroll: true });
-  }
-
-  function dismissSecIssue(id, status) {
-    router.patch(`${base}/settings/security_issues/${id}`, { new_status: status }, { preserveScroll: true });
-  }
-
-  function formatKeyDate(dateStr) {
-    if (!dateStr) return "";
-    const d = new Date(dateStr);
-    const now = new Date();
-    const diff = now - d;
-    const mins = Math.floor(diff / 60000);
-    if (mins < 1) return "just now";
-    if (mins < 60) return `${mins}m ago`;
-    const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return `${hrs}h ago`;
-    return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: d.getFullYear() !== now.getFullYear() ? "numeric" : undefined });
-  }
-
-  let expandedIssue = $state(null);
-  let expandedSecIssue = $state(null);
-  function toggleIssue(id) { expandedIssue = expandedIssue === id ? null : id; }
-  function toggleSecIssue(id) { expandedSecIssue = expandedSecIssue === id ? null : id; }
-
-  const severityColors = {
-    critical: "issue-critical",
-    warning: "issue-warning",
-    info: "issue-info"
-  };
-
-  const typeLabels = {
-    n_plus_one: "N+1 Query",
-    slow_query: "Slow Query",
-    counter_cache: "Counter Cache"
-  };
-
-  const secTypeLabels = {
-    injection: "Injection",
-    xss: "XSS",
-    csrf: "CSRF",
-    mass_assignment: "Mass Assignment",
-    rce: "Remote Code Exec",
-    redirect: "Unsafe Redirect",
-    file_access: "File Access",
-    config: "Configuration",
-    auth: "Authentication",
-    render: "Dynamic Render",
-    other: "Other"
-  };
-
-  const secTypeColors = {
-    injection: "sec-type-injection",
-    xss: "sec-type-xss",
-    csrf: "sec-type-csrf",
-    rce: "sec-type-rce",
-    mass_assignment: "sec-type-mass",
-    redirect: "sec-type-redirect",
-    file_access: "sec-type-file",
-    config: "sec-type-config",
-    auth: "sec-type-auth",
-    render: "sec-type-render",
-    other: "sec-type-other"
-  };
-
-  let secCriticalCount = $derived(security_issues.filter(i => i.severity === "critical").length);
-  let secWarningCount = $derived(security_issues.filter(i => i.severity === "warning").length);
-
-  const typeIcons = {
-    n_plus_one: "M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z",
-    slow_query: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z",
-    counter_cache: "M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"
-  };
 </script>
 
 <svelte:head><title>Settings — Daylight</title></svelte:head>
 
 <DaylightLayout>
-  <div class="page">
-    <div class="page-header">
-      <h1 class="page-title">Settings</h1>
-      <p class="page-subtitle">Configure Daylight monitoring and notifications</p>
+  <div class="dl-page">
+    <div class="dl-page-header">
+      <h1 class="dl-page-title">Settings</h1>
+      <p class="dl-page-subtitle">Configure Daylight monitoring and notifications</p>
     </div>
 
     <form class="form" onsubmit={handleSubmit}>
@@ -343,7 +271,7 @@
               {#if settings.gemini_api_key}
                 <span class="key-saved-badge">
                   <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3.5 8.5l3 3 6-6"/></svg>
-                  Saved{#if settings.gemini_api_key_saved_at}&nbsp;&middot;&nbsp;{formatKeyDate(settings.gemini_api_key_saved_at)}{/if}
+                  Saved{#if settings.gemini_api_key_saved_at}&nbsp;&middot;&nbsp;{timeAgo(settings.gemini_api_key_saved_at)}{/if}
                 </span>
               {/if}
             </div>
@@ -357,7 +285,7 @@
               {#if settings.anthropic_api_key}
                 <span class="key-saved-badge">
                   <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3.5 8.5l3 3 6-6"/></svg>
-                  Saved{#if settings.anthropic_api_key_saved_at}&nbsp;&middot;&nbsp;{formatKeyDate(settings.anthropic_api_key_saved_at)}{/if}
+                  Saved{#if settings.anthropic_api_key_saved_at}&nbsp;&middot;&nbsp;{timeAgo(settings.anthropic_api_key_saved_at)}{/if}
                 </span>
               {/if}
             </div>
@@ -393,7 +321,7 @@
               {#if settings.github_api_token}
                 <span class="key-saved-badge">
                   <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3.5 8.5l3 3 6-6"/></svg>
-                  Saved{#if settings.github_api_token_saved_at}&nbsp;&middot;&nbsp;{formatKeyDate(settings.github_api_token_saved_at)}{/if}
+                  Saved{#if settings.github_api_token_saved_at}&nbsp;&middot;&nbsp;{timeAgo(settings.github_api_token_saved_at)}{/if}
                 </span>
               {/if}
             </div>
@@ -453,7 +381,7 @@
               {/if}
               {#if settings.last_performance_scan_at}
                 <span class="scan-meta">
-                  Last scan: {formatKeyDate(settings.last_performance_scan_at)}
+                  Last scan: {timeAgo(settings.last_performance_scan_at)}
                   {#if settings.last_performance_scan_count}
                     &middot; {settings.last_performance_scan_count} issue{settings.last_performance_scan_count === "1" ? "" : "s"} found
                   {/if}
@@ -540,7 +468,7 @@
               {/if}
               {#if settings.last_security_scan_at}
                 <span class="scan-meta">
-                  Last scan: {formatKeyDate(settings.last_security_scan_at)}
+                  Last scan: {timeAgo(settings.last_security_scan_at)}
                   {#if settings.last_security_scan_total_warnings}
                     &middot; {settings.last_security_scan_total_warnings} warning{settings.last_security_scan_total_warnings === "1" ? "" : "s"}
                   {/if}
@@ -569,210 +497,25 @@
       </div>
     </form>
 
-    <!-- Performance Issues -->
-    {#if performance_issues.length > 0}
-      <div class="issues-section">
-        <div class="issues-header">
-          <h2 class="section-title">Performance Issues</h2>
-          <span class="issues-count">{performance_issues.length} open</span>
-        </div>
-
-        <div class="issues-list">
-          {#each performance_issues as issue (issue.id)}
-            <div class="issue-card {severityColors[issue.severity] || ''}">
-              <button class="issue-summary" onclick={() => toggleIssue(issue.id)}>
-                <div class="issue-left">
-                  <span class="issue-type-badge {issue.issue_type}">{typeLabels[issue.issue_type] || issue.issue_type}</span>
-                  <span class="issue-severity-dot {issue.severity}"></span>
-                  <span class="issue-title">{issue.title}</span>
-                </div>
-                <div class="issue-right">
-                  {#if issue.total_time_ms}
-                    <span class="issue-stat">{issue.total_time_ms >= 1000 ? `${(issue.total_time_ms / 1000).toFixed(1)}s` : `${Math.round(issue.total_time_ms)}ms`} total</span>
-                  {/if}
-                  <span class="issue-stat">{issue.occurrences}x</span>
-                  <svg class="issue-chevron" class:expanded={expandedIssue === issue.id} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-                </div>
-              </button>
-
-              {#if expandedIssue === issue.id}
-                <div class="issue-detail">
-                  <p class="issue-desc">{issue.description}</p>
-
-                  <div class="issue-meta-grid">
-                    {#if issue.source_location}
-                      <div class="issue-meta-item">
-                        <span class="issue-meta-label">Source</span>
-                        <code class="issue-meta-code">{issue.source_location}</code>
-                      </div>
-                    {/if}
-                    {#if issue.controller_action}
-                      <div class="issue-meta-item">
-                        <span class="issue-meta-label">Controller</span>
-                        <code class="issue-meta-code">{issue.controller_action}</code>
-                      </div>
-                    {/if}
-                    {#if issue.avg_duration_ms}
-                      <div class="issue-meta-item">
-                        <span class="issue-meta-label">Avg Duration</span>
-                        <span>{issue.avg_duration_ms.toFixed(1)}ms</span>
-                      </div>
-                    {/if}
-                    {#if issue.detected_at}
-                      <div class="issue-meta-item">
-                        <span class="issue-meta-label">Detected</span>
-                        <span>{formatKeyDate(issue.detected_at)}</span>
-                      </div>
-                    {/if}
-                  </div>
-
-                  {#if issue.sql_pattern}
-                    <div class="issue-sql">
-                      <span class="issue-sql-label">SQL Pattern</span>
-                      <pre class="issue-sql-pre">{issue.sql_pattern}</pre>
-                    </div>
-                  {/if}
-
-                  {#if issue.solution}
-                    <div class="issue-solution">
-                      <span class="issue-solution-label">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
-                        AI Suggestion
-                      </span>
-                      <div class="issue-solution-body">{@html issue.solution.replace(/\n/g, '<br>')}</div>
-                    </div>
-                  {/if}
-
-                  <div class="issue-actions">
-                    <Button variant="outline" size="sm" onclick={() => dismissIssue(issue.id, "fixed")}>Mark Fixed</Button>
-                    <Button variant="ghost" size="sm" onclick={() => dismissIssue(issue.id, "ignored")}>Ignore</Button>
-                  </div>
-                </div>
-              {/if}
-            </div>
-          {/each}
-        </div>
-      </div>
-    {/if}
-
-    <!-- Security Issues -->
-    {#if security_issues.length > 0}
-      <div class="issues-section">
-        <div class="issues-header">
-          <h2 class="section-title">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            Security Issues
-          </h2>
-          <div class="sec-counts">
-            {#if secCriticalCount > 0}
-              <span class="issues-count sec-count-critical">{secCriticalCount} critical</span>
-            {/if}
-            {#if secWarningCount > 0}
-              <span class="issues-count sec-count-warning">{secWarningCount} warning</span>
-            {/if}
-            <span class="issues-count">{security_issues.length} total</span>
-          </div>
-        </div>
-
-        <div class="issues-list">
-          {#each security_issues as issue (issue.id)}
-            <div class="issue-card {severityColors[issue.severity] || ''}">
-              <button class="issue-summary" onclick={() => toggleSecIssue(issue.id)}>
-                <div class="issue-left">
-                  <span class="sec-type-badge {secTypeColors[issue.issue_type] || ''}">{secTypeLabels[issue.issue_type] || issue.warning_type}</span>
-                  <span class="issue-severity-dot {issue.severity}"></span>
-                  <span class="issue-title">{issue.title}</span>
-                </div>
-                <div class="issue-right">
-                  {#if issue.confidence}
-                    <span class="sec-confidence sec-conf-{issue.confidence}">{issue.confidence}</span>
-                  {/if}
-                  <svg class="issue-chevron" class:expanded={expandedSecIssue === issue.id} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-                </div>
-              </button>
-
-              {#if expandedSecIssue === issue.id}
-                <div class="issue-detail">
-                  <p class="issue-desc">{issue.description}</p>
-
-                  <div class="issue-meta-grid">
-                    {#if issue.file_path}
-                      <div class="issue-meta-item">
-                        <span class="issue-meta-label">File</span>
-                        <code class="issue-meta-code">{issue.file_path}{#if issue.line_number}:{issue.line_number}{/if}</code>
-                      </div>
-                    {/if}
-                    {#if issue.warning_type}
-                      <div class="issue-meta-item">
-                        <span class="issue-meta-label">Warning Type</span>
-                        <span>{issue.warning_type}</span>
-                      </div>
-                    {/if}
-                    {#if issue.check_name}
-                      <div class="issue-meta-item">
-                        <span class="issue-meta-label">Check</span>
-                        <span>{issue.check_name}</span>
-                      </div>
-                    {/if}
-                    {#if issue.detected_at}
-                      <div class="issue-meta-item">
-                        <span class="issue-meta-label">Detected</span>
-                        <span>{formatKeyDate(issue.detected_at)}</span>
-                      </div>
-                    {/if}
-                  </div>
-
-                  {#if issue.code_snippet}
-                    <div class="issue-sql">
-                      <span class="issue-sql-label">Vulnerable Code</span>
-                      <pre class="issue-sql-pre">{issue.code_snippet}</pre>
-                    </div>
-                  {/if}
-
-                  {#if issue.solution}
-                    <div class="issue-solution sec-solution">
-                      <span class="issue-solution-label">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                        AI Fix Suggestion
-                      </span>
-                      <div class="issue-solution-body">{@html issue.solution.replace(/\n/g, '<br>')}</div>
-                    </div>
-                  {/if}
-
-                  <div class="issue-actions">
-                    {#if issue.link}
-                      <a href={issue.link} target="_blank" rel="noopener" class="sec-ref-link">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                        Brakeman docs
-                      </a>
-                    {/if}
-                    <Button variant="outline" size="sm" onclick={() => dismissSecIssue(issue.id, "fixed")}>Mark Fixed</Button>
-                    <Button variant="ghost" size="sm" onclick={() => dismissSecIssue(issue.id, "ignored")}>Ignore</Button>
-                  </div>
-                </div>
-              {/if}
-            </div>
-          {/each}
-        </div>
-      </div>
-    {/if}
+    <PerformanceIssues issues={performance_issues} {base} />
+    <SecurityIssues issues={security_issues} {base} />
   </div>
 </DaylightLayout>
 
 <style>
-  .page {
+  .dl-page {
     display: flex;
     flex-direction: column;
     gap: 1.75rem;
   }
 
-  .page-header {
+  .dl-page-header {
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
   }
 
-  .page-title {
+  .dl-page-title {
     font-size: 1.375rem;
     font-weight: 700;
     color: var(--color-fg);
@@ -780,7 +523,7 @@
     letter-spacing: -0.01em;
   }
 
-  .page-subtitle {
+  .dl-page-subtitle {
     font-size: 0.875rem;
     color: var(--color-muted);
     margin: 0;
@@ -1063,363 +806,4 @@
     gap: 0.625rem;
   }
 
-  /* ——— Performance Issues Section ——— */
-  .issues-section {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .issues-header {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-  }
-
-  .issues-count {
-    font-size: 0.75rem;
-    font-weight: 600;
-    padding: 0.125rem 0.5rem;
-    border-radius: 9999px;
-    background: var(--color-warning-subtle);
-    color: var(--color-warning-dark);
-    border: 1px solid var(--color-warning-border);
-  }
-
-  .issues-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .issue-card {
-    background: var(--color-bg);
-    border: 1px solid var(--color-border);
-    border-radius: 0.75rem;
-    overflow: hidden;
-    transition: border-color 0.15s;
-  }
-
-  .issue-card.issue-critical { border-left: 3px solid var(--color-danger); }
-  .issue-card.issue-warning { border-left: 3px solid var(--color-warning); }
-  .issue-card.issue-info { border-left: 3px solid var(--color-info); }
-
-  .issue-summary {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    padding: 0.75rem 1rem;
-    border: none;
-    background: none;
-    font-family: inherit;
-    cursor: pointer;
-    gap: 1rem;
-    text-align: left;
-    transition: background 0.1s;
-  }
-
-  .issue-summary:hover {
-    background: var(--color-surface);
-  }
-
-  .issue-left {
-    display: flex;
-    align-items: center;
-    gap: 0.625rem;
-    min-width: 0;
-    flex: 1;
-  }
-
-  .issue-type-badge {
-    flex-shrink: 0;
-    font-size: 0.625rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    padding: 0.125rem 0.5rem;
-    border-radius: 0.25rem;
-    white-space: nowrap;
-  }
-
-  .issue-type-badge.n_plus_one {
-    background: var(--color-danger-subtle);
-    color: var(--color-danger);
-  }
-
-  .issue-type-badge.slow_query {
-    background: var(--color-warning-subtle);
-    color: var(--color-warning-dark);
-  }
-
-  .issue-type-badge.counter_cache {
-    background: var(--color-info-subtle);
-    color: var(--color-info);
-  }
-
-  .issue-severity-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-
-  .issue-severity-dot.critical { background: var(--color-danger); }
-  .issue-severity-dot.warning { background: var(--color-warning); }
-  .issue-severity-dot.info { background: var(--color-info); }
-
-  .issue-title {
-    font-size: 0.8125rem;
-    font-weight: 600;
-    color: var(--color-fg);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .issue-right {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    flex-shrink: 0;
-  }
-
-  .issue-stat {
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: var(--color-muted);
-    font-variant-numeric: tabular-nums;
-  }
-
-  .issue-chevron {
-    color: var(--color-muted-light);
-    transition: transform 0.15s;
-  }
-
-  .issue-chevron.expanded {
-    transform: rotate(180deg);
-  }
-
-  .issue-detail {
-    padding: 0 1rem 1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.875rem;
-    border-top: 1px solid var(--color-accent);
-  }
-
-  .issue-desc {
-    font-size: 0.8125rem;
-    color: var(--color-muted);
-    margin: 0.875rem 0 0;
-    line-height: 1.5;
-  }
-
-  .issue-meta-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 0.5rem;
-  }
-
-  .issue-meta-item {
-    display: flex;
-    flex-direction: column;
-    gap: 0.125rem;
-  }
-
-  .issue-meta-label {
-    font-size: 0.6875rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--color-muted-light);
-  }
-
-  .issue-meta-code {
-    font-size: 0.75rem;
-    font-family: "SF Mono", Monaco, Menlo, monospace;
-    color: var(--color-fg);
-    background: var(--color-accent);
-    padding: 0.125rem 0.375rem;
-    border-radius: 0.25rem;
-    width: fit-content;
-  }
-
-  .issue-sql {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-  }
-
-  .issue-sql-label {
-    font-size: 0.6875rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--color-muted-light);
-  }
-
-  .issue-sql-pre {
-    font-size: 0.75rem;
-    font-family: "SF Mono", Monaco, Menlo, monospace;
-    background: var(--color-surface);
-    padding: 0.625rem 0.75rem;
-    border: 1px solid var(--color-border);
-    border-radius: 0.5rem;
-    overflow-x: auto;
-    white-space: pre-wrap;
-    word-break: break-all;
-    margin: 0;
-    line-height: 1.6;
-    color: var(--color-fg);
-  }
-
-  .issue-solution {
-    display: flex;
-    flex-direction: column;
-    gap: 0.375rem;
-    background: var(--color-primary-subtle);
-    border: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
-    border-radius: 0.5rem;
-    padding: 0.75rem;
-  }
-
-  .issue-solution-label {
-    display: flex;
-    align-items: center;
-    gap: 0.375rem;
-    font-size: 0.6875rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--color-primary);
-  }
-
-  .issue-solution-body {
-    font-size: 0.8125rem;
-    line-height: 1.6;
-    color: var(--color-fg);
-  }
-
-  .issue-solution-body :global(code) {
-    font-size: 0.75rem;
-    font-family: "SF Mono", Monaco, Menlo, monospace;
-    background: var(--color-accent);
-    padding: 0.0625rem 0.375rem;
-    border-radius: 0.25rem;
-  }
-
-  .issue-actions {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding-top: 0.25rem;
-  }
-
-  /* ——— Security Issues ——— */
-  .sec-counts {
-    display: flex;
-    gap: 0.375rem;
-  }
-
-  .sec-count-critical {
-    background: var(--color-danger-subtle);
-    color: var(--color-danger);
-    border-color: var(--color-danger-border);
-  }
-
-  .sec-count-warning {
-    background: var(--color-warning-subtle);
-    color: var(--color-warning-dark);
-    border-color: var(--color-warning-border);
-  }
-
-  .sec-type-badge {
-    flex-shrink: 0;
-    font-size: 0.625rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    padding: 0.125rem 0.5rem;
-    border-radius: 0.25rem;
-    white-space: nowrap;
-  }
-
-  .sec-type-injection, .sec-type-rce {
-    background: var(--color-danger-subtle);
-    color: var(--color-danger);
-  }
-
-  .sec-type-xss {
-    background: var(--color-warning-subtle);
-    color: var(--color-warning-dark);
-  }
-
-  .sec-type-csrf, .sec-type-auth {
-    background: var(--color-purple-subtle);
-    color: var(--color-purple);
-  }
-
-  .sec-type-mass, .sec-type-redirect {
-    background: var(--color-info-subtle);
-    color: var(--color-info);
-  }
-
-  .sec-type-file, .sec-type-render {
-    background: var(--color-warning-subtle);
-    color: var(--color-warning-darker);
-  }
-
-  .sec-type-config, .sec-type-other {
-    background: var(--color-accent);
-    color: var(--color-muted);
-  }
-
-  .sec-confidence {
-    font-size: 0.625rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    padding: 0.0625rem 0.375rem;
-    border-radius: 0.25rem;
-  }
-
-  .sec-conf-high {
-    background: var(--color-danger-subtle);
-    color: var(--color-danger);
-  }
-
-  .sec-conf-medium {
-    background: var(--color-warning-subtle);
-    color: var(--color-warning-dark);
-  }
-
-  .sec-conf-weak {
-    background: var(--color-accent);
-    color: var(--color-muted);
-  }
-
-  .sec-solution {
-    background: var(--color-danger-subtle);
-    border-color: color-mix(in srgb, var(--color-danger) 20%, transparent);
-  }
-
-  .sec-solution .issue-solution-label {
-    color: var(--color-danger);
-  }
-
-  .sec-ref-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: var(--color-info);
-    text-decoration: none;
-    margin-right: auto;
-  }
-
-  .sec-ref-link:hover {
-    text-decoration: underline;
-  }
 </style>

@@ -3,6 +3,7 @@
   import DaylightLayout from "../DaylightLayout.svelte";
   import Button from "@/components/ui/Button.svelte";
   import InfiniteScroll from "@/components/ui/InfiniteScroll.svelte";
+  import { timeAgo } from "@/lib/formatters.js";
 
   let {
     solutions = [],
@@ -32,18 +33,6 @@
       preserveState: true,
       onFinish: () => { generating = false; },
     });
-  }
-
-  function timeAgo(dateStr) {
-    if (!dateStr) return "";
-    const diff = Date.now() - new Date(dateStr).getTime();
-    const mins = Math.floor(diff / 60000);
-    if (mins < 1) return "just now";
-    if (mins < 60) return `${mins}m ago`;
-    const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return `${hrs}h ago`;
-    const days = Math.floor(hrs / 24);
-    return days < 30 ? `${days}d ago` : `${Math.floor(days / 30)}mo ago`;
   }
 
   const tabs = [
@@ -122,10 +111,10 @@
 <DaylightLayout>
   <div class="solutions-page">
     <!-- Header -->
-    <div class="page-header">
+    <div class="dl-page-header">
       <div>
-        <h1 class="page-title">Solutions</h1>
-        <p class="page-subtitle">AI-generated fixes for performance and security issues</p>
+        <h1 class="dl-page-title">Solutions</h1>
+        <p class="dl-page-subtitle">AI-generated fixes for performance and security issues</p>
       </div>
       <div class="header-actions">
         {#if last_scan_at}
@@ -167,14 +156,12 @@
 
     <!-- Solution Cards -->
     {#if allSolutions.length === 0}
-      <div class="empty-state">
-        <div class="empty-icon">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--color-muted-lightest)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
-          </svg>
-        </div>
-        <p class="empty-title">No solutions found</p>
-        <p class="empty-sub">No solutions to show for this filter. Try generating new solutions.</p>
+      <div class="dl-table-empty">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--color-muted-lightest)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+        </svg>
+        <p style="font-weight: 600;">No solutions found</p>
+        <p>No solutions to show for this filter. Try generating new solutions.</p>
       </div>
     {:else}
       <div class="solution-list">
@@ -186,11 +173,8 @@
             class="solution-card"
             onclick={() => viewSolution(solution)}
           >
-            <!-- Severity bar -->
             <div class="severity-bar" style="background: {sevColor}"></div>
-
             <div class="solution-content">
-              <!-- Top row: badges + time -->
               <div class="solution-top">
                 <div class="solution-badges">
                   <span class="source-badge" style="background: {sourceBadge.bg}; color: {sourceBadge.color}">
@@ -203,16 +187,10 @@
                 </div>
                 <span class="solution-time">{timeAgo(solution.generated_at)}</span>
               </div>
-
-              <!-- Title -->
               <h3 class="solution-title">{solution.title}</h3>
-
-              <!-- Problem description -->
               {#if solution.problem_description}
                 <p class="solution-description">{solution.problem_description}</p>
               {/if}
-
-              <!-- File paths -->
               {#if solution.file_paths && solution.file_paths.length > 0}
                 <div class="file-paths">
                   {#each solution.file_paths.slice(0, 3) as fp}
@@ -223,18 +201,10 @@
                   {/if}
                 </div>
               {/if}
-
-              <!-- Footer -->
               <div class="solution-footer">
                 <div class="solution-footer-left">
                   {#if solution.status === "pushed" && solution.pr_url}
-                    <a
-                      class="pr-link"
-                      href={solution.pr_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onclick={(e) => e.stopPropagation()}
-                    >
+                    <a class="pr-link" href={solution.pr_url} target="_blank" rel="noopener noreferrer" onclick={(e) => e.stopPropagation()}>
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 012 2v7"/><line x1="6" y1="9" x2="6" y2="21"/>
                       </svg>
@@ -264,282 +234,65 @@
 <style>
   .solutions-page { display: flex; flex-direction: column; gap: 1.5rem; }
 
-  .page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
-  .page-title { font-size: 1.375rem; font-weight: 700; color: var(--color-fg); margin: 0; letter-spacing: -0.02em; }
-  .page-subtitle { font-size: 0.8125rem; color: var(--color-muted); margin: 0.25rem 0 0; }
-
-  .header-actions {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    flex-shrink: 0;
-  }
-
-  .scan-info {
-    font-size: 0.75rem;
-    color: var(--color-muted-light);
-    font-variant-numeric: tabular-nums;
-  }
-
-  .scan-error {
-    font-size: 0.75rem;
-    color: var(--color-danger);
-  }
+  .header-actions { display: flex; align-items: center; gap: 0.75rem; flex-shrink: 0; }
+  .scan-info { font-size: 0.75rem; color: var(--color-muted-light); font-variant-numeric: tabular-nums; }
+  .scan-error { font-size: 0.75rem; color: var(--color-danger); }
 
   .btn-spinner {
-    width: 0.75rem;
-    height: 0.75rem;
-    border: 2px solid currentColor;
-    border-top-color: transparent;
-    border-radius: 50%;
-    display: inline-block;
+    width: 0.75rem; height: 0.75rem;
+    border: 2px solid currentColor; border-top-color: transparent;
+    border-radius: 50%; display: inline-block;
     animation: spin 0.8s linear infinite;
   }
-
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
   /* Tabs */
   .tabs-row { display: flex; align-items: center; gap: 1rem; }
-  .tabs {
-    display: flex;
-    gap: 0.125rem;
-    background: var(--color-accent);
-    border-radius: 0.5rem;
-    padding: 0.1875rem;
-  }
+  .tabs { display: flex; gap: 0.125rem; background: var(--color-accent); border-radius: 0.5rem; padding: 0.1875rem; }
   .tab {
-    padding: 0.375rem 0.875rem;
-    font-size: 0.8125rem;
-    font-weight: 500;
-    font-family: inherit;
-    border: none;
-    border-radius: 0.375rem;
-    background: transparent;
-    color: var(--color-muted);
-    cursor: pointer;
-    transition: all 0.15s ease;
-    display: flex;
-    align-items: center;
-    gap: 0.375rem;
+    padding: 0.375rem 0.875rem; font-size: 0.8125rem; font-weight: 500; font-family: inherit;
+    border: none; border-radius: 0.375rem; background: transparent; color: var(--color-muted);
+    cursor: pointer; transition: all 0.15s ease; display: flex; align-items: center; gap: 0.375rem;
   }
   .tab:hover { color: var(--color-fg); }
-  .tab.active {
-    background: var(--color-bg);
-    color: var(--color-fg);
-    font-weight: 600;
-    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
-  }
-  .tab-count {
-    font-size: 0.6875rem;
-    font-weight: 600;
-    background: var(--color-border);
-    color: var(--color-fg-tertiary);
-    padding: 0.0625rem 0.375rem;
-    border-radius: 9999px;
-    font-variant-numeric: tabular-nums;
-  }
-  .tab.active .tab-count {
-    background: var(--color-fg);
-    color: var(--color-bg);
-  }
+  .tab.active { background: var(--color-bg); color: var(--color-fg); font-weight: 600; box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1); }
+  .tab-count { font-size: 0.6875rem; font-weight: 600; background: var(--color-border); color: var(--color-fg-tertiary); padding: 0.0625rem 0.375rem; border-radius: 9999px; font-variant-numeric: tabular-nums; }
+  .tab.active .tab-count { background: var(--color-fg); color: var(--color-bg); }
 
-  /* Solution List */
-  .solution-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  /* Solution Card */
+  /* Solution Cards */
+  .solution-list { display: flex; flex-direction: column; gap: 0.75rem; }
   .solution-card {
-    display: flex;
-    align-items: stretch;
-    background: var(--color-bg);
-    border: 1px solid var(--color-border);
-    border-radius: 0.75rem;
-    overflow: hidden;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    text-align: left;
-    font-family: inherit;
-    width: 100%;
-    padding: 0;
+    display: flex; align-items: stretch; background: var(--color-bg); border: 1px solid var(--color-border);
+    border-radius: 0.75rem; overflow: hidden; cursor: pointer; transition: all 0.2s ease;
+    text-align: left; font-family: inherit; width: 100%; padding: 0;
   }
-  .solution-card:hover {
-    box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.08), 0 2px 4px -2px var(--color-border-subtle-alpha);
-    transform: translateY(-1px);
-    border-color: var(--color-muted-lightest);
-  }
-
-  /* Severity Bar */
-  .severity-bar {
-    width: 4px;
-    flex-shrink: 0;
-  }
-
-  /* Solution Content */
-  .solution-content {
-    flex: 1;
-    padding: 1rem 1.25rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    min-width: 0;
-  }
-
-  .solution-top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-  }
-  .solution-badges {
-    display: flex;
-    align-items: center;
-    gap: 0.375rem;
-    flex-wrap: wrap;
-  }
-
-  .source-badge {
-    font-size: 0.6875rem;
-    font-weight: 600;
-    padding: 0.1875rem 0.5rem;
-    border-radius: 9999px;
-  }
-
-  .severity-dot {
-    width: 0.5rem;
-    height: 0.5rem;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-
-  .status-badge {
-    font-size: 0.6875rem;
-    font-weight: 600;
-    padding: 0.1875rem 0.5rem;
-    border-radius: 9999px;
-    text-transform: capitalize;
-  }
-
-  .solution-time {
-    font-size: 0.75rem;
-    color: var(--color-muted-light);
-    flex-shrink: 0;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .solution-title {
-    font-size: 0.9375rem;
-    font-weight: 650;
-    color: var(--color-fg);
-    margin: 0;
-    line-height: 1.3;
-  }
-
-  .solution-description {
-    font-size: 0.8125rem;
-    color: var(--color-muted);
-    margin: 0;
-    line-height: 1.5;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
+  .solution-card:hover { box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.08), 0 2px 4px -2px var(--color-border-subtle-alpha); transform: translateY(-1px); border-color: var(--color-muted-lightest); }
+  .severity-bar { width: 4px; flex-shrink: 0; }
+  .solution-content { flex: 1; padding: 1rem 1.25rem; display: flex; flex-direction: column; gap: 0.5rem; min-width: 0; }
+  .solution-top { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
+  .solution-badges { display: flex; align-items: center; gap: 0.375rem; flex-wrap: wrap; }
+  .source-badge { font-size: 0.6875rem; font-weight: 600; padding: 0.1875rem 0.5rem; border-radius: 9999px; }
+  .severity-dot { width: 0.5rem; height: 0.5rem; border-radius: 50%; flex-shrink: 0; }
+  .status-badge { font-size: 0.6875rem; font-weight: 600; padding: 0.1875rem 0.5rem; border-radius: 9999px; text-transform: capitalize; }
+  .solution-time { font-size: 0.75rem; color: var(--color-muted-light); flex-shrink: 0; font-variant-numeric: tabular-nums; }
+  .solution-title { font-size: 0.9375rem; font-weight: 650; color: var(--color-fg); margin: 0; line-height: 1.3; }
+  .solution-description { font-size: 0.8125rem; color: var(--color-muted); margin: 0; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
   /* File paths */
-  .file-paths {
-    display: flex;
-    align-items: center;
-    gap: 0.375rem;
-    flex-wrap: wrap;
-  }
-  .file-path {
-    font-size: 0.6875rem;
-    font-family: var(--font-mono, monospace);
-    background: var(--color-accent);
-    color: var(--color-muted);
-    padding: 0.125rem 0.375rem;
-    border-radius: 0.25rem;
-    border: 1px solid var(--color-border);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 16rem;
-  }
-  .file-path-more {
-    font-size: 0.6875rem;
-    color: var(--color-muted-light);
-    font-weight: 500;
-  }
+  .file-paths { display: flex; align-items: center; gap: 0.375rem; flex-wrap: wrap; }
+  .file-path { font-size: 0.6875rem; font-family: var(--font-mono, monospace); background: var(--color-accent); color: var(--color-muted); padding: 0.125rem 0.375rem; border-radius: 0.25rem; border: 1px solid var(--color-border); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 16rem; }
+  .file-path-more { font-size: 0.6875rem; color: var(--color-muted-light); font-weight: 500; }
 
   /* Footer */
-  .solution-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-top: 0.25rem;
-  }
-  .solution-footer-left {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-  }
+  .solution-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 0.25rem; }
+  .solution-footer-left { display: flex; align-items: center; gap: 0.75rem; }
+  .pr-link { font-size: 0.75rem; font-weight: 500; color: var(--color-success-dark); display: inline-flex; align-items: center; gap: 0.25rem; text-decoration: none; }
+  .pr-link:hover { text-decoration: underline; color: var(--color-success); }
+  .message-count { font-size: 0.75rem; color: var(--color-muted-light); display: inline-flex; align-items: center; gap: 0.25rem; }
+  .view-details { font-size: 0.8125rem; font-weight: 500; color: var(--color-info); }
+  .solution-card:hover .view-details { color: var(--color-info-darker); text-decoration: underline; }
 
-  .pr-link {
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: var(--color-success-dark);
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    text-decoration: none;
-  }
-  .pr-link:hover {
-    text-decoration: underline;
-    color: var(--color-success);
-  }
-
-  .message-count {
-    font-size: 0.75rem;
-    color: var(--color-muted-light);
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-  }
-
-  .view-details {
-    font-size: 0.8125rem;
-    font-weight: 500;
-    color: var(--color-info);
-  }
-  .solution-card:hover .view-details {
-    color: var(--color-info-darker);
-    text-decoration: underline;
-  }
-
-  /* Empty State */
-  .empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 3rem 1rem;
-    background: var(--color-bg);
-    border: 1px solid var(--color-border);
-    border-radius: 0.75rem;
-    text-align: center;
-  }
-  .empty-icon { margin-bottom: 1rem; }
-  .empty-title { font-size: 0.9375rem; font-weight: 600; color: var(--color-fg); margin: 0; }
-  .empty-sub { font-size: 0.8125rem; color: var(--color-muted-light); margin: 0.25rem 0 0; }
-
-  /* Responsive */
   @media (max-width: 768px) {
-    .page-header { flex-direction: column; }
     .header-actions { flex-wrap: wrap; }
   }
 </style>

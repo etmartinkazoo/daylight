@@ -4,6 +4,7 @@
   import Badge from "@/components/ui/Badge.svelte";
   import Button from "@/components/ui/Button.svelte";
   import Table from "@/components/ui/Table.svelte";
+  import { timeAgo, formatTime } from "@/lib/formatters.js";
 
   let { error = {}, occurrences = [], base_path: base = "/daylight" } = $props();
 
@@ -16,27 +17,6 @@
       router.delete(`${base}/errors/${error.id}`);
     }
   }
-
-  function timeAgo(dateStr) {
-    if (!dateStr) return "";
-    const diff = Date.now() - new Date(dateStr).getTime();
-    const mins = Math.floor(diff / 60000);
-    if (mins < 1) return "just now";
-    if (mins < 60) return `${mins}m ago`;
-    const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return `${hrs}h ago`;
-    const days = Math.floor(hrs / 24);
-    if (days < 30) return `${days}d ago`;
-    return `${Math.floor(days / 30)}mo ago`;
-  }
-
-  function formatTime(dateStr) {
-    if (!dateStr) return "";
-    return new Date(dateStr).toLocaleString(undefined, {
-      month: "short", day: "numeric", year: "numeric",
-      hour: "2-digit", minute: "2-digit", second: "2-digit"
-    });
-  }
 </script>
 
 <svelte:head>
@@ -44,8 +24,8 @@
 </svelte:head>
 
 <DaylightLayout>
-  <div class="page">
-    <a href={`${base}/errors`} class="back-link">
+  <div class="dl-page">
+    <a href={`${base}/errors`} class="dl-back-btn">
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
         <path d="M10 12L6 8l4-4" />
       </svg>
@@ -113,20 +93,20 @@
 
     <!-- Backtrace -->
     {#if error.backtrace_summary}
-      <div class="section-card">
-        <div class="section-header">
-          <h2 class="section-title">Backtrace</h2>
+      <div class="dl-card">
+        <div class="dl-card-header">
+          <h2 class="dl-card-title">Backtrace</h2>
         </div>
-        <div class="section-body-flush">
+        <div class="dl-card-body" style="padding: 0;">
           <pre class="backtrace">{error.backtrace_summary}</pre>
         </div>
       </div>
     {/if}
 
     <!-- Occurrences -->
-    <div class="section-card">
-      <div class="section-header">
-        <h2 class="section-title">Recent Occurrences</h2>
+    <div class="dl-card">
+      <div class="dl-card-header">
+        <h2 class="dl-card-title">Recent Occurrences</h2>
         <span class="occurrence-count">{occurrences.length}</span>
       </div>
       <div class="occurrences-body">
@@ -169,349 +149,50 @@
 </DaylightLayout>
 
 <style>
-  .page {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-  }
+  .error-card { background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 0.75rem; overflow: hidden; display: flex; flex-direction: column; }
+  .error-card-top { padding: 1.5rem; display: flex; flex-direction: column; gap: 0.5rem; }
+  .error-title-row { display: flex; align-items: flex-start; gap: 0.75rem; flex-wrap: wrap; }
+  .error-class { font-size: 1.125rem; font-weight: 700; color: var(--color-danger-hover); margin: 0; word-break: break-word; flex: 1; min-width: 0; }
+  .error-message { font-size: 0.875rem; color: var(--color-muted); margin: 0; word-break: break-word; line-height: 1.5; }
 
-  /* Back link */
-  .back-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.375rem;
-    font-size: 0.8125rem;
-    font-weight: 500;
-    color: var(--color-muted);
-    text-decoration: none;
-    transition: color 0.15s ease;
-  }
+  .status-badge { display: inline-flex; align-items: center; font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding: 0.1875rem 0.625rem; border-radius: 9999px; white-space: nowrap; flex-shrink: 0; }
+  .status-open { background: var(--color-danger-subtle); color: var(--color-danger-hover); border: 1px solid var(--color-danger-border); }
+  .status-resolved { background: var(--color-success-subtle); color: var(--color-success-dark); border: 1px solid var(--color-success-border); }
+  .status-ignored { background: var(--color-surface); color: var(--color-muted-light); border: 1px solid var(--color-border); }
 
-  .back-link:hover {
-    color: var(--color-fg);
-  }
-
-  /* Error header card */
-  .error-card {
-    background: var(--color-bg);
-    border: 1px solid var(--color-border);
-    border-radius: 0.75rem;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .error-card-top {
-    padding: 1.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .error-title-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-  }
-
-  .error-class {
-    font-size: 1.125rem;
-    font-weight: 700;
-    color: var(--color-danger-hover);
-    margin: 0;
-    word-break: break-word;
-    flex: 1;
-    min-width: 0;
-  }
-
-  .status-badge {
-    display: inline-flex;
-    align-items: center;
-    font-size: 0.6875rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    padding: 0.1875rem 0.625rem;
-    border-radius: 9999px;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-
-  .status-open {
-    background: var(--color-danger-subtle);
-    color: var(--color-danger-hover);
-    border: 1px solid var(--color-danger-border);
-  }
-
-  .status-resolved {
-    background: var(--color-success-subtle);
-    color: var(--color-success-dark);
-    border: 1px solid var(--color-success-border);
-  }
-
-  .status-ignored {
-    background: var(--color-surface);
-    color: var(--color-muted-light);
-    border: 1px solid var(--color-border);
-  }
-
-  .error-message {
-    font-size: 0.875rem;
-    color: var(--color-muted);
-    margin: 0;
-    word-break: break-word;
-    line-height: 1.5;
-  }
-
-  /* Meta grid */
-  .meta-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    border-top: 1px solid var(--color-accent);
-    border-bottom: 1px solid var(--color-accent);
-  }
-
-  .meta-item {
-    display: flex;
-    flex-direction: column;
-    gap: 0.125rem;
-    padding: 1rem 1.5rem;
-  }
-
-  .meta-item:not(:last-child) {
-    border-right: 1px solid var(--color-accent);
-  }
-
-  .meta-label {
-    font-size: 0.6875rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--color-muted-light);
-  }
-
-  .meta-value {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--color-fg);
-  }
+  .meta-grid { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--color-accent); border-bottom: 1px solid var(--color-accent); }
+  .meta-item { display: flex; flex-direction: column; gap: 0.125rem; padding: 1rem 1.5rem; }
+  .meta-item:not(:last-child) { border-right: 1px solid var(--color-accent); }
+  .meta-label { font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-muted-light); }
+  .meta-value { font-size: 0.875rem; font-weight: 600; color: var(--color-fg); }
 
   @media (max-width: 540px) {
-    .meta-grid {
-      grid-template-columns: 1fr;
-    }
-    .meta-item:not(:last-child) {
-      border-right: none;
-      border-bottom: 1px solid var(--color-accent);
-    }
+    .meta-grid { grid-template-columns: 1fr; }
+    .meta-item:not(:last-child) { border-right: none; border-bottom: 1px solid var(--color-accent); }
   }
 
-  /* Action bar */
-  .action-bar {
-    display: flex;
-    gap: 0.5rem;
-    padding: 1rem 1.5rem;
-    flex-wrap: wrap;
-  }
+  .action-bar { display: flex; gap: 0.5rem; padding: 1rem 1.5rem; flex-wrap: wrap; }
+  .action-btn { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.4375rem 0.875rem; font-size: 0.8125rem; font-weight: 500; font-family: inherit; border: 1px solid var(--color-border); border-radius: 0.5rem; background: var(--color-bg); color: var(--color-fg); cursor: pointer; transition: all 0.15s ease; }
+  .action-btn:hover { background: var(--color-surface); border-color: var(--color-muted-lightest); }
+  .action-btn-danger { color: var(--color-danger-hover); border-color: var(--color-danger-border); }
+  .action-btn-danger:hover { background: var(--color-danger-subtle); border-color: #fca5a5; }
 
-  .action-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.375rem;
-    padding: 0.4375rem 0.875rem;
-    font-size: 0.8125rem;
-    font-weight: 500;
-    font-family: inherit;
-    border: 1px solid var(--color-border);
-    border-radius: 0.5rem;
-    background: var(--color-bg);
-    color: var(--color-fg);
-    cursor: pointer;
-    transition: all 0.15s ease;
-  }
+  .backtrace { background: var(--color-fg); color: var(--color-border); padding: 1.25rem 1.5rem; font-family: "SF Mono", Monaco, Menlo, "Courier New", monospace; font-size: 0.75rem; line-height: 1.8; overflow-x: auto; white-space: pre; margin: 0; }
+  .occurrence-count { display: inline-flex; align-items: center; justify-content: center; min-width: 1.375rem; height: 1.375rem; padding: 0 0.4375rem; font-size: 0.6875rem; font-weight: 700; color: var(--color-muted); background: var(--color-accent); border-radius: 9999px; }
 
-  .action-btn:hover {
-    background: var(--color-surface);
-    border-color: var(--color-muted-lightest);
-  }
-
-  .action-btn-danger {
-    color: var(--color-danger-hover);
-    border-color: var(--color-danger-border);
-  }
-
-  .action-btn-danger:hover {
-    background: var(--color-danger-subtle);
-    border-color: #fca5a5;
-  }
-
-  /* Section cards */
-  .section-card {
-    background: var(--color-bg);
-    border: 1px solid var(--color-border);
-    border-radius: 0.75rem;
-    overflow: hidden;
-  }
-
-  .section-header {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 1.25rem 1.5rem;
-    border-bottom: 1px solid var(--color-accent);
-  }
-
-  .section-title {
-    font-size: 0.9375rem;
-    font-weight: 600;
-    color: var(--color-fg);
-    margin: 0;
-  }
-
-  .occurrence-count {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 1.375rem;
-    height: 1.375rem;
-    padding: 0 0.4375rem;
-    font-size: 0.6875rem;
-    font-weight: 700;
-    color: var(--color-muted);
-    background: var(--color-accent);
-    border-radius: 9999px;
-  }
-
-  .section-body-flush {
-    padding: 0;
-  }
-
-  /* Backtrace */
-  .backtrace {
-    background: var(--color-fg);
-    color: var(--color-border);
-    padding: 1.25rem 1.5rem;
-    font-family: "SF Mono", Monaco, Menlo, "Courier New", monospace;
-    font-size: 0.75rem;
-    line-height: 1.8;
-    overflow-x: auto;
-    white-space: pre;
-    margin: 0;
-  }
-
-  /* Occurrences */
-  .occurrences-body {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .occ-item {
-    display: flex;
-    flex-direction: column;
-    gap: 0.625rem;
-    padding: 1rem 1.5rem;
-  }
-
-  .occ-item:not(:last-child) {
-    border-bottom: 1px solid var(--color-accent);
-  }
-
-  .occ-header {
-    display: flex;
-    align-items: center;
-    gap: 0.875rem;
-    flex-wrap: wrap;
-  }
-
-  .occ-time {
-    font-size: 0.8125rem;
-    font-weight: 500;
-    color: var(--color-fg);
-  }
-
-  .occ-url {
-    font-size: 0.75rem;
-    color: var(--color-muted);
-    font-family: "SF Mono", Monaco, Menlo, "Courier New", monospace;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.375rem;
-  }
-
-  .occ-method {
-    font-size: 0.625rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    color: var(--color-bg);
-    background: var(--color-muted);
-    padding: 0.0625rem 0.375rem;
-    border-radius: 0.25rem;
-  }
-
-  .occ-context {
-    font-size: 0.75rem;
-    color: var(--color-muted);
-    font-family: "SF Mono", Monaco, Menlo, "Courier New", monospace;
-    background: var(--color-surface);
-    padding: 0.75rem 1rem;
-    border-radius: 0.5rem;
-    border: 1px solid var(--color-accent);
-    overflow-x: auto;
-    white-space: pre-wrap;
-    word-break: break-all;
-    margin: 0;
-    line-height: 1.6;
-  }
-
-  .occ-details {
-    margin: 0;
-  }
-
-  .occ-summary {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: var(--color-muted-light);
-    cursor: pointer;
-    user-select: none;
-    transition: color 0.15s ease;
-    list-style: none;
-  }
-
-  .occ-summary::-webkit-details-marker {
-    display: none;
-  }
-
-  .occ-summary:hover {
-    color: var(--color-muted);
-  }
-
-  .occ-details[open] .occ-summary svg {
-    transform: rotate(90deg);
-  }
-
-  .occ-bt {
-    font-size: 0.6875rem;
-    color: var(--color-muted-lightest);
-    font-family: "SF Mono", Monaco, Menlo, "Courier New", monospace;
-    white-space: pre;
-    overflow-x: auto;
-    max-height: 200px;
-    overflow-y: auto;
-    margin: 0.5rem 0 0;
-    padding: 0.75rem 1rem;
-    background: var(--color-fg);
-    border-radius: 0.5rem;
-    line-height: 1.7;
-  }
-
-  .occ-empty {
-    padding: 2rem 1.5rem;
-    text-align: center;
-    font-size: 0.875rem;
-    color: var(--color-muted-light);
-  }
+  .occurrences-body { display: flex; flex-direction: column; }
+  .occ-item { display: flex; flex-direction: column; gap: 0.625rem; padding: 1rem 1.5rem; }
+  .occ-item:not(:last-child) { border-bottom: 1px solid var(--color-accent); }
+  .occ-header { display: flex; align-items: center; gap: 0.875rem; flex-wrap: wrap; }
+  .occ-time { font-size: 0.8125rem; font-weight: 500; color: var(--color-fg); }
+  .occ-url { font-size: 0.75rem; color: var(--color-muted); font-family: "SF Mono", Monaco, Menlo, "Courier New", monospace; display: inline-flex; align-items: center; gap: 0.375rem; }
+  .occ-method { font-size: 0.625rem; font-weight: 700; text-transform: uppercase; color: var(--color-bg); background: var(--color-muted); padding: 0.0625rem 0.375rem; border-radius: 0.25rem; }
+  .occ-context { font-size: 0.75rem; color: var(--color-muted); font-family: "SF Mono", Monaco, Menlo, "Courier New", monospace; background: var(--color-surface); padding: 0.75rem 1rem; border-radius: 0.5rem; border: 1px solid var(--color-accent); overflow-x: auto; white-space: pre-wrap; word-break: break-all; margin: 0; line-height: 1.6; }
+  .occ-details { margin: 0; }
+  .occ-summary { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--color-muted-light); cursor: pointer; user-select: none; transition: color 0.15s ease; list-style: none; }
+  .occ-summary::-webkit-details-marker { display: none; }
+  .occ-summary:hover { color: var(--color-muted); }
+  .occ-details[open] .occ-summary svg { transform: rotate(90deg); }
+  .occ-bt { font-size: 0.6875rem; color: var(--color-muted-lightest); font-family: "SF Mono", Monaco, Menlo, "Courier New", monospace; white-space: pre; overflow-x: auto; max-height: 200px; overflow-y: auto; margin: 0.5rem 0 0; padding: 0.75rem 1rem; background: var(--color-fg); border-radius: 0.5rem; line-height: 1.7; }
+  .occ-empty { padding: 2rem 1.5rem; text-align: center; font-size: 0.875rem; color: var(--color-muted-light); }
 </style>

@@ -1,5 +1,6 @@
 <script>
   import { router } from "@inertiajs/svelte";
+  import { fmt, timeAgo, statusCodeClass } from "@/lib/formatters.js";
   import DaylightLayout from "../DaylightLayout.svelte";
   import PeriodSelect from "../PeriodSelect.svelte";
   import EwSheet from "../errors/EwSheet.svelte";
@@ -19,9 +20,6 @@
   let sheetItem = $state(null);
 
   function changePeriod(p) { router.get(`${base}/http_requests`, { period: p }, { preserveState: true }); }
-  function fmt(ms) { if (ms == null) return "\u2014"; return ms >= 1000 ? `${(ms / 1000).toFixed(1)}s` : `${Math.round(ms)}ms`; }
-  function timeAgo(d) { if (!d) return ""; const m = Math.floor((Date.now() - new Date(d).getTime()) / 60000); if (m < 1) return "now"; if (m < 60) return `${m}m`; const h = Math.floor(m / 60); return h < 24 ? `${h}h` : `${Math.floor(h / 24)}d`; }
-  function sc(c) { return c >= 500 ? "s5xx" : c >= 400 ? "s4xx" : "s2xx"; }
 
   function selectHost(host) {
     router.get(`${base}/http_requests`, { period, host: host.host }, { preserveState: true });
@@ -97,21 +95,19 @@
 <svelte:head><title>Outgoing HTTP — Daylight</title></svelte:head>
 
 <DaylightLayout>
-  <div class="page">
-    <!-- Header -->
-    <div class="page-header">
+  <div class="dl-page">
+    <div class="dl-page-header">
       <div>
-        <h1 class="page-title">Outgoing HTTP</h1>
-        <p class="page-subtitle">{total_http_requests.toLocaleString()} requests in the last {period}</p>
+        <h1 class="dl-page-title">Outgoing HTTP</h1>
+        <p class="dl-page-subtitle">{total_http_requests.toLocaleString()} requests in the last {period}</p>
       </div>
-      <div class="period-selector">
+      <div class="dl-period-selector">
         <PeriodSelect value={period} onchange={changePeriod} />
       </div>
     </div>
 
     {#if selected_host && allHostRequests.length > 0}
-      <!-- Level 2: Individual requests for a host -->
-      <button class="back-btn" onclick={goBack}>
+      <button class="dl-back-btn back-btn-reset" onclick={goBack}>
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
         All hosts
       </button>
@@ -120,24 +116,24 @@
         <span class="drilldown-count">{allHostRequests.length} requests</span>
       </div>
 
-      <div class="card">
-        <div class="data-table">
-          <div class="table-header">
-            <div class="th" style="width:4.5rem">Status</div>
-            <div class="th" style="flex:3">URL</div>
-            <div class="th th-right" style="width:5.5rem">Duration</div>
-            <div class="th th-right" style="width:5rem">When</div>
+      <div class="dl-card">
+        <div class="dl-data-table">
+          <div class="dl-table-header">
+            <div class="dl-th" style="width:4.5rem">Status</div>
+            <div class="dl-th" style="flex:3">URL</div>
+            <div class="dl-th dl-th-right" style="width:5.5rem">Duration</div>
+            <div class="dl-th dl-th-right" style="width:5rem">When</div>
           </div>
           {#each allHostRequests as req (req.id || req.url + req.occurred_at)}
-            <button class="table-row" onclick={() => openRequest(req)}>
-              <div class="td" style="width:4.5rem">
-                <span class="status-badge {sc(req.status_code)}">{req.status_code}</span>
+            <button class="dl-table-row" onclick={() => openRequest(req)}>
+              <div class="dl-td" style="width:4.5rem">
+                <span class="status-badge dl-{statusCodeClass(req.status_code)}">{req.status_code}</span>
               </div>
-              <div class="td td-url" style="flex:3">
+              <div class="dl-td td-url" style="flex:3">
                 <span class="url-text">{req.url}</span>
               </div>
-              <div class="td td-num" style="width:5.5rem" class:td-danger={req.duration_ms > 2000}>{fmt(req.duration_ms)}</div>
-              <div class="td td-num" style="width:5rem"><span class="time-ago">{timeAgo(req.occurred_at)}</span></div>
+              <div class="dl-td dl-td-num" style="width:5.5rem" class:td-danger={req.duration_ms > 2000}>{fmt(req.duration_ms)}</div>
+              <div class="dl-td dl-td-num" style="width:5rem"><span class="time-ago">{timeAgo(req.occurred_at)}</span></div>
             </button>
           {/each}
           <InfiniteScroll loading={loadingMore} hasMore={has_more} onLoadMore={loadMore} />
@@ -145,8 +141,7 @@
       </div>
 
     {:else}
-      <!-- Stat Cards -->
-      <div class="stat-grid">
+      <div class="dl-stat-grid">
         <div class="stat-card">
           <span class="stat-card-label">Total Requests</span>
           <span class="stat-card-value">{total_http_requests.toLocaleString()}</span>
@@ -165,44 +160,42 @@
         </div>
       </div>
 
-      <!-- Volume Chart -->
       {#if volume_series.length >= 2}
-        <div class="card">
-          <div class="card-header">
-            <h2 class="card-title">Request Volume</h2>
-            <span class="card-subtitle">Over time</span>
+        <div class="dl-card">
+          <div class="dl-card-header">
+            <h2 class="dl-card-title">Request Volume</h2>
+            <span class="dl-card-subtitle">Over time</span>
           </div>
-          <div class="card-body">
+          <div class="dl-card-body">
             <AreaChart data={volume_series} width={700} height={80} color="#3b82f6" />
           </div>
         </div>
       {/if}
 
-      <!-- Hosts Table -->
-      <div class="card">
-        <div class="card-header">
-          <h2 class="card-title">Hosts</h2>
-          <span class="card-subtitle">{hosts.length} hosts</span>
+      <div class="dl-card">
+        <div class="dl-card-header">
+          <h2 class="dl-card-title">Hosts</h2>
+          <span class="dl-card-subtitle">{hosts.length} hosts</span>
         </div>
-        <div class="data-table">
-          <div class="table-header">
-            <div class="th" style="flex:2">Host</div>
-            <div class="th th-right" style="width:5rem"><SortableHeader column="total" label="Requests" {sort_column} {sort_direction} /></div>
-            <div class="th th-right" style="width:5rem"><SortableHeader column="avg_duration" label="Avg" {sort_column} {sort_direction} /></div>
-            <div class="th th-right" style="width:5rem"><SortableHeader column="max_duration" label="Max" {sort_column} {sort_direction} /></div>
-            <div class="th th-right" style="width:4.5rem">Errors</div>
+        <div class="dl-data-table">
+          <div class="dl-table-header">
+            <div class="dl-th" style="flex:2">Host</div>
+            <div class="dl-th dl-th-right" style="width:5rem"><SortableHeader column="total" label="Requests" {sort_column} {sort_direction} /></div>
+            <div class="dl-th dl-th-right" style="width:5rem"><SortableHeader column="avg_duration" label="Avg" {sort_column} {sort_direction} /></div>
+            <div class="dl-th dl-th-right" style="width:5rem"><SortableHeader column="max_duration" label="Max" {sort_column} {sort_direction} /></div>
+            <div class="dl-th dl-th-right" style="width:4.5rem">Errors</div>
           </div>
           {#each allHosts as host, i (host.host + ':' + i)}
-            <button class="table-row" onclick={() => selectHost(host)}>
-              <div class="td" style="flex:2"><span class="host-name">{host.host}</span></div>
-              <div class="td td-num" style="width:5rem">{host.total}</div>
-              <div class="td td-num" style="width:5rem">{fmt(host.avg_duration)}</div>
-              <div class="td td-num" style="width:5rem" class:td-danger={host.max_duration > 5000}>{fmt(host.max_duration)}</div>
-              <div class="td td-num" style="width:4.5rem" class:td-danger={host.error_count > 0}>{host.error_count || 0}</div>
+            <button class="dl-table-row" onclick={() => selectHost(host)}>
+              <div class="dl-td" style="flex:2"><span class="host-name">{host.host}</span></div>
+              <div class="dl-td dl-td-num" style="width:5rem">{host.total}</div>
+              <div class="dl-td dl-td-num" style="width:5rem">{fmt(host.avg_duration)}</div>
+              <div class="dl-td dl-td-num" style="width:5rem" class:td-danger={host.max_duration > 5000}>{fmt(host.max_duration)}</div>
+              <div class="dl-td dl-td-num" style="width:4.5rem" class:td-danger={host.error_count > 0}>{host.error_count || 0}</div>
             </button>
           {/each}
           {#if allHosts.length === 0}
-            <div class="table-empty">
+            <div class="dl-table-empty">
               <svg width="24" height="24" fill="none" stroke="#94a3b8" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
               <span>No outgoing HTTP requests recorded in this period.</span>
             </div>
@@ -216,13 +209,13 @@
 
 <EwSheet bind:open={sheetOpen} title="HTTP Request Detail" aiContext={sheetAi}>
   {#if sheetItem}
-    <div class="sheet-detail">
-      <dl class="dl">
-        {#if sheetItem.method}<div class="dl-row"><dt>Method</dt><dd>{sheetItem.method}</dd></div>{/if}
-        <div class="dl-row"><dt>URL</dt><dd class="mono">{sheetItem.url}</dd></div>
-        <div class="dl-row"><dt>Status</dt><dd><span class="status-badge {sc(sheetItem.status_code)}">{sheetItem.status_code}</span></dd></div>
-        <div class="dl-row"><dt>Duration</dt><dd class:td-danger={sheetItem.duration_ms > 2000}>{fmt(sheetItem.duration_ms)}</dd></div>
-        {#if sheetItem.occurred_at}<div class="dl-row"><dt>Time</dt><dd>{new Date(sheetItem.occurred_at).toLocaleString()}</dd></div>{/if}
+    <div class="dl-sheet-detail">
+      <dl class="dl-dl">
+        {#if sheetItem.method}<div class="dl-dl-row"><dt>Method</dt><dd>{sheetItem.method}</dd></div>{/if}
+        <div class="dl-dl-row"><dt>URL</dt><dd class="dl-mono">{sheetItem.url}</dd></div>
+        <div class="dl-dl-row"><dt>Status</dt><dd><span class="status-badge dl-{statusCodeClass(sheetItem.status_code)}">{sheetItem.status_code}</span></dd></div>
+        <div class="dl-dl-row"><dt>Duration</dt><dd class:td-danger={sheetItem.duration_ms > 2000}>{fmt(sheetItem.duration_ms)}</dd></div>
+        {#if sheetItem.occurred_at}<div class="dl-dl-row"><dt>Time</dt><dd>{new Date(sheetItem.occurred_at).toLocaleString()}</dd></div>{/if}
       </dl>
 
       {#if sheetItem.response_body}
@@ -234,342 +227,20 @@
 </EwSheet>
 
 <style>
-  /* Page Layout */
-  .page {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-  }
-
-  .page-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 1rem;
-  }
-
-  .page-title {
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: var(--color-fg);
-    margin: 0;
-    letter-spacing: -0.025em;
-  }
-
-  .page-subtitle {
-    font-size: 0.8125rem;
-    color: var(--color-muted);
-    margin: 0.25rem 0 0;
-  }
-
-  .period-selector {
-    flex-shrink: 0;
-  }
-
-  /* Back button + drilldown */
-  .back-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    font-size: 0.8125rem;
-    font-weight: 500;
-    color: var(--color-muted);
-    border: none;
-    background: none;
-    font-family: inherit;
-    cursor: pointer;
-    padding: 0.25rem 0;
-    transition: color 0.15s;
-  }
-
-  .back-btn:hover { color: var(--color-fg); }
-
-  .drilldown-header {
-    display: flex;
-    align-items: baseline;
-    gap: 0.75rem;
-    margin-top: -0.5rem;
-  }
-
-  .route-title {
-    font-size: 0.9375rem;
-    font-weight: 600;
-    color: var(--color-fg);
-    margin: 0;
-    font-family: "SF Mono", Monaco, Menlo, Consolas, monospace;
-  }
-
-  .drilldown-count {
-    font-size: 0.75rem;
-    color: var(--color-muted);
-    font-weight: 500;
-  }
-
-  /* Stat Cards */
-  .stat-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1rem;
-  }
-
-  .stat-card {
-    background: var(--color-bg);
-    border: 1px solid var(--color-border);
-    border-radius: 0.75rem;
-    padding: 1.25rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-  }
-
-  .stat-card-label {
-    font-size: 0.8125rem;
-    font-weight: 500;
-    color: var(--color-muted);
-  }
-
-  .stat-card-value {
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: var(--color-fg);
-    letter-spacing: -0.02em;
-    line-height: 1;
-    font-variant-numeric: tabular-nums;
-  }
-
+  .back-btn-reset { border: none; background: none; font-family: inherit; cursor: pointer; padding: 0.25rem 0; }
+  .drilldown-header { display: flex; align-items: baseline; gap: 0.75rem; margin-top: -0.5rem; }
+  .route-title { font-size: 0.9375rem; font-weight: 600; color: var(--color-fg); margin: 0; font-family: "SF Mono", Monaco, Menlo, Consolas, monospace; }
+  .drilldown-count { font-size: 0.75rem; color: var(--color-muted); font-weight: 500; }
+  .stat-card { background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 0.75rem; padding: 1.25rem; display: flex; flex-direction: column; gap: 0.25rem; }
+  .stat-card-label { font-size: 0.8125rem; font-weight: 500; color: var(--color-muted); }
+  .stat-card-value { font-size: 1.75rem; font-weight: 700; color: var(--color-fg); letter-spacing: -0.02em; line-height: 1; font-variant-numeric: tabular-nums; }
   .stat-danger { color: var(--color-danger); }
-
-  /* Cards */
-  .card {
-    background: var(--color-bg);
-    border: 1px solid var(--color-border);
-    border-radius: 0.75rem;
-    overflow: hidden;
-  }
-
-  .card-header {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    padding: 1rem 1.25rem;
-    border-bottom: 1px solid var(--color-border);
-  }
-
-  .card-title {
-    font-size: 0.9375rem;
-    font-weight: 650;
-    color: var(--color-fg);
-    margin: 0;
-  }
-
-  .card-subtitle {
-    font-size: 0.75rem;
-    color: var(--color-muted);
-  }
-
-  .card-body {
-    padding: 1.25rem;
-  }
-
-  /* Data Table */
-  .data-table {
-    background: var(--color-bg);
-    border: 1px solid var(--color-border);
-    border-radius: 0.75rem;
-    overflow: hidden;
-  }
-
-  .card .data-table {
-    border: none;
-    border-radius: 0;
-  }
-
-  .table-header {
-    display: flex;
-    align-items: center;
-    padding: 0 1rem;
-    background: var(--color-surface);
-    border-bottom: 1px solid var(--color-border);
-  }
-
-  .th {
-    padding: 0.625rem 0.5rem;
-    font-size: 0.6875rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--color-muted);
-  }
-
-  .th-right {
-    text-align: right;
-  }
-
-  .table-row {
-    display: flex;
-    align-items: center;
-    padding: 0 1rem;
-    width: 100%;
-    border: none;
-    border-bottom: 1px solid var(--color-accent);
-    background: none;
-    font-family: inherit;
-    cursor: pointer;
-    text-align: left;
-    transition: background 0.1s ease;
-  }
-
-  .table-row:last-child {
-    border-bottom: none;
-  }
-
-  .table-row:hover {
-    background: var(--color-surface);
-  }
-
-  .td {
-    padding: 0.625rem 0.5rem;
-    font-size: 0.8125rem;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    color: var(--color-fg);
-  }
-
-  .td-url {
-    min-width: 0;
-  }
-
-  .url-text {
-    font-family: "SF Mono", Monaco, Menlo, Consolas, monospace;
-    font-size: 0.75rem;
-    color: var(--color-fg-tertiary);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    display: block;
-  }
-
-  .td-num {
-    text-align: right;
-    font-variant-numeric: tabular-nums;
-    font-weight: 500;
-    color: var(--color-fg-tertiary);
-  }
-
-  .td-danger {
-    color: var(--color-danger);
-    font-weight: 600;
-  }
-
-  .host-name {
-    font-size: 0.8125rem;
-    font-weight: 600;
-    color: var(--color-fg);
-  }
-
-  .time-ago {
-    font-size: 0.6875rem;
-    color: var(--color-muted);
-  }
-
-  /* Status badges */
-  .status-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.6875rem;
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-    padding: 0.125rem 0.5rem;
-    border-radius: 9999px;
-  }
-
-  .s2xx { background: var(--color-status-2xx-bg); color: var(--color-status-2xx); }
-  .s4xx { background: var(--color-status-4xx-bg); color: var(--color-status-4xx); }
-  .s5xx { background: var(--color-status-5xx-bg); color: var(--color-danger-hover); }
-
-  .table-empty {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 2.5rem 1rem;
-    color: var(--color-muted-light);
-    font-size: 0.8125rem;
-  }
-
-  /* Sheet Detail */
-  .sheet-detail {
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-  }
-
-  .dl {
-    display: flex;
-    flex-direction: column;
-    margin: 0;
-  }
-
-  .dl-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.5rem 0;
-    border-bottom: 1px solid var(--color-accent);
-    font-size: 0.8125rem;
-  }
-
-  .dl-row:last-child {
-    border-bottom: none;
-  }
-
-  .dl-row dt {
-    color: var(--color-muted);
-    font-weight: 500;
-  }
-
-  .dl-row dd {
-    color: var(--color-fg);
-    font-weight: 500;
-    margin: 0;
-  }
-
-  .mono {
-    font-family: "SF Mono", Monaco, Menlo, Consolas, monospace;
-    font-size: 0.75rem;
-    word-break: break-all;
-  }
-
-  .sheet-sub {
-    font-size: 0.6875rem;
-    font-weight: 600;
-    color: var(--color-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin: 0;
-  }
-
-  .sheet-pre {
-    font-size: 0.75rem;
-    font-family: "SF Mono", Monaco, Menlo, Consolas, monospace;
-    background: var(--color-surface);
-    padding: 1rem;
-    border: 1px solid var(--color-border);
-    border-radius: 0.5rem;
-    overflow-x: auto;
-    white-space: pre-wrap;
-    word-break: break-all;
-    margin: 0;
-    line-height: 1.6;
-    color: var(--color-fg-tertiary);
-  }
-
-  /* Responsive */
-  @media (max-width: 640px) {
-    .stat-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-  }
+  .host-name { font-size: 0.8125rem; font-weight: 600; color: var(--color-fg); }
+  .td-url { min-width: 0; }
+  .url-text { font-family: "SF Mono", Monaco, Menlo, Consolas, monospace; font-size: 0.75rem; color: var(--color-fg-tertiary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
+  .td-danger { color: var(--color-danger); font-weight: 600; }
+  .time-ago { font-size: 0.6875rem; color: var(--color-muted); }
+  .status-badge { display: inline-flex; align-items: center; justify-content: center; font-size: 0.6875rem; font-weight: 700; font-variant-numeric: tabular-nums; padding: 0.125rem 0.5rem; border-radius: 9999px; }
+  .sheet-sub { font-size: 0.6875rem; font-weight: 600; color: var(--color-muted); text-transform: uppercase; letter-spacing: 0.05em; margin: 0; }
+  .sheet-pre { font-size: 0.75rem; font-family: "SF Mono", Monaco, Menlo, Consolas, monospace; background: var(--color-surface); padding: 1rem; border: 1px solid var(--color-border); border-radius: 0.5rem; overflow-x: auto; white-space: pre-wrap; word-break: break-all; margin: 0; line-height: 1.6; color: var(--color-fg-tertiary); }
 </style>
