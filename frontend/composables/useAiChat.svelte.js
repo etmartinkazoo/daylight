@@ -6,8 +6,8 @@ import { playNotificationSound } from "@/lib/notification-sounds.js";
 export function useAiChat({ autoSubscribe = false } = {}) {
   const pageStore = usePage();
 
-  let aiModels = $derived($pageStore.props.aiModels || []);
-  let defaultAiModel = $derived($pageStore.props.defaultAiModel);
+  let aiModels = $derived(pageStore.props.aiModels || []);
+  let defaultAiModel = $derived(pageStore.props.defaultAiModel);
   let selectedModel = $state("");
 
   $effect(() => {
@@ -53,8 +53,8 @@ export function useAiChat({ autoSubscribe = false } = {}) {
   let executedActions = $state({});
 
   function detectContext() {
-    const url = $pageStore.url || "";
-    const props = $pageStore.props || {};
+    const url = pageStore.url || "";
+    const props = pageStore.props || {};
     const fullUrl =
       typeof window !== "undefined"
         ? window.location.pathname + window.location.search

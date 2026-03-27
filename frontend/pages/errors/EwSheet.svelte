@@ -5,7 +5,7 @@
   let { open = $bindable(false), title = "", aiContext = "", children } = $props();
 
   const pageStore = usePage();
-  let ewSettings = $derived($pageStore.props.ew_settings || {});
+  let ewSettings = $derived(pageStore.props.ew_settings || {});
 
   let appContextStr = $derived.by(() => {
     const parts = [];

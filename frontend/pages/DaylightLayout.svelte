@@ -4,8 +4,8 @@ import NavIcon from "@/components/ui/NavIcon.svelte";
 
 let { children } = $props();
 const pageStore = usePage();
-let url = $derived($pageStore.url?.split("?")[0] || "");
-let base = $derived($pageStore.props?.base_path || "/daylight");
+let url = $derived(pageStore.url?.split("?")[0] || "");
+let base = $derived(pageStore.props?.base_path || "/daylight");
 
 let nav = $derived([
   { label: "Errors", href: `${base}/errors`, match: `${base}/errors`, icon: "errors" },

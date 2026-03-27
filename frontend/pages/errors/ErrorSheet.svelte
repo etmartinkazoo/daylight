@@ -6,8 +6,8 @@
   let { open = $bindable(false), error = null, onstatuschange } = $props();
 
   const pageStore = usePage();
-  let base = $derived($pageStore.props?.base_path || "/daylight");
-  let ewSettings = $derived($pageStore.props.ew_settings || {});
+  let base = $derived(pageStore.props?.base_path || "/daylight");
+  let ewSettings = $derived(pageStore.props.ew_settings || {});
 
   let tab = $state("info");
   let aiChatRef;
