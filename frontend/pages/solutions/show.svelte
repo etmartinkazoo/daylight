@@ -7,10 +7,10 @@
 
   let { solution = {}, messages: initialMessages = [], source_issue = null, github_configured = false } = $props();
   const pageStore = usePage();
-  let base = $derived($pageStore.props?.base_path || "/daylight");
+  let base = $derived(pageStore.props?.base_path || "/daylight");
 
-  let aiModels = $derived($pageStore.props?.aiModels || []);
-  let defaultAiModel = $derived($pageStore.props?.defaultAiModel || "");
+  let aiModels = $derived(pageStore.props?.aiModels || []);
+  let defaultAiModel = $derived(pageStore.props?.defaultAiModel || "");
   let selectedModel = $state("");
 
   $effect(() => {

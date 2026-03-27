@@ -7,7 +7,7 @@
 
   let { error = {}, occurrences = [] } = $props();
   const pageStore = usePage();
-  let base = $derived($pageStore.props?.base_path || "/daylight");
+  let base = $derived(pageStore.props?.base_path || "/daylight");
 
   function updateStatus(status) {
     router.patch(`${base}/errors/${error.id}`, { status, filter_status: "open" });

@@ -28,7 +28,7 @@
     unhandled_count = 0,
   } = $props();
   const pageStore = usePage();
-  let base = $derived($pageStore.props?.base_path || "/daylight");
+  let base = $derived(pageStore.props?.base_path || "/daylight");
 
   let searchVal = $state(query || "");
   $effect(() => { searchVal = query || ""; });

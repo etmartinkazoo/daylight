@@ -8,7 +8,7 @@
 
   let { system = {}, database = {}, jobs = {}, errors = {}, apdex = null, error_sparkline = [], request_sparkline = [] } = $props();
   const pageStore = usePage();
-  let base = $derived($pageStore.props?.base_path || "/daylight");
+  let base = $derived(pageStore.props?.base_path || "/daylight");
 
   let sheetOpen = $state(false);
   let sheetTitle = $state("");

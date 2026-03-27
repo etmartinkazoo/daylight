@@ -17,13 +17,8 @@ module Daylight
         scope = scope.where(incident_type: params[:incident_type])
       end
 
-      page = (params[:page] || 1).to_i
-      per_page = 50
-      scope = scope.order(occurred_at: :desc).limit(per_page + 1).offset((page - 1) * per_page)
-
-      incidents = scope.map { |i| serialize_incident(i) }
-      has_more = incidents.length > per_page
-      incidents = incidents.first(per_page)
+      scope = scope.order(occurred_at: :desc)
+      pagy, incidents = pagy(scope, limit: 50)
 
       counts = {
         open: Database::IncidentRecord.where(status: "open").count,
@@ -36,12 +31,10 @@ module Daylight
       incident_scope = Database::IncidentRecord.where("occurred_at > ?", period_start(period))
 
       render inertia: "daylight/incidents/index", props: {
-        incidents: incidents,
+        incidents: InertiaRails.scroll(pagy) { incidents.map { |i| serialize_incident(i) } },
         counts: counts,
         status: status,
         period: period,
-        page: page,
-        has_more: has_more,
         incident_series: time_series_buckets(incident_scope, period)
       }
     end

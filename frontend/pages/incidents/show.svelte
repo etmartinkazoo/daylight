@@ -5,7 +5,7 @@
 
   let { incident = {}, related_error = null, related_deploy = null } = $props();
   const pageStore = usePage();
-  let base = $derived($pageStore.props?.base_path || "/daylight");
+  let base = $derived(pageStore.props?.base_path || "/daylight");
 
   function updateStatus(newStatus) {
     router.patch(`${base}/incidents/${incident.id}`, { status: newStatus });

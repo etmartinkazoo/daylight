@@ -9,7 +9,7 @@
 
   let { logs = [], counts = {}, period = "24h", level = null, total_logs = 0, volume_series = [], page = 1, has_more = false } = $props();
   const pageStore = usePage();
-  let base = $derived($pageStore.props?.base_path || "/daylight");
+  let base = $derived(pageStore.props?.base_path || "/daylight");
 
   let sheetOpen = $state(false);
   let sheetItem = $state(null);

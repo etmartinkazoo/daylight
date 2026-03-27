@@ -17,7 +17,7 @@
   } = $props();
 
   const pageStore = usePage();
-  let base = $derived($pageStore.props?.base_path || "/daylight");
+  let base = $derived(pageStore.props?.base_path || "/daylight");
 
   let generating = $state(false);
 

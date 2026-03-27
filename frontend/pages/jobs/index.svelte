@@ -15,7 +15,7 @@
 
   let { job_classes = [], failures = [], period = "24h", totals = {}, solid_queue = null, volume_series = [], failure_series = [], page = 1, has_more = false } = $props();
   const pageStore = usePage();
-  let base = $derived($pageStore.props?.base_path || "/daylight");
+  let base = $derived(pageStore.props?.base_path || "/daylight");
 
   let sheetOpen = $state(false);
   let sheetItem = $state(null);

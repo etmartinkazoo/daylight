@@ -15,7 +15,7 @@
 
   let { queries = [], slowest = [], period = "24h", total_queries = 0, volume_series = [], n_plus_one_requests = [], page = 1, has_more = false } = $props();
   const pageStore = usePage();
-  let base = $derived($pageStore.props?.base_path || "/daylight");
+  let base = $derived(pageStore.props?.base_path || "/daylight");
 
   let sheetOpen = $state(false);
   let sheetItem = $state(null);

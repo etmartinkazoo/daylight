@@ -11,7 +11,7 @@
 
   let { incidents = [], counts = {}, status = "all", period = "24h", incident_series = [] } = $props();
   const pageStore = usePage();
-  let base = $derived($pageStore.props?.base_path || "/daylight");
+  let base = $derived(pageStore.props?.base_path || "/daylight");
 
   function changePeriod(p) {
     router.get(`${base}/incidents`, { period: p, status }, { preserveState: true });

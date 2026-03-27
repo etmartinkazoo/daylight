@@ -7,7 +7,7 @@
   let { settings = {}, performance_issues = [], security_issues = [] } = $props();
   let selectedSound = $state(getNotificationSound());
   const pageStore = usePage();
-  let base = $derived($pageStore.props?.base_path || "/daylight");
+  let base = $derived(pageStore.props?.base_path || "/daylight");
 
   let form = useForm({
     "settings[github_repo_url]": settings.github_repo_url || "",
