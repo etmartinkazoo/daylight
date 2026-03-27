@@ -528,6 +528,7 @@ module Daylight
         ensure_connected!
         SettingRecord.all.each_with_object({}) { |r, h| h[r.key] = r.value }
       end
+
     end
   end
 end

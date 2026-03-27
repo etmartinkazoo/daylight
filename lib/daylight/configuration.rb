@@ -6,7 +6,8 @@ module Daylight
                   :sample_rate, :sample_rates, :always_capture_exceptions,
                   :username, :password,
                   :anomaly_detection_enabled, :anomaly_error_spike_threshold,
-                  :anomaly_latency_spike_threshold, :anomaly_check_interval
+                  :anomaly_latency_spike_threshold, :anomaly_check_interval,
+                  :multi_tenant
 
     def initialize
       @database_path = nil # resolved at boot from Rails.root
@@ -28,6 +29,7 @@ module Daylight
       @anomaly_error_spike_threshold = 3.0
       @anomaly_latency_spike_threshold = 3.0
       @anomaly_check_interval = 60
+      @multi_tenant = false
     end
 
     def resolved_database_path

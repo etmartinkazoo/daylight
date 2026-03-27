@@ -1,10 +1,13 @@
 <script>
   import { router } from "@inertiajs/svelte";
   import DaylightLayout from "../DaylightLayout.svelte";
+  import EwSheet from "../errors/EwSheet.svelte";
   import { markdownToHtml } from "@/lib/markdown.js";
   import { timeAgo, formatTimeLong } from "@/lib/formatters.js";
 
   let { incident = {}, related_error = null, related_deploy = null, base_path: base = "/daylight" } = $props();
+
+  let sheetOpen = $state(false);
 
   function updateStatus(newStatus) {
     router.patch(`${base}/incidents/${incident.id}`, { status: newStatus });
@@ -80,6 +83,10 @@
           Reopen
         </button>
       {/if}
+      <button class="action-btn action-btn-ai" onclick={() => sheetOpen = true}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Ask AI
+      </button>
     </div>
 
     {#if triggerEntries.length > 0}
@@ -177,6 +184,23 @@
       {/if}
     </div>
   </div>
+
+  <EwSheet bind:open={sheetOpen} title={incident.title || "Incident"} aiContext={incident.ai_context || ""}>
+    <div class="dl-sheet-detail">
+      <dl class="dl-dl">
+        <div class="dl-dl-row"><dt>Severity</dt><dd>{incident.severity}</dd></div>
+        <div class="dl-dl-row"><dt>Status</dt><dd>{incident.status}</dd></div>
+        <div class="dl-dl-row"><dt>Type</dt><dd>{incident.incident_type || "\u2014"}</dd></div>
+        <div class="dl-dl-row"><dt>Started</dt><dd>{formatTimeLong(incident.started_at)}</dd></div>
+        {#if incident.resolved_at}
+          <div class="dl-dl-row"><dt>Resolved</dt><dd>{formatTimeLong(incident.resolved_at)}</dd></div>
+        {/if}
+      </dl>
+      {#if incident.summary}
+        <p class="sheet-summary">{incident.summary}</p>
+      {/if}
+    </div>
+  </EwSheet>
 </DaylightLayout>
 
 <style>
@@ -214,6 +238,9 @@
   .action-btn-dismiss:hover { background: var(--color-surface); }
   .action-btn-reopen { color: var(--color-warning-dark); border-color: var(--color-warning-border); background: var(--color-warning-subtle); }
   .action-btn-reopen:hover { background: var(--color-warning-bg); }
+  .action-btn-ai { color: var(--color-purple); border-color: var(--color-purple-subtle); background: var(--color-purple-subtle); margin-left: auto; }
+  .action-btn-ai:hover { background: color-mix(in srgb, var(--color-purple-subtle) 80%, var(--color-purple) 20%); }
+  .sheet-summary { font-size: 0.8125rem; color: var(--color-muted); line-height: 1.5; margin: 0; }
 
   /* Accent cards */
   .card-deploy { border-left: 3px solid var(--color-warning); }

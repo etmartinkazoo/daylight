@@ -120,8 +120,39 @@ module Daylight
         started_at: i.started_at,
         started_at_ago: i.started_at ? helpers.time_ago_in_words(i.started_at) + " ago" : "",
         resolved_at: i.resolved_at,
-        occurred_at: i.occurred_at
+        occurred_at: i.occurred_at,
+        ai_context: build_ai_context(i)
       }
+    end
+
+    def build_ai_context(incident)
+      lines = [
+        "Incident: #{incident.title}",
+        "Type: #{incident.incident_type}",
+        "Severity: #{incident.severity}",
+        "Status: #{incident.status}",
+        "Started: #{incident.started_at}"
+      ]
+      lines << "Summary: #{incident.summary}" if incident.summary.present?
+      lines << "Investigation: #{incident.investigation}" if incident.investigation.present?
+
+      trigger = (JSON.parse(incident.trigger_data) rescue nil)
+      if trigger.is_a?(Hash) && trigger.any?
+        lines << "\nTrigger Data:"
+        trigger.each { |k, v| lines << "  #{k}: #{v}" }
+      end
+
+      if incident.related_error_id
+        err = Database::ErrorRecord.find_by(id: incident.related_error_id)
+        if err
+          lines << "\nRelated Error: #{err.error_class}"
+          lines << "Error Message: #{err.message}"
+          lines << "Occurrences: #{err.occurrences_count}"
+          lines << "Backtrace:\n#{err.backtrace_summary}" if err.backtrace_summary.present?
+        end
+      end
+
+      lines.join("\n")
     end
   end
 end
