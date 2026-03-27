@@ -119,7 +119,7 @@ module Daylight
       # Merge failures: SQ failures are authoritative, deduplicate by time+class
       all_failures = merge_failures(sq_failures, ew_failures)
 
-      render inertia: "daylight/jobs", props: {
+      render inertia: "daylight/jobs/index", props: {
         job_classes: job_classes,
         failures: all_failures,
         period: period,

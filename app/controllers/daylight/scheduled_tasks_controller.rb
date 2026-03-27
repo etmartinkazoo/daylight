@@ -60,7 +60,7 @@ module Daylight
         }
       end
 
-      render inertia: "daylight/scheduled_tasks", props: {
+      render inertia: "daylight/scheduled_tasks/index", props: {
         task_classes: task_classes,
         failures: failures,
         period: period,

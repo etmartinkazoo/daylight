@@ -58,7 +58,7 @@ module Daylight
           }
         end
 
-      render inertia: "daylight/settings", props: {
+      render inertia: "daylight/settings/index", props: {
         settings: {
           github_repo_url: settings["github_repo_url"] || "",
           github_default_branch: settings["github_default_branch"] || "main",

@@ -51,7 +51,7 @@ module Daylight
         host_requests = host_requests.first(per_page)
       end
 
-      render inertia: "daylight/http_requests", props: {
+      render inertia: "daylight/http_requests/index", props: {
         hosts: hosts,
         host_requests: host_requests,
         selected_host: params[:host],

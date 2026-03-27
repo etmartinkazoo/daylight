@@ -1,6 +1,6 @@
 <script>
   import { router, usePage } from "@inertiajs/svelte";
-  import DaylightLayout from "./DaylightLayout.svelte";
+  import DaylightLayout from "../DaylightLayout.svelte";
   import Button from "@/components/ui/Button.svelte";
   import Table from "@/components/ui/Table.svelte";
   import SortableHeader from "@/components/ui/SortableHeader.svelte";

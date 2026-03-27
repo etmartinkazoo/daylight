@@ -5,7 +5,7 @@ module Daylight
     include Daylight::TimeSeries
 
     def index
-      render inertia: "daylight/health", props: {
+      render inertia: "daylight/health/index", props: {
         system: system_info,
         database: database_info,
         jobs: jobs_info,

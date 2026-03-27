@@ -75,7 +75,7 @@ module Daylight
       failed = scope.where(status: "failed").count
       delivery_rate = total > 0 ? (delivered.to_f / total * 100).round(1) : 0
 
-      render inertia: "daylight/mail_events", props: {
+      render inertia: "daylight/mail_events/index", props: {
         mailers: mailers,
         events: events,
         selected_mailer: params[:mailer],

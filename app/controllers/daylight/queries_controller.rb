@@ -78,7 +78,7 @@ module Daylight
           }
         end
 
-      render inertia: "daylight/queries", props: {
+      render inertia: "daylight/queries/index", props: {
         queries: queries,
         slowest: slowest,
         period: period,

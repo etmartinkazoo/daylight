@@ -26,7 +26,7 @@ module Daylight
 
       settings = Database.all_settings
 
-      render inertia: "daylight/solutions", props: {
+      render inertia: "daylight/solutions/index", props: {
         solutions: solutions,
         counts: counts,
         status: status_filter,
@@ -49,7 +49,7 @@ module Daylight
       source_issue = load_source_issue(solution)
       settings = Database.all_settings
 
-      render inertia: "daylight/solution_show", props: {
+      render inertia: "daylight/solutions/show", props: {
         solution: serialize_solution(solution),
         messages: messages,
         source_issue: source_issue ? serialize_source_issue(source_issue, solution.source_type) : nil,

@@ -130,7 +130,7 @@ module Daylight
       frustrated = scope.where("duration_ms >= 2000").count
       apdex = total > 0 ? ((satisfied + tolerating * 0.5) / total.to_f).round(3) : 1.0
 
-      render inertia: "daylight/requests", props: {
+      render inertia: "daylight/requests/index", props: {
         endpoints: endpoints,
         route_requests: route_requests,
         selected_request: selected_request,

@@ -35,7 +35,7 @@ module Daylight
 
       incident_scope = Database::IncidentRecord.where("occurred_at > ?", period_start(period))
 
-      render inertia: "daylight/incidents", props: {
+      render inertia: "daylight/incidents/index", props: {
         incidents: incidents,
         counts: counts,
         status: status,
@@ -83,7 +83,7 @@ module Daylight
         end
       end
 
-      render inertia: "daylight/incident_show", props: {
+      render inertia: "daylight/incidents/show", props: {
         incident: serialize_incident(incident),
         related_error: related_error,
         related_deploy: related_deploy
@@ -125,6 +125,7 @@ module Daylight
         related_error_id: i.related_error_id,
         related_deploy_id: i.related_deploy_id,
         started_at: i.started_at,
+        started_at_ago: i.started_at ? helpers.time_ago_in_words(i.started_at) + " ago" : "",
         resolved_at: i.resolved_at,
         occurred_at: i.occurred_at
       }

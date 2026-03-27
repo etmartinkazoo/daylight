@@ -5,16 +5,10 @@ createInertiaApp({
   progress: false,
   resolve: (name) => {
     const pages = import.meta.glob("../pages/**/*.svelte", { eager: true });
-    // Strip "daylight/" prefix — engine controllers render "daylight/index"
+    // Controllers render "daylight/errors/index", "daylight/incidents/show", etc.
+    // Strip "daylight/" prefix to get "errors/index", "incidents/show"
     const stripped = name.replace(/^daylight\//, "");
-    const normalizedName = stripped
-      .split("/")
-      .map((s) => s.charAt(0).toLowerCase() + s.slice(1))
-      .join("/");
-    const page =
-      pages[`../pages/${normalizedName}.svelte`] ||
-      pages[`../pages/${stripped}.svelte`] ||
-      pages[`../pages/${name}.svelte`];
+    const page = pages[`../pages/${stripped}.svelte`];
     if (!page) {
       throw new Error(`[Daylight] Page not found: ${name}`);
     }

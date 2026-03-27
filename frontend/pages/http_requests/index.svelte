@@ -1,8 +1,8 @@
 <script>
   import { router, usePage } from "@inertiajs/svelte";
-  import DaylightLayout from "./DaylightLayout.svelte";
-  import PeriodSelect from "./PeriodSelect.svelte";
-  import EwSheet from "./EwSheet.svelte";
+  import DaylightLayout from "../DaylightLayout.svelte";
+  import PeriodSelect from "../PeriodSelect.svelte";
+  import EwSheet from "../errors/EwSheet.svelte";
   import SortableHeader from "@/components/ui/SortableHeader.svelte";
   import AreaChart from "@/components/charts/AreaChart.svelte";
   import InfiniteScroll from "@/components/ui/InfiniteScroll.svelte";

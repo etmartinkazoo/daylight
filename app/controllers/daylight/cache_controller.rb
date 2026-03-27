@@ -38,7 +38,7 @@ module Daylight
       has_more = key_groups.length > per_page
       key_groups = key_groups.first(per_page)
 
-      render inertia: "daylight/cache", props: {
+      render inertia: "daylight/cache/index", props: {
         key_groups: key_groups,
         period: period,
         page: page,

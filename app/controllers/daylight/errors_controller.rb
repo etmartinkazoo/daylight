@@ -46,7 +46,7 @@ counts = {
 
 occurrence_scope = Database::OccurrenceRecord.where("occurred_at > ?", period_start(period))
 
-render inertia: "daylight/index", props: {
+render inertia: "daylight/errors/index", props: {
   errors: InertiaRails.scroll(pagy) { errors.map { |e| serialize_error(e) } },
   counts: counts,
   status: status,
@@ -66,7 +66,7 @@ end
         .limit(50)
         .map { |o| serialize_occurrence(o) }
 
-      render inertia: "daylight/show", props: {
+      render inertia: "daylight/errors/show", props: {
         error: serialize_error(error),
         occurrences: occurrences
       }

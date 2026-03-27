@@ -1,12 +1,12 @@
 <script>
   import { router, usePage } from "@inertiajs/svelte";
-  import DaylightLayout from "./DaylightLayout.svelte";
+  import DaylightLayout from "../DaylightLayout.svelte";
   import Badge from "@/components/ui/Badge.svelte";
   import Button from "@/components/ui/Button.svelte";
   import Table from "@/components/ui/Table.svelte";
   import SortableHeader from "@/components/ui/SortableHeader.svelte";
-  import PeriodSelect from "./PeriodSelect.svelte";
-  import EwSheet from "./EwSheet.svelte";
+  import PeriodSelect from "../PeriodSelect.svelte";
+  import EwSheet from "../errors/EwSheet.svelte";
   import BarList from "@/components/charts/BarList.svelte";
   import TimeSeriesChart from "@/components/charts/TimeSeriesChart.svelte";
   import InteractiveBarChart from "@/components/charts/InteractiveBarChart.svelte";

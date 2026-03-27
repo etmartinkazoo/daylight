@@ -1,7 +1,7 @@
 <script>
   import { usePage } from "@inertiajs/svelte";
-  import DaylightLayout from "./DaylightLayout.svelte";
-  import EwSheet from "./EwSheet.svelte";
+  import DaylightLayout from "../DaylightLayout.svelte";
+  import EwSheet from "../errors/EwSheet.svelte";
   import DonutChart from "@/components/charts/DonutChart.svelte";
   import Sparkline from "@/components/charts/Sparkline.svelte";
   import AreaChart from "@/components/charts/AreaChart.svelte";

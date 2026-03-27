@@ -1,6 +1,6 @@
 <script>
   import { router, usePage } from "@inertiajs/svelte";
-  import DaylightLayout from "./DaylightLayout.svelte";
+  import DaylightLayout from "../DaylightLayout.svelte";
   import { markdownToHtml } from "@/lib/markdown.js";
 
   let { incident = {}, related_error = null, related_deploy = null } = $props();

@@ -1,6 +1,6 @@
 <script>
   import { router, usePage } from "@inertiajs/svelte";
-  import DaylightLayout from "./DaylightLayout.svelte";
+  import DaylightLayout from "../DaylightLayout.svelte";
   import Button from "@/components/ui/Button.svelte";
   import { markdownToHtml } from "@/lib/markdown.js";
   import { playNotificationSound } from "@/lib/notification-sounds.js";

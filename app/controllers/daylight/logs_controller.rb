@@ -25,7 +25,7 @@ module Daylight
       has_more = logs.length > per_page
       logs = logs.first(per_page)
 
-      render inertia: "daylight/logs", props: {
+      render inertia: "daylight/logs/index", props: {
         logs: logs,
         counts: counts,
         period: period,
