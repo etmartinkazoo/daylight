@@ -64,7 +64,7 @@ module Daylight
         occurrence = Database::OccurrenceRecord.create!(
           error_id: err.id,
           backtrace: backtrace.first(30).join("\n"),
-          context: context.to_json,
+          context: safe_json(context),
           request_url: req_url&.to_s&.truncate(2000),
           request_method: req_method,
           user_id: user_id,
@@ -93,9 +93,9 @@ module Daylight
         AnomalyDetector.check! rescue nil
 
         err
-      rescue StandardError => e
+      rescue Exception => e # rubocop:disable Lint/RescueException -- must not mask the original error (e.g. SystemStackError from circular context)
         # Never let error tracking break the app
-        Rails.logger.error("[Daylight] Failed to record error: #{e.message}") if defined?(Rails)
+        Rails.logger.error("[Daylight] Failed to record error: #{e.class}: #{e.message}") if defined?(Rails)
         nil
       end
 
@@ -125,6 +125,27 @@ module Daylight
         end
 
         app_lines
+      end
+
+      def safe_json(hash)
+        seen = {}.compare_by_identity
+        sanitize = ->(obj) do
+          case obj
+          when Hash
+            return "(circular)" if seen.key?(obj)
+            seen[obj] = true
+            obj.each_with_object({}) { |(k, v), h| h[k] = sanitize.call(v) }
+          when Array
+            return "(circular)" if seen.key?(obj)
+            seen[obj] = true
+            obj.map { |v| sanitize.call(v) }
+          else
+            obj
+          end
+        end
+        sanitize.call(hash).to_json
+      rescue => e
+        { "_daylight_serialization_error" => e.message }.to_json
       end
 
       def ignored?(error)
