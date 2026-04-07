@@ -1,13 +1,16 @@
 import { useState } from "react";
 import { router, InfiniteScroll } from "@inertiajs/react";
+import { cn } from "@/lib/utils";
 import DaylightLayout from "../DaylightLayout";
 import PeriodSelect from "../PeriodSelect";
 import EwSheet from "../errors/EwSheet";
-import InteractiveBarChart from "@/components/charts/InteractiveBarChart";
+import { InteractiveBarChart } from "@/components/charts/InteractiveBarChart";
 import { ExportButton } from "@/components/ui/export-button";
 import { SortableHeader } from "@/components/ui/sortable-header";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Separator } from "@/components/ui/separator";
 import { fmt, timeAgo, formatTime } from "@/lib/formatters.js";
 
 export default function MailEventsIndex({
@@ -22,8 +25,6 @@ export default function MailEventsIndex({
   const deliveryRate = totals.total > 0
     ? Math.round(((totals.delivered || 0) / totals.total) * 100)
     : 0;
-
-  const deliveryRateColor = deliveryRate >= 95 ? "#22c55e" : deliveryRate >= 80 ? "#f59e0b" : "#ef4444";
 
   const sheetTitle = sheetType === "mailer"
     ? (sheetItem?.mailer_class || "Mailer")
@@ -47,31 +48,42 @@ export default function MailEventsIndex({
     return "secondary";
   }
 
+  const deliveryRateColor = deliveryRate >= 95 ? "text-green-500" : deliveryRate >= 80 ? "text-yellow-500" : "text-red-500";
+
   return (
     <DaylightLayout>
-      <div className="dl-page">
-        <div className="dl-page-header">
-          <div>
-            <h1 className="dl-page-title">Mail &amp; Notifications</h1>
-            <p className="dl-page-subtitle">Email and notification delivery monitoring</p>
+      <div className="flex flex-col gap-6 p-6">
+
+        {/* Page header */}
+        <div className="flex items-start justify-between">
+          <div className="flex flex-col gap-1">
+            <h1 className="text-xl font-semibold">Mail &amp; Notifications</h1>
+            <p className="text-sm text-muted-foreground">Email and notification delivery monitoring</p>
           </div>
-          <div className="header-controls">
+          <div className="flex items-center gap-2">
             <ExportButton baseUrl={`${base}/mail_events/export`} />
             <PeriodSelect value={period} onChange={changePeriod} />
           </div>
         </div>
 
-        <div className="dl-stat-grid">
-          <div className="stat-card"><span className="stat-card-label">Total Sent</span><span className="stat-card-value">{totals.total || 0}</span></div>
-          <div className="stat-card"><span className="stat-card-label">Delivered</span><span className="stat-card-value" style={{ color: "#22c55e" }}>{totals.delivered || 0}</span></div>
-          <div className={`stat-card${totals.failed > 0 ? " stat-card-danger" : ""}`}>
-            <span className="stat-card-label">Failed</span>
-            <span className="stat-card-value">{totals.failed || 0}</span>
-          </div>
-          <div className="stat-card">
-            <span className="stat-card-label">Delivery Rate</span>
-            <span className="stat-card-value" style={{ color: deliveryRateColor }}>{deliveryRate}%</span>
-          </div>
+        {/* Stat cards */}
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          <Card>
+            <CardHeader><CardDescription>Total Sent</CardDescription></CardHeader>
+            <CardContent><p className="text-2xl font-semibold tabular-nums">{totals.total || 0}</p></CardContent>
+          </Card>
+          <Card>
+            <CardHeader><CardDescription>Delivered</CardDescription></CardHeader>
+            <CardContent><p className="text-2xl font-semibold tabular-nums text-green-500">{totals.delivered || 0}</p></CardContent>
+          </Card>
+          <Card className={cn(totals.failed > 0 && "border-red-200")}>
+            <CardHeader><CardDescription>Failed</CardDescription></CardHeader>
+            <CardContent><p className={cn("text-2xl font-semibold tabular-nums", totals.failed > 0 && "text-red-500")}>{totals.failed || 0}</p></CardContent>
+          </Card>
+          <Card>
+            <CardHeader><CardDescription>Delivery Rate</CardDescription></CardHeader>
+            <CardContent><p className={cn("text-2xl font-semibold tabular-nums", deliveryRateColor)}>{deliveryRate}%</p></CardContent>
+          </Card>
         </div>
 
         {volume_series.length > 0 && (
@@ -84,111 +96,104 @@ export default function MailEventsIndex({
           />
         )}
 
+        {/* Mailer Classes table */}
         {mailers.length > 0 && (
-          <div className="section">
-            <h2 className="section-title">Mailer Classes</h2>
-            <div className="dl-data-table">
+          <div className="flex flex-col gap-3">
+            <h2 className="text-sm font-semibold">Mailer Classes</h2>
+            <Card>
               <InfiniteScroll data="mailers" itemsElement="#mailers-tbody" startElement="#mailers-thead">
-                <table className="dl-table">
-                  <thead id="mailers-thead">
-                    <tr>
-                      <th style={{ flex: 2 }}>Mailer Class</th>
-                      <th style={{ width: "4rem", textAlign: "right" }}><SortableHeader column="total" label="Total" sort_column={sort_column} sort_direction={sort_direction} /></th>
-                      <th style={{ width: "5rem", textAlign: "right" }}><SortableHeader column="delivered_count" label="Delivered" sort_column={sort_column} sort_direction={sort_direction} /></th>
-                      <th style={{ width: "4rem", textAlign: "right" }}><SortableHeader column="failed_count" label="Failed" sort_column={sort_column} sort_direction={sort_direction} /></th>
-                      <th style={{ width: "5rem", textAlign: "right" }}><SortableHeader column="avg_duration" label="Avg" sort_column={sort_column} sort_direction={sort_direction} /></th>
-                    </tr>
-                  </thead>
-                  <tbody id="mailers-tbody">
+                <Table>
+                  <TableHeader id="mailers-thead">
+                    <TableRow>
+                      <TableHead>Mailer Class</TableHead>
+                      <TableHead className="w-16 text-right"><SortableHeader column="total" label="Total" sort_column={sort_column} sort_direction={sort_direction} /></TableHead>
+                      <TableHead className="w-24 text-right"><SortableHeader column="delivered_count" label="Delivered" sort_column={sort_column} sort_direction={sort_direction} /></TableHead>
+                      <TableHead className="w-16 text-right"><SortableHeader column="failed_count" label="Failed" sort_column={sort_column} sort_direction={sort_direction} /></TableHead>
+                      <TableHead className="w-20 text-right"><SortableHeader column="avg_duration" label="Avg" sort_column={sort_column} sort_direction={sort_direction} /></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody id="mailers-tbody">
                     {mailers.map((ml, i) => (
-                      <tr key={`${ml.mailer_class}:${i}`} className="row" onClick={() => openMailer(ml)} style={{ cursor: "pointer" }}>
-                        <td className="cell" style={{ flex: 2 }}><span className="mailer-name">{ml.mailer_class}</span></td>
-                        <td className="cell num" style={{ width: "4rem" }}>{ml.total}</td>
-                        <td className="cell num delivered" style={{ width: "5rem" }}>{ml.delivered_count}</td>
-                        <td className={`cell num${ml.failed_count > 0 ? " failed-val" : ""}`} style={{ width: "4rem" }}>{ml.failed_count}</td>
-                        <td className="cell num" style={{ width: "5rem" }}>{fmt(ml.avg_duration)}</td>
-                      </tr>
+                      <TableRow key={`${ml.mailer_class}:${i}`} className="cursor-pointer" onClick={() => openMailer(ml)}>
+                        <TableCell className="font-medium">{ml.mailer_class}</TableCell>
+                        <TableCell className="text-right tabular-nums">{ml.total}</TableCell>
+                        <TableCell className="text-right tabular-nums text-green-500">{ml.delivered_count}</TableCell>
+                        <TableCell className={cn("text-right tabular-nums", ml.failed_count > 0 && "text-red-500")}>{ml.failed_count}</TableCell>
+                        <TableCell className="text-right tabular-nums">{fmt(ml.avg_duration)}</TableCell>
+                      </TableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </InfiniteScroll>
-            </div>
+            </Card>
           </div>
         )}
 
+        {/* Recent Events */}
         {events.length > 0 ? (
-          <div className="section">
-            <h2 className="section-title">Recent Events</h2>
-            <div className="dl-data-table">
-              <div className="dl-table-header">
-                <div className="dl-th" style={{ flex: 1.5 }}>Mailer</div>
-                <div className="dl-th" style={{ flex: 1 }}>Subject</div>
-                <div className="dl-th" style={{ width: "5rem" }}>Status</div>
-                <div className="dl-th" style={{ width: "4rem" }}>Channel</div>
-                <div className="dl-th dl-th-right" style={{ width: "5.5rem" }}>When</div>
-              </div>
-              {events.map((ev) => (
-                <Button key={ev.id} variant="ghost" className="dl-table-row w-full justify-start h-auto rounded-none" onClick={() => openEvent(ev)}>
-                  <div className="dl-td" style={{ flex: 1.5 }}><span className="event-mailer">{ev.mailer_class || "Unknown"}</span></div>
-                  <div className="dl-td" style={{ flex: 1 }}><span className="event-subject">{ev.subject || "—"}</span></div>
-                  <div className="dl-td" style={{ width: "5rem" }}>
-                    <Badge variant={statusVariant(ev.status)}>
-                      {ev.status || "—"}
-                    </Badge>
-                  </div>
-                  <div className="dl-td" style={{ width: "4rem" }}><span className="event-channel">{ev.channel || "email"}</span></div>
-                  <div className="dl-td dl-td-num" style={{ width: "5.5rem" }}><span className="event-time">{timeAgo(ev.occurred_at)}</span></div>
-                </Button>
-              ))}
-            </div>
+          <div className="flex flex-col gap-3">
+            <h2 className="text-sm font-semibold">Recent Events</h2>
+            <Card>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Mailer</TableHead>
+                    <TableHead>Subject</TableHead>
+                    <TableHead className="w-24">Status</TableHead>
+                    <TableHead className="w-20">Channel</TableHead>
+                    <TableHead className="w-24 text-right">When</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {events.map((ev) => (
+                    <TableRow key={ev.id} className="cursor-pointer" onClick={() => openEvent(ev)}>
+                      <TableCell className="font-medium">{ev.mailer_class || "Unknown"}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{ev.subject || "—"}</TableCell>
+                      <TableCell><Badge variant={statusVariant(ev.status)}>{ev.status || "—"}</Badge></TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{ev.channel || "email"}</TableCell>
+                      <TableCell className="text-right tabular-nums text-muted-foreground">{timeAgo(ev.occurred_at)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Card>
           </div>
         ) : mailers.length === 0 ? (
-          <div className="empty-state">
-            <div className="empty-icon">
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
-              </svg>
-            </div>
-            <p className="empty-title">No mail data yet</p>
-            <p className="empty-sub">Mail events will appear here once your app starts sending emails.</p>
+          <div className="flex flex-col items-center gap-2 py-10 text-sm text-muted-foreground">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
+            </svg>
+            <p className="font-medium">No mail data yet</p>
+            <p>Mail events will appear here once your app starts sending emails.</p>
           </div>
         ) : null}
       </div>
 
       <EwSheet open={sheetOpen} onClose={() => setSheetOpen(false)} title={sheetTitle} aiContext={sheetAi}>
         {sheetItem && (
-          <div className="dl-sheet-detail">
+          <div className="flex flex-col divide-y p-4">
             {sheetType === "mailer" ? (
-              <dl className="dl-dl">
-                <div className="dl-dl-row"><dt>Mailer Class</dt><dd>{sheetItem.mailer_class}</dd></div>
-                <div className="dl-dl-row"><dt>Total</dt><dd>{sheetItem.total}</dd></div>
-                <div className="dl-dl-row"><dt>Delivered</dt><dd className="ok">{sheetItem.delivered_count}</dd></div>
-                <div className="dl-dl-row"><dt>Failed</dt><dd className={sheetItem.failed_count > 0 ? "err" : ""}>{sheetItem.failed_count}</dd></div>
-                <div className="dl-dl-row"><dt>Avg Duration</dt><dd>{fmt(sheetItem.avg_duration)}</dd></div>
-              </dl>
+              <>
+                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Mailer Class</span><span>{sheetItem.mailer_class}</span></div>
+                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Total</span><span>{sheetItem.total}</span></div>
+                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Delivered</span><span className="text-green-500">{sheetItem.delivered_count}</span></div>
+                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Failed</span><span className={cn(sheetItem.failed_count > 0 && "text-red-500")}>{sheetItem.failed_count}</span></div>
+                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Avg Duration</span><span>{fmt(sheetItem.avg_duration)}</span></div>
+              </>
             ) : (
               <>
-                <dl className="dl-dl">
-                  <div className="dl-dl-row"><dt>Mailer Class</dt><dd>{sheetItem.mailer_class}</dd></div>
-                  <div className="dl-dl-row"><dt>Subject</dt><dd>{sheetItem.subject || "—"}</dd></div>
-                  <div className="dl-dl-row"><dt>Recipients</dt><dd>{sheetItem.recipients || "—"}</dd></div>
-                  <div className="dl-dl-row"><dt>Channel</dt><dd><Badge variant="secondary">{sheetItem.channel || "email"}</Badge></dd></div>
-                  <div className="dl-dl-row">
-                    <dt>Status</dt>
-                    <dd>
-                      <Badge variant={statusVariant(sheetItem.status)}>
-                        {sheetItem.status || "—"}
-                      </Badge>
-                    </dd>
-                  </div>
-                  {sheetItem.duration_ms && <div className="dl-dl-row"><dt>Duration</dt><dd>{fmt(sheetItem.duration_ms)}</dd></div>}
-                  <div className="dl-dl-row"><dt>Time</dt><dd>{formatTime(sheetItem.occurred_at)}</dd></div>
-                </dl>
+                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Mailer Class</span><span>{sheetItem.mailer_class}</span></div>
+                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Subject</span><span>{sheetItem.subject || "—"}</span></div>
+                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Recipients</span><span>{sheetItem.recipients || "—"}</span></div>
+                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Channel</span><Badge variant="secondary">{sheetItem.channel || "email"}</Badge></div>
+                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Status</span><Badge variant={statusVariant(sheetItem.status)}>{sheetItem.status || "—"}</Badge></div>
+                {sheetItem.duration_ms && <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Duration</span><span>{fmt(sheetItem.duration_ms)}</span></div>}
+                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Time</span><span>{formatTime(sheetItem.occurred_at)}</span></div>
                 {sheetItem.error_message && (
-                  <>
-                    <h4 className="sheet-sub">Error</h4>
-                    <pre className="sheet-pre">{sheetItem.error_message}</pre>
-                  </>
+                  <div className="pt-3">
+                    <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Error</p>
+                    <pre className="overflow-auto rounded-md bg-muted p-3 text-xs font-mono">{sheetItem.error_message}</pre>
+                  </div>
                 )}
               </>
             )}

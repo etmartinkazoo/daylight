@@ -1,10 +1,23 @@
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 import DaylightLayout from "../DaylightLayout";
 import EwSheet from "../errors/EwSheet";
-import DonutChart from "@/components/charts/DonutChart";
-import AreaChart from "@/components/charts/AreaChart";
+import { DonutChart } from "@/components/charts/DonutChart";
+import { AreaChart } from "@/components/charts/AreaChart";
 import { formatTimeLong } from "@/lib/formatters.js";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+
+function SheetRow({ label, children, className }) {
+  return (
+    <div className={cn("flex items-center justify-between py-3 text-sm", className)}>
+      <span className="text-muted-foreground">{label}</span>
+      <span>{children}</span>
+    </div>
+  );
+}
 
 export default function HealthIndex({
   system = {}, database = {}, jobs = {}, errors = {}, apdex = null,
@@ -28,212 +41,253 @@ export default function HealthIndex({
 
   return (
     <DaylightLayout>
-      <div className="dl-page">
-        <div className="dl-page-header">
-          <div>
-            <h1 className="dl-page-title">Health Dashboard</h1>
-            <p className="dl-page-subtitle">System monitoring and performance overview</p>
-          </div>
+      <div className="flex flex-col gap-6 p-6">
+
+        {/* Page header */}
+        <div>
+          <h1 className="text-xl font-semibold">Health Dashboard</h1>
+          <p className="mt-1 text-sm text-muted-foreground">System monitoring and performance overview</p>
         </div>
 
-        <div className="section">
-          <h2 className="section-title">System Info</h2>
-          <div className="card-grid">
-            <div className="stat-card">
-              <span className="stat-card-label">Environment</span>
-              <div className="stat-card-value">
-                <span className={`env-badge${system.environment === "production" ? " production" : ""}`}>
+        {/* System Info */}
+        <div className="flex flex-col gap-3">
+          <h2 className="text-sm font-semibold">System Info</h2>
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+            <Card>
+              <CardHeader><CardDescription>Environment</CardDescription></CardHeader>
+              <CardContent>
+                <Badge variant={system.environment === "production" ? "destructive" : "secondary"}>
                   {system.environment || "—"}
-                </span>
-              </div>
-            </div>
-            <div className="stat-card">
-              <span className="stat-card-label">Ruby Version</span>
-              <span className="stat-card-value stat-card-value-sm">{system.ruby_version || "—"}</span>
-            </div>
-            <div className="stat-card">
-              <span className="stat-card-label">Rails Version</span>
-              <span className="stat-card-value stat-card-value-sm">{system.rails_version || "—"}</span>
-            </div>
-            <div className="stat-card">
-              <span className="stat-card-label">Uptime</span>
-              <span className="stat-card-value stat-card-value-sm">{system.uptime || "—"}</span>
-            </div>
-            <div className="stat-card">
-              <span className="stat-card-label">Memory Usage</span>
-              <span className="stat-card-value">{system.memory_mb ? `${system.memory_mb}` : "—"}</span>
-              {system.memory_mb && <span className="stat-card-unit">MB</span>}
-            </div>
-            <div className="stat-card">
-              <span className="stat-card-label">Process ID</span>
-              <span className="stat-card-value mono">{system.pid || "—"}</span>
-            </div>
-            <div className="stat-card">
-              <span className="stat-card-label">Server Time</span>
-              <span className="stat-card-value stat-card-value-sm">{formatTimeLong(system.server_time) || "—"}</span>
-            </div>
+                </Badge>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader><CardDescription>Ruby Version</CardDescription></CardHeader>
+              <CardContent><p className="font-mono text-sm">{system.ruby_version || "—"}</p></CardContent>
+            </Card>
+            <Card>
+              <CardHeader><CardDescription>Rails Version</CardDescription></CardHeader>
+              <CardContent><p className="font-mono text-sm">{system.rails_version || "—"}</p></CardContent>
+            </Card>
+            <Card>
+              <CardHeader><CardDescription>Uptime</CardDescription></CardHeader>
+              <CardContent><p className="text-sm">{system.uptime || "—"}</p></CardContent>
+            </Card>
+            <Card>
+              <CardHeader><CardDescription>Memory Usage</CardDescription></CardHeader>
+              <CardContent>
+                <p className="text-2xl font-semibold tabular-nums">
+                  {system.memory_mb || "—"}
+                  {system.memory_mb && <span className="text-sm font-normal text-muted-foreground"> MB</span>}
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader><CardDescription>Process ID</CardDescription></CardHeader>
+              <CardContent><p className="font-mono text-sm">{system.pid || "—"}</p></CardContent>
+            </Card>
+            <Card>
+              <CardHeader><CardDescription>Server Time</CardDescription></CardHeader>
+              <CardContent><p className="text-sm">{formatTimeLong(system.server_time) || "—"}</p></CardContent>
+            </Card>
           </div>
         </div>
 
-        <div className="section">
-          <h2 className="section-title">Database Status</h2>
-          <div className="card-grid">
-            <div className="stat-card">
-              <span className="stat-card-label">Connection</span>
-              <div className="stat-card-value">
-                <span className="status-indicator">
-                  <span className={`status-dot${database.connected ? " connected" : " disconnected"}`} />
+        {/* Database Status */}
+        <div className="flex flex-col gap-3">
+          <h2 className="text-sm font-semibold">Database Status</h2>
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+            <Card>
+              <CardHeader><CardDescription>Connection</CardDescription></CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-2 text-sm">
+                  <span className={cn("size-2 rounded-full", database.connected ? "bg-green-500" : "bg-red-500")} />
                   {database.connected ? "Connected" : "Disconnected"}
-                </span>
-              </div>
-            </div>
-            <div className="stat-card">
-              <span className="stat-card-label">Adapter</span>
-              <span className="stat-card-value stat-card-value-sm">{database.adapter || "—"}</span>
-            </div>
-            <div className="stat-card">
-              <span className="stat-card-label">Tables</span>
-              <span className="stat-card-value">{database.tables ?? "—"}</span>
-            </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader><CardDescription>Adapter</CardDescription></CardHeader>
+              <CardContent><p className="font-mono text-sm">{database.adapter || "—"}</p></CardContent>
+            </Card>
+            <Card>
+              <CardHeader><CardDescription>Tables</CardDescription></CardHeader>
+              <CardContent><p className="text-2xl font-semibold tabular-nums">{database.tables ?? "—"}</p></CardContent>
+            </Card>
             {database.size_mb != null && (
-              <div className="stat-card">
-                <span className="stat-card-label">App DB Size</span>
-                <span className="stat-card-value">{database.size_mb}</span>
-                <span className="stat-card-unit">MB</span>
-              </div>
+              <Card>
+                <CardHeader><CardDescription>App DB Size</CardDescription></CardHeader>
+                <CardContent>
+                  <p className="text-2xl font-semibold tabular-nums">
+                    {database.size_mb}
+                    <span className="text-sm font-normal text-muted-foreground"> MB</span>
+                  </p>
+                </CardContent>
+              </Card>
             )}
             {database.errorwatch_size_mb != null && (
-              <div className="stat-card">
-                <span className="stat-card-label">Daylight DB Size</span>
-                <span className="stat-card-value">{database.errorwatch_size_mb}</span>
-                <span className="stat-card-unit">MB</span>
-              </div>
+              <Card>
+                <CardHeader><CardDescription>Daylight DB Size</CardDescription></CardHeader>
+                <CardContent>
+                  <p className="text-2xl font-semibold tabular-nums">
+                    {database.errorwatch_size_mb}
+                    <span className="text-sm font-normal text-muted-foreground"> MB</span>
+                  </p>
+                </CardContent>
+              </Card>
             )}
             {database.error && (
-              <div className="stat-card stat-card-error">
-                <span className="stat-card-label">Error</span>
-                <span className="stat-card-value stat-card-value-sm err-text">{database.error}</span>
-              </div>
+              <Card className="border-red-200">
+                <CardHeader><CardDescription>Error</CardDescription></CardHeader>
+                <CardContent><p className="text-sm text-red-500">{database.error}</p></CardContent>
+              </Card>
             )}
           </div>
         </div>
 
-        <div className="section">
-          <h2 className="section-title">Performance Overview</h2>
+        {/* Performance Overview */}
+        <div className="flex flex-col gap-4">
+          <h2 className="text-sm font-semibold">Performance Overview</h2>
+
           {apdex != null && (
-            <div className="subsection">
-              <h3 className="subsection-title">Application Performance</h3>
-              <div className="apdex-card" style={{ borderColor: `${apdexColor}20` }}>
-                <span className="apdex-label">Apdex Score</span>
-                <span className="apdex-value" style={{ color: apdexColor }}>{apdex.toFixed(2)}</span>
-                <span className="apdex-desc">
-                  {apdex >= 0.9 ? "Excellent" : apdex >= 0.7 ? "Fair" : "Poor"}
-                </span>
-              </div>
-            </div>
+            <Card style={{ borderColor: `${apdexColor}30` }}>
+              <CardContent className="flex items-center gap-4 pt-6">
+                <div className="flex flex-col">
+                  <span className="text-xs text-muted-foreground uppercase tracking-wide">Apdex Score</span>
+                  <span className="text-3xl font-bold tabular-nums" style={{ color: apdexColor }}>{apdex.toFixed(2)}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {apdex >= 0.9 ? "Excellent" : apdex >= 0.7 ? "Fair" : "Poor"}
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
           )}
 
-          <div className="subsection">
-            <h3 className="subsection-title">Errors</h3>
-            <div className="card-grid-with-chart">
-              <div className="chart-card">
-                <span className="stat-card-label">Error Distribution</span>
-                <div className="chart-wrapper">
+          {/* Errors section */}
+          <div className="flex flex-col gap-3">
+            <h3 className="text-sm font-medium text-muted-foreground">Errors</h3>
+            <div className="flex flex-wrap gap-4">
+              <Card className="flex-none">
+                <CardHeader><CardDescription>Error Distribution</CardDescription></CardHeader>
+                <CardContent>
                   <DonutChart segments={errorChartSegments} size={140} strokeWidth={16} centerValue={String(errors.total ?? 0)} centerLabel="total" />
-                </div>
-              </div>
-              <div className="stat-cards-group">
-                <div className={`stat-card${errors.open > 0 ? " stat-card-alert" : ""}`}>
-                  <span className="stat-card-label">Open Errors</span>
-                  <span className={`stat-card-value${errors.open > 0 ? " err-value" : ""}`}>{errors.open ?? 0}</span>
-                  <span className="stat-card-description">Currently unresolved</span>
-                  {error_sparkline.length >= 2 && (
-                    <div className="sparkline-container"><AreaChart data={error_sparkline} width={120} height={32} color="#ef4444" /></div>
-                  )}
-                </div>
-                <div className="stat-card">
-                  <span className="stat-card-label">Last 24 Hours</span>
-                  <span className="stat-card-value">{errors.last_24h ?? 0}</span>
-                  <span className="stat-card-description">Errors in past day</span>
-                </div>
-                <div className="stat-card">
-                  <span className="stat-card-label">Last 7 Days</span>
-                  <span className="stat-card-value">{errors.last_7d ?? 0}</span>
-                  <span className="stat-card-description">Errors in past week</span>
-                </div>
-                <div className="stat-card">
-                  <span className="stat-card-label">Total Errors</span>
-                  <span className="stat-card-value">{errors.total ?? 0}</span>
-                  <span className="stat-card-description">All time</span>
-                </div>
+                </CardContent>
+              </Card>
+              <div className="grid flex-1 grid-cols-2 gap-3">
+                <Card className={cn(errors.open > 0 && "border-red-200")}>
+                  <CardHeader><CardDescription>Open Errors</CardDescription></CardHeader>
+                  <CardContent className="flex flex-col gap-1">
+                    <p className={cn("text-2xl font-semibold tabular-nums", errors.open > 0 && "text-red-500")}>{errors.open ?? 0}</p>
+                    <p className="text-xs text-muted-foreground">Currently unresolved</p>
+                    {error_sparkline.length >= 2 && (
+                      <div className="mt-1"><AreaChart data={error_sparkline} width={120} height={32} color="#ef4444" /></div>
+                    )}
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader><CardDescription>Last 24 Hours</CardDescription></CardHeader>
+                  <CardContent className="flex flex-col gap-1">
+                    <p className="text-2xl font-semibold tabular-nums">{errors.last_24h ?? 0}</p>
+                    <p className="text-xs text-muted-foreground">Errors in past day</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader><CardDescription>Last 7 Days</CardDescription></CardHeader>
+                  <CardContent className="flex flex-col gap-1">
+                    <p className="text-2xl font-semibold tabular-nums">{errors.last_7d ?? 0}</p>
+                    <p className="text-xs text-muted-foreground">Errors in past week</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader><CardDescription>Total Errors</CardDescription></CardHeader>
+                  <CardContent className="flex flex-col gap-1">
+                    <p className="text-2xl font-semibold tabular-nums">{errors.total ?? 0}</p>
+                    <p className="text-xs text-muted-foreground">All time</p>
+                  </CardContent>
+                </Card>
               </div>
             </div>
             {errors.open > 0 && (
-              <a href={`${base}/errors`} className="action-link">View open errors &rarr;</a>
+              <a href={`${base}/errors`} className="text-sm text-primary hover:underline">View open errors →</a>
             )}
           </div>
 
-          <div className="subsection">
-            <h3 className="subsection-title">Background Jobs</h3>
+          {/* Background Jobs */}
+          <div className="flex flex-col gap-3">
+            <h3 className="text-sm font-medium text-muted-foreground">Background Jobs</h3>
             {!jobs.available ? (
-              <div className="stat-card">
-                <span className="stat-card-label">Status</span>
-                <span className="stat-card-value stat-card-value-sm muted-text">Solid Queue not detected</span>
-              </div>
+              <Card>
+                <CardContent className="pt-4 text-sm text-muted-foreground">Solid Queue not detected</CardContent>
+              </Card>
             ) : jobs.error ? (
-              <div className="stat-card stat-card-error">
-                <span className="stat-card-label">Error</span>
-                <span className="stat-card-value stat-card-value-sm err-text">{jobs.error}</span>
-              </div>
+              <Card className="border-red-200">
+                <CardContent className="pt-4 text-sm text-red-500">{jobs.error}</CardContent>
+              </Card>
             ) : (
-              <>
-                <div className="card-grid">
-                  <div className="stat-card">
-                    <span className="stat-card-label">Ready</span>
-                    <span className="stat-card-value">{jobs.ready ?? 0}</span>
-                    <span className="stat-card-description">Queued for processing</span>
-                    {request_sparkline.length >= 2 && (
-                      <div className="sparkline-container"><AreaChart data={request_sparkline} width={120} height={32} color="#3b82f6" /></div>
-                    )}
-                  </div>
-                  <div className="stat-card">
-                    <span className="stat-card-label">Scheduled</span>
-                    <span className="stat-card-value">{jobs.scheduled ?? 0}</span>
-                    <span className="stat-card-description">Waiting to run</span>
-                  </div>
-                  <div className="stat-card">
-                    <span className="stat-card-label">Running</span>
-                    <span className="stat-card-value">{jobs.claimed ?? 0}</span>
-                    <span className="stat-card-description">Currently executing</span>
-                  </div>
-                  <div className={`stat-card${jobs.failed > 0 ? " stat-card-alert" : ""}`}>
-                    <span className="stat-card-label">Failed</span>
-                    <span className={`stat-card-value${jobs.failed > 0 ? " err-value" : ""}`}>{jobs.failed ?? 0}</span>
-                    <span className="stat-card-description">Requires attention</span>
-                  </div>
-                  <div className="stat-card">
-                    <span className="stat-card-label">Processes</span>
-                    <span className="stat-card-value">{jobs.processes ?? 0}</span>
-                    <span className="stat-card-description">Active workers</span>
-                  </div>
+              <div className="flex flex-col gap-3">
+                <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+                  <Card>
+                    <CardHeader><CardDescription>Ready</CardDescription></CardHeader>
+                    <CardContent className="flex flex-col gap-1">
+                      <p className="text-2xl font-semibold tabular-nums">{jobs.ready ?? 0}</p>
+                      <p className="text-xs text-muted-foreground">Queued for processing</p>
+                      {request_sparkline.length >= 2 && (
+                        <div className="mt-1"><AreaChart data={request_sparkline} width={120} height={32} color="#3b82f6" /></div>
+                      )}
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader><CardDescription>Scheduled</CardDescription></CardHeader>
+                    <CardContent className="flex flex-col gap-1">
+                      <p className="text-2xl font-semibold tabular-nums">{jobs.scheduled ?? 0}</p>
+                      <p className="text-xs text-muted-foreground">Waiting to run</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader><CardDescription>Running</CardDescription></CardHeader>
+                    <CardContent className="flex flex-col gap-1">
+                      <p className="text-2xl font-semibold tabular-nums">{jobs.claimed ?? 0}</p>
+                      <p className="text-xs text-muted-foreground">Currently executing</p>
+                    </CardContent>
+                  </Card>
+                  <Card className={cn(jobs.failed > 0 && "border-red-200")}>
+                    <CardHeader><CardDescription>Failed</CardDescription></CardHeader>
+                    <CardContent className="flex flex-col gap-1">
+                      <p className={cn("text-2xl font-semibold tabular-nums", jobs.failed > 0 && "text-red-500")}>{jobs.failed ?? 0}</p>
+                      <p className="text-xs text-muted-foreground">Requires attention</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader><CardDescription>Processes</CardDescription></CardHeader>
+                    <CardContent className="flex flex-col gap-1">
+                      <p className="text-2xl font-semibold tabular-nums">{jobs.processes ?? 0}</p>
+                      <p className="text-xs text-muted-foreground">Active workers</p>
+                    </CardContent>
+                  </Card>
                 </div>
+
                 {jobs.recent_failures?.length > 0 && (
-                  <div className="failures-section">
-                    <h4 className="failures-title">Recent Failures</h4>
-                    <div className="failures-list">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-sm">Recent Failures</CardTitle>
+                    </CardHeader>
+                    <Separator />
+                    <div className="flex flex-col">
                       {jobs.recent_failures.map((f) => (
-                        <Button key={f.id} variant="ghost" className="failure-row w-full justify-start h-auto py-2 px-3 text-left" onClick={() => openFailure(f)}>
-                          <div className="failure-main">
-                            <span className="failure-job">{f.job_class || "Unknown"}</span>
-                            <span className="failure-time">{formatTimeLong(f.failed_at)}</span>
+                        <Button key={f.id} variant="ghost" className="h-auto w-full justify-start rounded-none px-4 py-3 text-left" onClick={() => openFailure(f)}>
+                          <div className="flex w-full flex-col gap-0.5">
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm font-medium">{f.job_class || "Unknown"}</span>
+                              <span className="text-xs text-muted-foreground">{formatTimeLong(f.failed_at)}</span>
+                            </div>
+                            <span className="text-xs text-red-500">{f.error_class}: {f.error_message}</span>
                           </div>
-                          <span className="failure-err">{f.error_class}: {f.error_message}</span>
                         </Button>
                       ))}
                     </div>
-                  </div>
+                  </Card>
                 )}
-              </>
+              </div>
             )}
           </div>
         </div>
@@ -241,17 +295,15 @@ export default function HealthIndex({
 
       <EwSheet open={sheetOpen} onClose={() => setSheetOpen(false)} title={sheetTitle}>
         {sheetData && (
-          <div className="dl-sheet-detail">
-            <dl className="dl-dl">
-              <div className="dl-dl-row"><dt>Job Class</dt><dd>{sheetData.job_class}</dd></div>
-              <div className="dl-dl-row"><dt>Error Class</dt><dd className="err-text">{sheetData.error_class}</dd></div>
-              <div className="dl-dl-row"><dt>Failed At</dt><dd>{formatTimeLong(sheetData.failed_at)}</dd></div>
-            </dl>
+          <div className="flex flex-col divide-y p-4">
+            <SheetRow label="Job Class">{sheetData.job_class}</SheetRow>
+            <SheetRow label="Error Class"><span className="text-red-500">{sheetData.error_class}</span></SheetRow>
+            <SheetRow label="Failed At">{formatTimeLong(sheetData.failed_at)}</SheetRow>
             {sheetData.error_message && (
-              <>
-                <h4 className="sheet-sub">Error Message</h4>
-                <pre className="sheet-pre">{sheetData.error_message}</pre>
-              </>
+              <div className="pt-3">
+                <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Error Message</p>
+                <pre className="overflow-auto rounded-md bg-muted p-3 text-xs font-mono">{sheetData.error_message}</pre>
+              </div>
             )}
           </div>
         )}

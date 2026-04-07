@@ -1,13 +1,16 @@
 import { useState } from "react";
 import { router, InfiniteScroll } from "@inertiajs/react";
+import { cn } from "@/lib/utils";
 import DaylightLayout from "../DaylightLayout";
 import PeriodSelect from "../PeriodSelect";
 import EwSheet from "../errors/EwSheet";
-import AreaChart from "@/components/charts/AreaChart";
+import { AreaChart } from "@/components/charts/AreaChart";
 import { SortableHeader } from "@/components/ui/sortable-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Separator } from "@/components/ui/separator";
 import { fmt, timeAgo, statusCodeClass } from "@/lib/formatters.js";
 
 export default function HttpRequestsIndex({
@@ -42,109 +45,124 @@ export default function HttpRequestsIndex({
 
   return (
     <DaylightLayout>
-      <div className="dl-page">
-        <div className="dl-page-header">
-          <div>
-            <h1 className="dl-page-title">Outgoing HTTP</h1>
-            <p className="dl-page-subtitle">{total_requests.toLocaleString()} requests in the last {period}</p>
+      <div className="flex flex-col gap-6 p-6">
+
+        {/* Page header */}
+        <div className="flex items-start justify-between">
+          <div className="flex flex-col gap-1">
+            <h1 className="text-xl font-semibold">Outgoing HTTP</h1>
+            <p className="text-sm text-muted-foreground">{total_requests.toLocaleString()} requests in the last {period}</p>
           </div>
-          <div className="dl-period-selector">
-            <PeriodSelect value={period} onChange={changePeriod} />
-          </div>
+          <PeriodSelect value={period} onChange={changePeriod} />
         </div>
 
         {selected_host && host_requests.length > 0 ? (
           <>
-            <Button variant="ghost" size="sm" onClick={goBack} className="mb-2">
+            <Button variant="ghost" size="sm" onClick={goBack} className="self-start">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8l4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
               All hosts
             </Button>
-            <div className="drilldown-header">
-              <h2 className="route-title">{selected_host}</h2>
-              <span className="drilldown-count">{host_requests.length} requests</span>
+            <div className="flex items-center gap-3">
+              <h2 className="font-medium">{selected_host}</h2>
+              <span className="text-sm text-muted-foreground">{host_requests.length} requests</span>
             </div>
             <Card>
-              <div className="dl-data-table">
-                <div className="dl-table-header">
-                  <div className="dl-th" style={{ width: "4.5rem" }}>Status</div>
-                  <div className="dl-th" style={{ flex: 3 }}>URL</div>
-                  <div className="dl-th dl-th-right" style={{ width: "5.5rem" }}>Duration</div>
-                  <div className="dl-th dl-th-right" style={{ width: "5rem" }}>When</div>
-                </div>
-                {host_requests.map((req) => (
-                  <Button key={req.id || `${req.url}${req.occurred_at}`} variant="ghost" className="dl-table-row w-full justify-start h-auto rounded-none" onClick={() => openRequest(req)}>
-                    <div className="dl-td" style={{ width: "4.5rem" }}>
-                      <Badge variant={statusBadgeVariant(req.status_code)}>{req.status_code}</Badge>
-                    </div>
-                    <div className="dl-td td-url" style={{ flex: 3 }}>
-                      <span className="url-text">{req.url}</span>
-                    </div>
-                    <div className={`dl-td dl-td-num${req.duration_ms > 2000 ? " td-danger" : ""}`} style={{ width: "5.5rem" }}>{fmt(req.duration_ms)}</div>
-                    <div className="dl-td dl-td-num" style={{ width: "5rem" }}><span className="time-ago">{timeAgo(req.occurred_at)}</span></div>
-                  </Button>
-                ))}
-              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-20">Status</TableHead>
+                    <TableHead>URL</TableHead>
+                    <TableHead className="w-24 text-right">Duration</TableHead>
+                    <TableHead className="w-20 text-right">When</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {host_requests.map((req) => (
+                    <TableRow key={req.id || `${req.url}${req.occurred_at}`} className="cursor-pointer" onClick={() => openRequest(req)}>
+                      <TableCell><Badge variant={statusBadgeVariant(req.status_code)}>{req.status_code}</Badge></TableCell>
+                      <TableCell className="max-w-0 truncate font-mono text-xs">{req.url}</TableCell>
+                      <TableCell className={cn("text-right tabular-nums", req.duration_ms > 2000 && "text-red-500")}>{fmt(req.duration_ms)}</TableCell>
+                      <TableCell className="text-right tabular-nums text-muted-foreground">{timeAgo(req.occurred_at)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </Card>
           </>
         ) : (
           <>
-            <div className="dl-stat-grid">
-              <div className="stat-card"><span className="stat-card-label">Total Requests</span><span className="stat-card-value">{total_requests.toLocaleString()}</span></div>
-              <div className="stat-card"><span className="stat-card-label">Unique Hosts</span><span className="stat-card-value">{uniqueHosts.toLocaleString()}</span></div>
-              <div className="stat-card"><span className="stat-card-label">Avg Duration</span><span className="stat-card-value">{fmt(avgDuration)}</span></div>
-              <div className="stat-card"><span className="stat-card-label">Error Rate</span><span className={`stat-card-value${totalErrors > 0 ? " stat-danger" : ""}`}>{errorRate}%</span></div>
+            {/* Stat cards */}
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+              <Card>
+                <CardHeader><CardDescription>Total Requests</CardDescription></CardHeader>
+                <CardContent><p className="text-2xl font-semibold tabular-nums">{total_requests.toLocaleString()}</p></CardContent>
+              </Card>
+              <Card>
+                <CardHeader><CardDescription>Unique Hosts</CardDescription></CardHeader>
+                <CardContent><p className="text-2xl font-semibold tabular-nums">{uniqueHosts.toLocaleString()}</p></CardContent>
+              </Card>
+              <Card>
+                <CardHeader><CardDescription>Avg Duration</CardDescription></CardHeader>
+                <CardContent><p className="text-2xl font-semibold tabular-nums">{fmt(avgDuration)}</p></CardContent>
+              </Card>
+              <Card>
+                <CardHeader><CardDescription>Error Rate</CardDescription></CardHeader>
+                <CardContent>
+                  <p className={cn("text-2xl font-semibold tabular-nums", totalErrors > 0 && "text-red-500")}>{errorRate}%</p>
+                </CardContent>
+              </Card>
             </div>
 
             {volume_series.length >= 2 && (
               <Card>
-                <CardHeader className="border-b">
+                <CardHeader>
                   <CardTitle className="text-sm">Request Volume</CardTitle>
-                  <span className="dl-card-subtitle">Over time</span>
+                  <CardDescription>Over time</CardDescription>
                 </CardHeader>
-                <CardContent>
+                <Separator />
+                <CardContent className="pt-4">
                   <AreaChart data={volume_series} width={700} height={80} color="#3b82f6" />
                 </CardContent>
               </Card>
             )}
 
             <Card>
-              <CardHeader className="border-b">
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-sm">Hosts</CardTitle>
-                <span className="dl-card-subtitle">{hosts.length} hosts</span>
+                <CardDescription>{hosts.length} hosts</CardDescription>
               </CardHeader>
-              <div className="dl-data-table">
-                {hosts.length === 0 ? (
-                  <div className="dl-table-empty">
-                    <svg width="24" height="24" fill="none" stroke="#94a3b8" strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-                    <span>No outgoing HTTP requests recorded in this period.</span>
-                  </div>
-                ) : (
-                  <InfiniteScroll data="hosts" itemsElement="#hosts-tbody" startElement="#hosts-thead">
-                    <table className="dl-table">
-                      <thead id="hosts-thead">
-                        <tr>
-                          <th style={{ flex: 2 }}>Host</th>
-                          <th style={{ width: "5rem", textAlign: "right" }}><SortableHeader column="total" label="Requests" sort_column={sort_column} sort_direction={sort_direction} /></th>
-                          <th style={{ width: "5rem", textAlign: "right" }}><SortableHeader column="avg_duration" label="Avg" sort_column={sort_column} sort_direction={sort_direction} /></th>
-                          <th style={{ width: "5rem", textAlign: "right" }}><SortableHeader column="max_duration" label="Max" sort_column={sort_column} sort_direction={sort_direction} /></th>
-                          <th style={{ width: "4.5rem", textAlign: "right" }}>Errors</th>
-                        </tr>
-                      </thead>
-                      <tbody id="hosts-tbody">
-                        {hosts.map((host, i) => (
-                          <tr key={`${host.host}:${i}`} className="row" onClick={() => selectHost(host)} style={{ cursor: "pointer" }}>
-                            <td className="cell" style={{ flex: 2 }}><span className="host-name">{host.host}</span></td>
-                            <td className="cell num" style={{ width: "5rem" }}>{host.total}</td>
-                            <td className="cell num" style={{ width: "5rem" }}>{fmt(host.avg_duration)}</td>
-                            <td className={`cell num${host.max_duration > 5000 ? " td-danger" : ""}`} style={{ width: "5rem" }}>{fmt(host.max_duration)}</td>
-                            <td className={`cell num${host.error_count > 0 ? " td-danger" : ""}`} style={{ width: "4.5rem" }}>{host.error_count || 0}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </InfiniteScroll>
-                )}
-              </div>
+              <Separator />
+              {hosts.length === 0 ? (
+                <div className="flex flex-col items-center gap-2 py-10 text-sm text-muted-foreground">
+                  <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                  <span>No outgoing HTTP requests recorded in this period.</span>
+                </div>
+              ) : (
+                <InfiniteScroll data="hosts" itemsElement="#hosts-tbody" startElement="#hosts-thead">
+                  <Table>
+                    <TableHeader id="hosts-thead">
+                      <TableRow>
+                        <TableHead>Host</TableHead>
+                        <TableHead className="w-20 text-right"><SortableHeader column="total" label="Requests" sort_column={sort_column} sort_direction={sort_direction} /></TableHead>
+                        <TableHead className="w-20 text-right"><SortableHeader column="avg_duration" label="Avg" sort_column={sort_column} sort_direction={sort_direction} /></TableHead>
+                        <TableHead className="w-20 text-right"><SortableHeader column="max_duration" label="Max" sort_column={sort_column} sort_direction={sort_direction} /></TableHead>
+                        <TableHead className="w-20 text-right">Errors</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody id="hosts-tbody">
+                      {hosts.map((host, i) => (
+                        <TableRow key={`${host.host}:${i}`} className="cursor-pointer" onClick={() => selectHost(host)}>
+                          <TableCell className="font-medium">{host.host}</TableCell>
+                          <TableCell className="text-right tabular-nums">{host.total}</TableCell>
+                          <TableCell className="text-right tabular-nums">{fmt(host.avg_duration)}</TableCell>
+                          <TableCell className={cn("text-right tabular-nums", host.max_duration > 5000 && "text-red-500")}>{fmt(host.max_duration)}</TableCell>
+                          <TableCell className={cn("text-right tabular-nums", host.error_count > 0 && "text-red-500")}>{host.error_count || 0}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </InfiniteScroll>
+              )}
             </Card>
           </>
         )}
@@ -152,22 +170,36 @@ export default function HttpRequestsIndex({
 
       <EwSheet open={sheetOpen} onClose={() => setSheetOpen(false)} title="HTTP Request Detail" aiContext={sheetAi}>
         {sheetItem && (
-          <div className="dl-sheet-detail">
-            <dl className="dl-dl">
-              {sheetItem.method && <div className="dl-dl-row"><dt>Method</dt><dd>{sheetItem.method}</dd></div>}
-              <div className="dl-dl-row"><dt>URL</dt><dd className="dl-mono">{sheetItem.url}</dd></div>
-              <div className="dl-dl-row">
-                <dt>Status</dt>
-                <dd><Badge variant={statusBadgeVariant(sheetItem.status_code)}>{sheetItem.status_code}</Badge></dd>
+          <div className="flex flex-col divide-y p-4">
+            {sheetItem.method && (
+              <div className="flex items-center justify-between py-3 text-sm">
+                <span className="text-muted-foreground">Method</span>
+                <span>{sheetItem.method}</span>
               </div>
-              <div className="dl-dl-row"><dt>Duration</dt><dd className={sheetItem.duration_ms > 2000 ? "td-danger" : ""}>{fmt(sheetItem.duration_ms)}</dd></div>
-              {sheetItem.occurred_at && <div className="dl-dl-row"><dt>Time</dt><dd>{new Date(sheetItem.occurred_at).toLocaleString()}</dd></div>}
-            </dl>
+            )}
+            <div className="flex items-center justify-between py-3 text-sm">
+              <span className="text-muted-foreground">URL</span>
+              <span className="font-mono text-xs">{sheetItem.url}</span>
+            </div>
+            <div className="flex items-center justify-between py-3 text-sm">
+              <span className="text-muted-foreground">Status</span>
+              <Badge variant={statusBadgeVariant(sheetItem.status_code)}>{sheetItem.status_code}</Badge>
+            </div>
+            <div className="flex items-center justify-between py-3 text-sm">
+              <span className="text-muted-foreground">Duration</span>
+              <span className={cn(sheetItem.duration_ms > 2000 && "text-red-500")}>{fmt(sheetItem.duration_ms)}</span>
+            </div>
+            {sheetItem.occurred_at && (
+              <div className="flex items-center justify-between py-3 text-sm">
+                <span className="text-muted-foreground">Time</span>
+                <span>{new Date(sheetItem.occurred_at).toLocaleString()}</span>
+              </div>
+            )}
             {sheetItem.response_body && (
-              <>
-                <h4 className="sheet-sub">Response</h4>
-                <pre className="sheet-pre">{sheetItem.response_body}</pre>
-              </>
+              <div className="pt-3">
+                <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Response</p>
+                <pre className="overflow-auto rounded-md bg-muted p-3 text-xs font-mono">{sheetItem.response_body}</pre>
+              </div>
             )}
           </div>
         )}

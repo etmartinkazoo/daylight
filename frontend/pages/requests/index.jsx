@@ -1,16 +1,26 @@
 import { useState, useEffect, useRef } from "react";
 import { router, InfiniteScroll } from "@inertiajs/react";
+import { cn } from "@/lib/utils";
 import DaylightLayout from "../DaylightLayout";
 import PeriodSelect from "../PeriodSelect";
 import EwSheet from "../errors/EwSheet";
-import BarList from "@/components/charts/BarList";
-import InteractiveBarChart from "@/components/charts/InteractiveBarChart";
+import { BarList } from "@/components/charts/BarList";
+import { InteractiveBarChart } from "@/components/charts/InteractiveBarChart";
 import { AutoRefresh } from "@/components/ui/auto-refresh";
 import { ExportButton } from "@/components/ui/export-button";
 import { SortableHeader } from "@/components/ui/sortable-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Separator } from "@/components/ui/separator";
 import { fmt, timeAgo, formatTime, statusCodeClass, methodColor } from "@/lib/formatters.js";
+
+function levelVariant(l) {
+  if (l === "error" || l === "fatal") return "destructive";
+  if (l === "warn") return "secondary";
+  return "outline";
+}
 
 export default function RequestsIndex({
   endpoints = [], route_requests = [], selected_request = null,
@@ -101,13 +111,15 @@ export default function RequestsIndex({
 
   return (
     <DaylightLayout>
-      <div className="dl-page">
-        <div className="dl-page-header">
-          <div>
-            <h1 className="dl-page-title">Requests</h1>
-            <p className="dl-page-subtitle">{total_requests.toLocaleString()} requests in the last {period}</p>
+      <div className="flex flex-col gap-6 p-6">
+
+        {/* Page header */}
+        <div className="flex items-start justify-between">
+          <div className="flex flex-col gap-1">
+            <h1 className="text-xl font-semibold">Requests</h1>
+            <p className="text-sm text-muted-foreground">{total_requests.toLocaleString()} requests in the last {period}</p>
           </div>
-          <div className="header-controls">
+          <div className="flex items-center gap-2">
             <AutoRefresh interval={refreshInterval} onChange={setRefreshInterval} />
             <ExportButton baseUrl={`${base}/requests/export`} />
             <PeriodSelect value={period} onChange={changePeriod} />
@@ -116,72 +128,89 @@ export default function RequestsIndex({
 
         {selected_route && route_requests.length > 0 ? (
           <>
-            <Button variant="ghost" size="sm" onClick={goBack} className="mb-2">
+            <Button variant="ghost" size="sm" onClick={goBack} className="self-start">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8l4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
               All endpoints
             </Button>
-            <div className="drilldown-header">
-              <h2 className="route-title">{selected_route}</h2>
-              <span className="drilldown-count">{route_requests.length} requests</span>
+            <div className="flex items-center gap-3">
+              <h2 className="font-medium">{selected_route}</h2>
+              <span className="text-sm text-muted-foreground">{route_requests.length} requests</span>
             </div>
-            <div className="table-container">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th className="th" style={{ width: "4.5rem" }}>Status</th>
-                    <th className="th" style={{ width: "auto" }}>Path</th>
-                    <th className="th r" style={{ width: "5.5rem" }}>Duration</th>
-                    <th className="th r" style={{ width: "4.5rem" }}>DB</th>
-                    <th className="th r" style={{ width: "3.5rem" }}>Qry</th>
-                    <th className="th" style={{ width: "5rem" }}>IP</th>
-                    <th className="th r" style={{ width: "4.5rem" }}>When</th>
-                  </tr>
-                </thead>
-                <tbody>
+            <Card>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-20">Status</TableHead>
+                    <TableHead>Path</TableHead>
+                    <TableHead className="w-24 text-right">Duration</TableHead>
+                    <TableHead className="w-20 text-right">DB</TableHead>
+                    <TableHead className="w-14 text-right">Qry</TableHead>
+                    <TableHead className="w-24">IP</TableHead>
+                    <TableHead className="w-20 text-right">When</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {route_requests.map((req) => (
-                    <tr key={req.id} className="row" onClick={() => openRequest(req)}>
-                      <td className="cell"><Badge variant={statusBadgeVariant(req.status_code)}>{req.status_code}</Badge></td>
-                      <td className="cell mono-cell">{req.path}</td>
-                      <td className={`cell num${req.duration_ms > 500 ? " slow" : ""}`}>{fmt(req.duration_ms)}</td>
-                      <td className="cell num">{fmt(req.db_duration_ms)}</td>
-                      <td className="cell num">{req.query_count}</td>
-                      <td className="cell"><span className="ip-text">{req.ip}</span></td>
-                      <td className="cell r"><span className="time-ago">{timeAgo(req.occurred_at)}</span></td>
-                    </tr>
+                    <TableRow key={req.id} className="cursor-pointer" onClick={() => openRequest(req)}>
+                      <TableCell><Badge variant={statusBadgeVariant(req.status_code)}>{req.status_code}</Badge></TableCell>
+                      <TableCell className="font-mono text-xs">{req.path}</TableCell>
+                      <TableCell className={cn("text-right tabular-nums", req.duration_ms > 500 && "text-yellow-500")}>{fmt(req.duration_ms)}</TableCell>
+                      <TableCell className="text-right tabular-nums">{fmt(req.db_duration_ms)}</TableCell>
+                      <TableCell className="text-right tabular-nums">{req.query_count}</TableCell>
+                      <TableCell className="font-mono text-xs text-muted-foreground">{req.ip}</TableCell>
+                      <TableCell className="text-right tabular-nums text-muted-foreground">{timeAgo(req.occurred_at)}</TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
-            </div>
+                </TableBody>
+              </Table>
+            </Card>
           </>
         ) : (
           <>
-            <div className="stats-row">
-              <div className="stats-grid stats-grid-3col">
-                <div className="stat-card"><span className="stat-card-label">Total Requests</span><span className="stat-card-value">{statTotal.toLocaleString()}</span></div>
-                <div className="stat-card"><span className="stat-card-label">Avg Response Time</span><span className="stat-card-value">{fmt(statAvg)}</span></div>
-                <div className="stat-card">
-                  <span className="stat-card-label">Error Rate (5xx)</span>
-                  <span className={`stat-card-value${statErrors > 0 ? " stat-danger" : ""}`}>{statErrorRate}%</span>
-                </div>
-                <div className="stat-card">
-                  <span className="stat-card-label">P95 Response Time</span>
-                  <span className={`stat-card-value${statP95 > 500 ? " stat-warn" : ""}`}>{fmt(statP95)}</span>
-                </div>
-                <div className="stat-card">
-                  <span className="stat-card-label">Throughput</span>
-                  <span className="stat-card-value">{throughput_rpm}<span className="stat-unit"> req/min</span></span>
-                </div>
+            {/* Stats + bar list */}
+            <div className="flex items-start gap-4">
+              <div className="grid flex-1 grid-cols-2 gap-3 md:grid-cols-3">
+                <Card>
+                  <CardHeader><CardDescription>Total Requests</CardDescription></CardHeader>
+                  <CardContent><p className="text-2xl font-semibold tabular-nums">{statTotal.toLocaleString()}</p></CardContent>
+                </Card>
+                <Card>
+                  <CardHeader><CardDescription>Avg Response Time</CardDescription></CardHeader>
+                  <CardContent><p className="text-2xl font-semibold tabular-nums">{fmt(statAvg)}</p></CardContent>
+                </Card>
+                <Card>
+                  <CardHeader><CardDescription>Error Rate (5xx)</CardDescription></CardHeader>
+                  <CardContent><p className={cn("text-2xl font-semibold tabular-nums", statErrors > 0 && "text-red-500")}>{statErrorRate}%</p></CardContent>
+                </Card>
+                <Card>
+                  <CardHeader><CardDescription>P95 Response Time</CardDescription></CardHeader>
+                  <CardContent><p className={cn("text-2xl font-semibold tabular-nums", statP95 > 500 && "text-yellow-500")}>{fmt(statP95)}</p></CardContent>
+                </Card>
+                <Card>
+                  <CardHeader><CardDescription>Throughput</CardDescription></CardHeader>
+                  <CardContent>
+                    <p className="text-2xl font-semibold tabular-nums">
+                      {throughput_rpm}
+                      <span className="text-sm font-normal text-muted-foreground"> req/min</span>
+                    </p>
+                  </CardContent>
+                </Card>
                 {apdex != null && (
-                  <div className="stat-card">
-                    <span className="stat-card-label">Apdex</span>
-                    <span className="stat-card-value" style={{ color: apdexColor }}>{apdex.toFixed(2)}</span>
-                  </div>
+                  <Card>
+                    <CardHeader><CardDescription>Apdex</CardDescription></CardHeader>
+                    <CardContent><p className="text-2xl font-semibold tabular-nums" style={{ color: apdexColor }}>{apdex.toFixed(2)}</p></CardContent>
+                  </Card>
                 )}
               </div>
-              <div className="chart-card">
-                <h3 className="chart-title">Slowest Endpoints</h3>
-                <BarList items={topEndpoints} valueFormatter={fmt} color="#6366f1" />
-              </div>
+              {topEndpoints.length > 0 && (
+                <Card className="w-72 flex-none">
+                  <CardHeader><CardTitle className="text-sm">Slowest Endpoints</CardTitle></CardHeader>
+                  <Separator />
+                  <CardContent className="pt-4">
+                    <BarList items={topEndpoints} valueFormatter={fmt} color="#6366f1" />
+                  </CardContent>
+                </Card>
+              )}
             </div>
 
             {(latency_series.length > 0 || throughput_series.length > 0) && (
@@ -198,126 +227,127 @@ export default function RequestsIndex({
               />
             )}
 
-            <div className="table-container">
-              {endpoints.length === 0 ? (
-                <div className="empty-state">
-                  <p className="empty-text">No request data yet</p>
-                  <p className="empty-hint">Requests are tracked automatically once your app starts serving traffic.</p>
-                </div>
-              ) : (
+            {/* Endpoints table */}
+            {endpoints.length === 0 ? (
+              <div className="flex flex-col items-center gap-2 py-10 text-sm text-muted-foreground">
+                <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                <p className="font-medium">No request data yet</p>
+                <p>Requests are tracked automatically once your app starts serving traffic.</p>
+              </div>
+            ) : (
+              <Card>
                 <InfiniteScroll data="endpoints" itemsElement="#endpoints-tbody" startElement="#endpoints-thead">
-                  <table className="table">
-                    <thead id="endpoints-thead">
-                      <tr>
-                        <th className="th" style={{ width: "auto" }}>Route</th>
-                        <th className="th r" style={{ width: "4rem" }}><SortableHeader column="total" label="Reqs" sort_column={sort_column} sort_direction={sort_direction} /></th>
-                        <th className="th r" style={{ width: "5rem" }}><SortableHeader column="avg_duration" label="Avg" sort_column={sort_column} sort_direction={sort_direction} /></th>
-                        <th className="th r" style={{ width: "5rem" }}>P95</th>
-                        <th className="th r" style={{ width: "5rem" }}><SortableHeader column="max_duration" label="Max" sort_column={sort_column} sort_direction={sort_direction} /></th>
-                        <th className="th c" style={{ width: "3.5rem" }}><SortableHeader column="ok_count" label="2xx" sort_column={sort_column} sort_direction={sort_direction} /></th>
-                        <th className="th c" style={{ width: "3.5rem" }}><SortableHeader column="client_error_count" label="4xx" sort_column={sort_column} sort_direction={sort_direction} /></th>
-                        <th className="th c" style={{ width: "3.5rem" }}><SortableHeader column="server_error_count" label="5xx" sort_column={sort_column} sort_direction={sort_direction} /></th>
-                      </tr>
-                    </thead>
-                    <tbody id="endpoints-tbody">
+                  <Table>
+                    <TableHeader id="endpoints-thead">
+                      <TableRow>
+                        <TableHead>Route</TableHead>
+                        <TableHead className="w-16 text-right"><SortableHeader column="total" label="Reqs" sort_column={sort_column} sort_direction={sort_direction} /></TableHead>
+                        <TableHead className="w-20 text-right"><SortableHeader column="avg_duration" label="Avg" sort_column={sort_column} sort_direction={sort_direction} /></TableHead>
+                        <TableHead className="w-20 text-right">P95</TableHead>
+                        <TableHead className="w-20 text-right"><SortableHeader column="max_duration" label="Max" sort_column={sort_column} sort_direction={sort_direction} /></TableHead>
+                        <TableHead className="w-14 text-center"><SortableHeader column="ok_count" label="2xx" sort_column={sort_column} sort_direction={sort_direction} /></TableHead>
+                        <TableHead className="w-14 text-center"><SortableHeader column="client_error_count" label="4xx" sort_column={sort_column} sort_direction={sort_direction} /></TableHead>
+                        <TableHead className="w-14 text-center"><SortableHeader column="server_error_count" label="5xx" sort_column={sort_column} sort_direction={sort_direction} /></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody id="endpoints-tbody">
                       {endpoints.map((ep, i) => (
-                        <tr key={`${ep.route}:${i}`} className="row" onClick={() => selectEndpoint(ep)}>
-                          <td className="cell">
-                            <span className="method-pill" style={{ background: `${methodColor(ep.method)}15`, color: methodColor(ep.method) }}>{ep.method}</span>
-                            <span className="route-path">{ep.route?.replace(/^(GET|POST|PATCH|PUT|DELETE)\s/, "") || ep.route}</span>
-                          </td>
-                          <td className="cell num">{ep.total}</td>
-                          <td className="cell num">{fmt(ep.avg_duration)}</td>
-                          <td className={`cell num${ep.p95_duration > 500 ? " warn" : ""}`}>{fmt(ep.p95_duration)}</td>
-                          <td className={`cell num${ep.max_duration > 1000 ? " slow" : ""}`}>{fmt(ep.max_duration)}</td>
-                          <td className="cell num c">{ep.ok_count}</td>
-                          <td className={`cell num c${ep.client_error_count > 0 ? " warn" : ""}`}>{ep.client_error_count}</td>
-                          <td className={`cell num c${ep.server_error_count > 0 ? " err" : ""}`}>{ep.server_error_count}</td>
-                        </tr>
+                        <TableRow key={`${ep.route}:${i}`} className="cursor-pointer" onClick={() => selectEndpoint(ep)}>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <span className="rounded px-1.5 py-0.5 text-xs font-semibold" style={{ background: `${methodColor(ep.method)}15`, color: methodColor(ep.method) }}>{ep.method}</span>
+                              <span className="font-mono text-xs">{ep.route?.replace(/^(GET|POST|PATCH|PUT|DELETE)\s/, "") || ep.route}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right tabular-nums">{ep.total}</TableCell>
+                          <TableCell className="text-right tabular-nums">{fmt(ep.avg_duration)}</TableCell>
+                          <TableCell className={cn("text-right tabular-nums", ep.p95_duration > 500 && "text-yellow-500")}>{fmt(ep.p95_duration)}</TableCell>
+                          <TableCell className={cn("text-right tabular-nums", ep.max_duration > 1000 && "text-yellow-500")}>{fmt(ep.max_duration)}</TableCell>
+                          <TableCell className="text-center tabular-nums">{ep.ok_count}</TableCell>
+                          <TableCell className={cn("text-center tabular-nums", ep.client_error_count > 0 && "text-yellow-500")}>{ep.client_error_count}</TableCell>
+                          <TableCell className={cn("text-center tabular-nums", ep.server_error_count > 0 && "text-red-500")}>{ep.server_error_count}</TableCell>
+                        </TableRow>
                       ))}
-                    </tbody>
-                  </table>
+                    </TableBody>
+                  </Table>
                 </InfiniteScroll>
-              )}
-            </div>
+              </Card>
+            )}
           </>
         )}
       </div>
 
       <EwSheet open={sheetOpen} onClose={() => setSheetOpen(false)} title={sheetTitle} aiContext={sheetAi}>
         {sheetItem && (
-          <div className="dl-sheet-detail">
+          <div className="flex flex-col divide-y p-4">
             {sheetType === "endpoint" ? (
-              <dl className="dl-dl">
-                <div className="dl-dl-row"><dt>Route</dt><dd>{sheetItem.route}</dd></div>
-                <div className="dl-dl-row"><dt>Requests</dt><dd>{sheetItem.total}</dd></div>
-                <div className="dl-dl-row"><dt>Avg Duration</dt><dd>{fmt(sheetItem.avg_duration)}</dd></div>
-                <div className="dl-dl-row"><dt>P95 Duration</dt><dd className={sheetItem.p95_duration > 500 ? "warn" : ""}>{fmt(sheetItem.p95_duration)}</dd></div>
-                <div className="dl-dl-row"><dt>Max Duration</dt><dd className={sheetItem.max_duration > 1000 ? "slow" : ""}>{fmt(sheetItem.max_duration)}</dd></div>
-                <div className="dl-dl-row"><dt>Avg DB</dt><dd>{fmt(sheetItem.avg_db_duration)}</dd></div>
-                <div className="dl-dl-row"><dt>Avg Queries</dt><dd>{Math.round(sheetItem.avg_query_count)}</dd></div>
-                <div className="dl-dl-row"><dt>2xx</dt><dd>{sheetItem.ok_count}</dd></div>
-                <div className="dl-dl-row"><dt>4xx</dt><dd className={sheetItem.client_error_count > 0 ? "warn" : ""}>{sheetItem.client_error_count}</dd></div>
-                <div className="dl-dl-row"><dt>5xx</dt><dd className={sheetItem.server_error_count > 0 ? "err" : ""}>{sheetItem.server_error_count}</dd></div>
-              </dl>
+              <>
+                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Route</span><span className="font-mono text-xs">{sheetItem.route}</span></div>
+                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Requests</span><span>{sheetItem.total}</span></div>
+                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Avg Duration</span><span>{fmt(sheetItem.avg_duration)}</span></div>
+                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">P95 Duration</span><span className={cn(sheetItem.p95_duration > 500 && "text-yellow-500")}>{fmt(sheetItem.p95_duration)}</span></div>
+                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Max Duration</span><span className={cn(sheetItem.max_duration > 1000 && "text-yellow-500")}>{fmt(sheetItem.max_duration)}</span></div>
+                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Avg DB</span><span>{fmt(sheetItem.avg_db_duration)}</span></div>
+                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Avg Queries</span><span>{Math.round(sheetItem.avg_query_count)}</span></div>
+                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">2xx</span><span>{sheetItem.ok_count}</span></div>
+                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">4xx</span><span className={cn(sheetItem.client_error_count > 0 && "text-yellow-500")}>{sheetItem.client_error_count}</span></div>
+                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">5xx</span><span className={cn(sheetItem.server_error_count > 0 && "text-red-500")}>{sheetItem.server_error_count}</span></div>
+              </>
             ) : (
               <>
-                <dl className="dl-dl">
-                  <div className="dl-dl-row">
-                    <dt>Method</dt>
-                    <dd><span className="method-pill" style={{ background: `${methodColor(sheetItem.method)}15`, color: methodColor(sheetItem.method) }}>{sheetItem.method}</span></dd>
-                  </div>
-                  <div className="dl-dl-row"><dt>Path</dt><dd className="dl-mono">{sheetItem.path}</dd></div>
-                  <div className="dl-dl-row"><dt>Controller</dt><dd>{sheetItem.controller_action}</dd></div>
-                  <div className="dl-dl-row">
-                    <dt>Status</dt>
-                    <dd><Badge variant={statusBadgeVariant(sheetItem.status_code)}>{sheetItem.status_code}</Badge></dd>
-                  </div>
-                  <div className="dl-dl-row"><dt>Duration</dt><dd className={sheetItem.duration_ms > 500 ? "slow" : ""}>{fmt(sheetItem.duration_ms)}</dd></div>
-                  <div className="dl-dl-row"><dt>DB Time</dt><dd>{fmt(sheetItem.db_duration_ms)}</dd></div>
-                  <div className="dl-dl-row"><dt>View Time</dt><dd>{fmt(sheetItem.view_duration_ms)}</dd></div>
-                  <div className="dl-dl-row"><dt>Queries</dt><dd>{sheetItem.query_count}</dd></div>
-                  <div className="dl-dl-row"><dt>IP</dt><dd>{sheetItem.ip}</dd></div>
-                  <div className="dl-dl-row"><dt>Time</dt><dd>{formatTime(sheetItem.occurred_at)}</dd></div>
-                </dl>
+                <div className="flex items-center justify-between py-3 text-sm">
+                  <span className="text-muted-foreground">Method</span>
+                  <span className="rounded px-1.5 py-0.5 text-xs font-semibold" style={{ background: `${methodColor(sheetItem.method)}15`, color: methodColor(sheetItem.method) }}>{sheetItem.method}</span>
+                </div>
+                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Path</span><span className="font-mono text-xs">{sheetItem.path}</span></div>
+                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Controller</span><span>{sheetItem.controller_action}</span></div>
+                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Status</span><Badge variant={statusBadgeVariant(sheetItem.status_code)}>{sheetItem.status_code}</Badge></div>
+                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Duration</span><span className={cn(sheetItem.duration_ms > 500 && "text-yellow-500")}>{fmt(sheetItem.duration_ms)}</span></div>
+                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">DB Time</span><span>{fmt(sheetItem.db_duration_ms)}</span></div>
+                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">View Time</span><span>{fmt(sheetItem.view_duration_ms)}</span></div>
+                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Queries</span><span>{sheetItem.query_count}</span></div>
+                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">IP</span><span className="font-mono text-xs">{sheetItem.ip}</span></div>
+                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Time</span><span>{formatTime(sheetItem.occurred_at)}</span></div>
+
+                {/* Waterfall / query timeline */}
                 {sheetItem.waterfall?.length > 0 ? (
-                  <>
-                    <h4 className="sheet-sub">Request Timeline ({sheetItem.waterfall.length} events)</h4>
-                    <div className="waterfall">
+                  <div className="pt-3">
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Request Timeline ({sheetItem.waterfall.length} events)</p>
+                    <div className="flex flex-col gap-2">
                       {sheetItem.waterfall.map((evt, i) => (
-                        <div key={i} className="wf-item">
-                          <div className={`wf-type-badge wf-type-${evt.type}`}>{evt.type}</div>
-                          <div className="wf-detail">
-                            <span className="wf-text">{evt.detail}</span>
+                        <div key={i} className="flex items-start gap-2 rounded-md bg-muted/50 px-3 py-2 text-xs">
+                          <Badge variant="outline" className="shrink-0 text-xs">{evt.type}</Badge>
+                          <div className="flex flex-1 flex-col gap-0.5">
+                            <span className="font-mono">{evt.detail}</span>
                             {evt.duration_ms && (
-                              <span className={`wf-duration${evt.duration_ms > 100 ? " wf-slow" : ""}`}>{fmt(evt.duration_ms)}</span>
+                              <span className={cn("text-muted-foreground", evt.duration_ms > 100 && "text-yellow-500")}>{fmt(evt.duration_ms)}</span>
                             )}
                           </div>
                           {evt.status_code && <Badge variant={statusBadgeVariant(evt.status_code)}>{evt.status_code}</Badge>}
                           {evt.type === "cache" && <Badge variant={evt.hit ? "default" : "secondary"}>{evt.hit ? "HIT" : "MISS"}</Badge>}
-                          {evt.type === "log" && <Badge variant={levelVariant(evt.level)} className={`wf-log-level wf-level-${evt.level}`}>{evt.level}</Badge>}
+                          {evt.type === "log" && <Badge variant={levelVariant(evt.level)}>{evt.level}</Badge>}
                         </div>
                       ))}
                     </div>
-                  </>
+                  </div>
                 ) : sheetItem.queries?.length > 0 ? (
-                  <>
-                    <h4 className="sheet-sub">Query Timeline ({sheetItem.queries.length})</h4>
-                    <div className="timeline">
+                  <div className="pt-3">
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Query Timeline ({sheetItem.queries.length})</p>
+                    <div className="flex flex-col gap-2">
                       {sheetItem.queries.map((q) => (
-                        <div key={q.id} className="tl-item">
-                          <div className="tl-bar" style={{ width: `${Math.max(Math.min((q.duration_ms / sheetItem.duration_ms) * 100, 100), 3)}%` }} />
-                          <div className="tl-info">
-                            <span className={`tl-duration${q.duration_ms > 100 ? " slow" : ""}`}>{fmt(q.duration_ms)}</span>
-                            <span className="tl-source">{q.source_location || ""}</span>
+                        <div key={q.id} className="flex flex-col gap-1 rounded-md bg-muted/50 p-3">
+                          <div className="flex items-center gap-2">
+                            <div className="h-1.5 rounded-full bg-primary/30" style={{ width: `${Math.max(Math.min((q.duration_ms / sheetItem.duration_ms) * 100, 100), 3)}%` }} />
+                            <span className={cn("text-xs font-semibold tabular-nums", q.duration_ms > 100 && "text-yellow-500")}>{fmt(q.duration_ms)}</span>
+                            <span className="text-xs text-muted-foreground">{q.source_location || ""}</span>
                           </div>
-                          <pre className="tl-sql">{q.sql}</pre>
+                          <pre className="overflow-auto text-xs font-mono text-muted-foreground">{q.sql}</pre>
                         </div>
                       ))}
                     </div>
-                  </>
+                  </div>
                 ) : sheetItem.query_count > 0 ? (
-                  <p className="sheet-hint">{sheetItem.query_count} queries ran but none exceeded the slow threshold.</p>
+                  <p className="py-3 text-sm text-muted-foreground">{sheetItem.query_count} queries ran but none exceeded the slow threshold.</p>
                 ) : null}
               </>
             )}
@@ -326,10 +356,4 @@ export default function RequestsIndex({
       </EwSheet>
     </DaylightLayout>
   );
-}
-
-function levelVariant(l) {
-  if (l === "error" || l === "fatal") return "destructive";
-  if (l === "warn") return "secondary";
-  return "outline";
 }

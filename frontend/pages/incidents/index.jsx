@@ -1,10 +1,11 @@
 import { router, InfiniteScroll } from "@inertiajs/react";
+import { cn } from "@/lib/utils";
 import DaylightLayout from "../DaylightLayout";
 import PeriodSelect from "../PeriodSelect";
 import IncidentCard from "./IncidentCard";
 import { StatCard } from "@/components/ui/stat-card";
 import { TabsNav } from "@/components/ui/tabs-nav";
-import InteractiveBarChart from "@/components/charts/InteractiveBarChart";
+import { InteractiveBarChart } from "@/components/charts/InteractiveBarChart";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Alert02Icon } from "@hugeicons/core-free-icons";
 
@@ -22,16 +23,19 @@ export default function IncidentsIndex({
 
   return (
     <DaylightLayout>
-      <div className="dl-page">
-        <div className="dl-page-header">
-          <div>
-            <h1 className="dl-page-title">Incident Autopsies</h1>
-            <p className="dl-page-subtitle">AI-investigated incidents and anomaly reports</p>
+      <div className="flex flex-col gap-6 p-6">
+
+        {/* Page header */}
+        <div className="flex items-start justify-between">
+          <div className="flex flex-col gap-1">
+            <h1 className="text-xl font-semibold">Incident Autopsies</h1>
+            <p className="text-sm text-muted-foreground">AI-investigated incidents and anomaly reports</p>
           </div>
           <PeriodSelect value={period} onChange={(p) => router.get(`${base}/incidents`, { period: p, status }, { preserveState: true })} />
         </div>
 
-        <div className="stats-cards" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "0.75rem" }}>
+        {/* Stat cards */}
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           <StatCard label="Open" value={counts.open || 0} danger={counts.open > 0} />
           <StatCard label="Investigating" value={counts.investigating || 0} color={counts.investigating > 0 ? "var(--color-warning-dark)" : ""} />
           <StatCard label="Resolved" value={counts.resolved || 0} color="var(--color-success)" />
@@ -51,15 +55,15 @@ export default function IncidentsIndex({
         <TabsNav value={status} tabs={tabs} href={`${base}/incidents`} data={{ period }} counts={counts} />
 
         {incidents.length === 0 ? (
-          <div className="empty">
-            <span><HugeiconsIcon icon={Alert02Icon} size={48} /></span>
-            <p>No incidents found</p>
+          <div className="flex flex-col items-center gap-2 py-10 text-sm text-muted-foreground">
+            <HugeiconsIcon icon={Alert02Icon} size={48} />
+            <p className="font-medium">No incidents found</p>
             <p>No incidents to show for this filter and time period.</p>
           </div>
         ) : (
           <InfiniteScroll data="incidents" itemsElement="#incidents-list" startElement="#incidents-start">
-            <div id="incidents-start" style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-              <div id="incidents-list">
+            <div id="incidents-start" className="flex flex-col gap-3">
+              <div id="incidents-list" className="flex flex-col gap-3">
                 {incidents.map((incident) => (
                   <IncidentCard
                     key={incident.id}

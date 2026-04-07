@@ -1,27 +1,21 @@
 import { useState } from "react";
 import { router, InfiniteScroll } from "@inertiajs/react";
+import { cn } from "@/lib/utils";
 import DaylightLayout from "../DaylightLayout";
 import PeriodSelect from "../PeriodSelect";
 import EwSheet from "../errors/EwSheet";
-import AreaChart from "@/components/charts/AreaChart";
+import { AreaChart } from "@/components/charts/AreaChart";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Separator } from "@/components/ui/separator";
 import { timeAgo } from "@/lib/formatters.js";
 
 function levelVariant(l) {
   if (l === "error" || l === "fatal") return "destructive";
   if (l === "warn") return "secondary";
   return "outline";
-}
-
-function levelClass(l) {
-  if (l === "debug") return "level-debug";
-  if (l === "info") return "level-info";
-  if (l === "warn") return "level-warn";
-  if (l === "error") return "level-error";
-  if (l === "fatal") return "level-fatal";
-  return "level-debug";
 }
 
 export default function LogsIndex({
@@ -52,112 +46,143 @@ export default function LogsIndex({
 
   return (
     <DaylightLayout>
-      <div className="dl-page">
-        <div className="dl-page-header">
-          <div>
-            <h1 className="dl-page-title">Logs</h1>
-            <p className="dl-page-subtitle">Application log entries in the last {period}</p>
+      <div className="flex flex-col gap-6 p-6">
+
+        {/* Page header */}
+        <div className="flex items-start justify-between">
+          <div className="flex flex-col gap-1">
+            <h1 className="text-xl font-semibold">Logs</h1>
+            <p className="text-sm text-muted-foreground">Application log entries in the last {period}</p>
           </div>
-          <div className="dl-period-selector">
-            <PeriodSelect value={period} onChange={changePeriod} />
-          </div>
+          <PeriodSelect value={period} onChange={changePeriod} />
         </div>
 
-        <div className="level-tabs">
+        {/* Level filter tabs */}
+        <div className="flex items-center gap-1">
           {tabs.map((tab) => (
             <Button
               key={tab.label}
               variant={level === tab.value ? "default" : "ghost"}
               size="sm"
-              className="level-tab"
               onClick={() => changeLevel(tab.value)}
             >
               {tab.label}
-              {tab.count > 0 && <span className="tab-count">{tab.count.toLocaleString()}</span>}
+              {tab.count > 0 && (
+                <Badge variant={level === tab.value ? "secondary" : "outline"} className="ml-1.5 text-xs">
+                  {tab.count.toLocaleString()}
+                </Badge>
+              )}
             </Button>
           ))}
         </div>
 
-        <div className="dl-stat-grid">
-          <div className="stat-card"><span className="stat-card-label">Total Logs</span><span className="stat-card-value">{total_logs.toLocaleString()}</span></div>
-          <div className="stat-card"><span className="stat-card-label">Warn</span><span className={`stat-card-value${warnCount > 0 ? " stat-warn" : ""}`}>{warnCount.toLocaleString()}</span></div>
-          <div className="stat-card"><span className="stat-card-label">Error</span><span className={`stat-card-value${errorCount > 0 ? " stat-danger" : ""}`}>{errorCount.toLocaleString()}</span></div>
-          <div className="stat-card"><span className="stat-card-label">Fatal</span><span className={`stat-card-value${fatalCount > 0 ? " stat-fatal" : ""}`}>{fatalCount.toLocaleString()}</span></div>
+        {/* Stat cards */}
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          <Card>
+            <CardHeader><CardDescription>Total Logs</CardDescription></CardHeader>
+            <CardContent><p className="text-2xl font-semibold tabular-nums">{total_logs.toLocaleString()}</p></CardContent>
+          </Card>
+          <Card>
+            <CardHeader><CardDescription>Warn</CardDescription></CardHeader>
+            <CardContent><p className={cn("text-2xl font-semibold tabular-nums", warnCount > 0 && "text-yellow-500")}>{warnCount.toLocaleString()}</p></CardContent>
+          </Card>
+          <Card>
+            <CardHeader><CardDescription>Error</CardDescription></CardHeader>
+            <CardContent><p className={cn("text-2xl font-semibold tabular-nums", errorCount > 0 && "text-red-500")}>{errorCount.toLocaleString()}</p></CardContent>
+          </Card>
+          <Card>
+            <CardHeader><CardDescription>Fatal</CardDescription></CardHeader>
+            <CardContent><p className={cn("text-2xl font-semibold tabular-nums", fatalCount > 0 && "text-red-700")}>{fatalCount.toLocaleString()}</p></CardContent>
+          </Card>
         </div>
 
         {volume_series.length >= 2 && (
           <Card>
-            <CardHeader className="border-b">
+            <CardHeader>
               <CardTitle className="text-sm">Log Volume</CardTitle>
-              <span className="dl-card-subtitle">Over time</span>
+              <CardDescription>Over time</CardDescription>
             </CardHeader>
-            <CardContent>
+            <Separator />
+            <CardContent className="pt-4">
               <AreaChart data={volume_series} width={700} height={80} color="#6366f1" />
             </CardContent>
           </Card>
         )}
 
+        {/* Log entries table */}
         <Card>
-          <CardHeader className="border-b">
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-sm">Log Entries</CardTitle>
-            <span className="dl-card-subtitle">{logs.length} entries</span>
+            <CardDescription>{logs.length} entries</CardDescription>
           </CardHeader>
-          <div className="dl-data-table">
-            {logs.length === 0 ? (
-              <div className="dl-table-empty">
-                <svg width="24" height="24" fill="none" stroke="#94a3b8" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                <span>No log entries recorded in this period.</span>
-              </div>
-            ) : (
-              <InfiniteScroll data="logs" itemsElement="#logs-tbody" startElement="#logs-thead">
-                <table className="dl-table">
-                  <thead id="logs-thead">
-                    <tr>
-                      <th style={{ width: "5rem" }}>Level</th>
-                      <th style={{ flex: 3 }}>Message</th>
-                      <th style={{ flex: 1 }}>Controller</th>
-                      <th style={{ flex: 1 }}>Path</th>
-                      <th style={{ width: "5rem", textAlign: "right" }}>Time</th>
-                    </tr>
-                  </thead>
-                  <tbody id="logs-tbody">
-                    {logs.map((log) => (
-                      <tr
-                        key={log.id || `${log.message}${log.occurred_at}`}
-                        className="row"
-                        onClick={() => openLog(log)}
-                        style={{ cursor: "pointer" }}
-                      >
-                        <td className="cell">
-                          <Badge variant={levelVariant(log.level)} className={levelClass(log.level)}>{log.level}</Badge>
-                        </td>
-                        <td className="cell td-message">
-                          <span className="message-text">{log.message}</span>
-                        </td>
-                        <td className="cell td-source">{log.controller_action || "—"}</td>
-                        <td className="cell td-source">{log.request_path || "—"}</td>
-                        <td className="cell num">{timeAgo(log.occurred_at)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </InfiniteScroll>
-            )}
-          </div>
+          <Separator />
+          {logs.length === 0 ? (
+            <div className="flex flex-col items-center gap-2 py-10 text-sm text-muted-foreground">
+              <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              <span>No log entries recorded in this period.</span>
+            </div>
+          ) : (
+            <InfiniteScroll data="logs" itemsElement="#logs-tbody" startElement="#logs-thead">
+              <Table>
+                <TableHeader id="logs-thead">
+                  <TableRow>
+                    <TableHead className="w-20">Level</TableHead>
+                    <TableHead>Message</TableHead>
+                    <TableHead className="w-40">Controller</TableHead>
+                    <TableHead className="w-40">Path</TableHead>
+                    <TableHead className="w-20 text-right">Time</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody id="logs-tbody">
+                  {logs.map((log) => (
+                    <TableRow
+                      key={log.id || `${log.message}${log.occurred_at}`}
+                      className="cursor-pointer"
+                      onClick={() => openLog(log)}
+                    >
+                      <TableCell><Badge variant={levelVariant(log.level)}>{log.level}</Badge></TableCell>
+                      <TableCell className="max-w-0 truncate text-sm">{log.message}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{log.controller_action || "—"}</TableCell>
+                      <TableCell className="font-mono text-xs text-muted-foreground">{log.request_path || "—"}</TableCell>
+                      <TableCell className="text-right tabular-nums text-muted-foreground">{timeAgo(log.occurred_at)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </InfiniteScroll>
+          )}
         </Card>
       </div>
 
       <EwSheet open={sheetOpen} onClose={() => setSheetOpen(false)} title="Log Detail" aiContext={sheetAi}>
         {sheetItem && (
-          <div className="dl-sheet-detail">
-            <dl className="dl-dl">
-              <div className="dl-dl-row"><dt>Level</dt><dd><Badge variant={levelVariant(sheetItem.level)} className={levelClass(sheetItem.level)}>{sheetItem.level}</Badge></dd></div>
-              {sheetItem.controller_action && <div className="dl-dl-row"><dt>Controller</dt><dd>{sheetItem.controller_action}</dd></div>}
-              {sheetItem.request_path && <div className="dl-dl-row"><dt>Path</dt><dd className="dl-mono">{sheetItem.request_path}</dd></div>}
-              {sheetItem.occurred_at && <div className="dl-dl-row"><dt>Time</dt><dd>{new Date(sheetItem.occurred_at).toLocaleString()}</dd></div>}
-            </dl>
-            <h4 className="sheet-sub">Message</h4>
-            <pre className="sheet-message">{sheetItem.message}</pre>
+          <div className="flex flex-col divide-y p-4">
+            <div className="flex items-center justify-between py-3 text-sm">
+              <span className="text-muted-foreground">Level</span>
+              <Badge variant={levelVariant(sheetItem.level)}>{sheetItem.level}</Badge>
+            </div>
+            {sheetItem.controller_action && (
+              <div className="flex items-center justify-between py-3 text-sm">
+                <span className="text-muted-foreground">Controller</span>
+                <span>{sheetItem.controller_action}</span>
+              </div>
+            )}
+            {sheetItem.request_path && (
+              <div className="flex items-center justify-between py-3 text-sm">
+                <span className="text-muted-foreground">Path</span>
+                <span className="font-mono text-xs">{sheetItem.request_path}</span>
+              </div>
+            )}
+            {sheetItem.occurred_at && (
+              <div className="flex items-center justify-between py-3 text-sm">
+                <span className="text-muted-foreground">Time</span>
+                <span>{new Date(sheetItem.occurred_at).toLocaleString()}</span>
+              </div>
+            )}
+            <div className="pt-3">
+              <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Message</p>
+              <pre className="overflow-auto rounded-md bg-muted p-3 text-xs font-mono whitespace-pre-wrap">{sheetItem.message}</pre>
+            </div>
           </div>
         )}
       </EwSheet>

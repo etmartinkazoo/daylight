@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { router, Link, InfiniteScroll, usePoll } from "@inertiajs/react";
+import { cn } from "@/lib/utils";
 import DaylightLayout from "../DaylightLayout";
 import { StatCard } from "@/components/ui/stat-card";
 import { BulkActions } from "@/components/ui/bulk-actions";
@@ -8,8 +9,10 @@ import { TabsNav } from "@/components/ui/tabs-nav";
 import { SortableHeader } from "@/components/ui/sortable-header";
 import { ExportButton } from "@/components/ui/export-button";
 import { Input } from "@/components/ui/input";
-import DonutChart from "@/components/charts/DonutChart";
-import InteractiveBarChart from "@/components/charts/InteractiveBarChart";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
+import { DonutChart } from "@/components/charts/DonutChart";
+import { InteractiveBarChart } from "@/components/charts/InteractiveBarChart";
 import ErrorSheet from "./ErrorSheet";
 import ErrorRow from "./ErrorRow";
 import { toggleSelect, selectAllIds } from "@/lib/utils.js";
@@ -81,14 +84,17 @@ export default function ErrorsIndex({
 
   return (
     <DaylightLayout>
-      <div className="dl-page">
-        <div className="header-actions">
+      <div className="flex flex-col gap-6 p-6">
+
+        {/* Header actions */}
+        <div className="flex items-center justify-end gap-2">
           <AutoRefresh interval={refreshInterval} onChange={setRefreshInterval} />
           <ExportButton baseUrl={`${base}/errors/export`} />
         </div>
 
-        <div className="stats-row">
-          <div className="stats-cards">
+        {/* Stats row */}
+        <div className="flex items-start gap-4">
+          <div className="flex flex-wrap gap-3 flex-1">
             <StatCard label="Open" value={counts.open || 0} danger={counts.open > 0} />
             <StatCard label="Last 24h" value={counts.last_24h || 0} />
             <StatCard label="Unhandled" value={unhandled_count} danger={unhandled_count > 0} />
@@ -97,9 +103,7 @@ export default function ErrorsIndex({
             <StatCard label="Performance" value={counts.performance || 0} color="var(--color-warning)" />
           </div>
           {totalErrors > 0 && (
-            <div className="stats-donut">
-              <DonutChart segments={donutSegments} size={100} strokeWidth={12} centerValue={String(totalErrors)} centerLabel="total" />
-            </div>
+            <DonutChart segments={donutSegments} size={100} strokeWidth={12} centerValue={String(totalErrors)} centerLabel="total" />
           )}
         </div>
 
@@ -121,13 +125,13 @@ export default function ErrorsIndex({
           counts={counts}
           extra={
             <>
-              <div className="pills">
+              <div className="flex gap-1">
                 <Link href={`${base}/errors`} data={{ status, q: searchVal || undefined }} preserveState>All</Link>
                 <Link href={`${base}/errors`} data={{ status, q: searchVal || undefined, handled: false }} preserveState>
                   Unhandled {unhandled_count > 0 && <span>{unhandled_count}</span>}
                 </Link>
               </div>
-              <div className="pills">
+              <div className="flex gap-1">
                 <Link href={`${base}/errors`} data={{ status, q: searchVal || undefined }} preserveState>All Types</Link>
                 <Link href={`${base}/errors`} data={{ status, q: searchVal || undefined, severity: "performance" }} preserveState>
                   Performance {counts.performance && <span>{counts.performance}</span>}
@@ -137,10 +141,10 @@ export default function ErrorsIndex({
           }
         />
 
-        <form onSubmit={handleSearch} className="search-form">
+        <form onSubmit={handleSearch}>
           <input type="hidden" name="status" value={status} />
           <div className="relative">
-            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
+            <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground">
               <HugeiconsIcon icon={Search01Icon} size={14} />
             </span>
             <Input
@@ -157,46 +161,43 @@ export default function ErrorsIndex({
         <BulkActions count={selectedIds.length} actions={bulkActions} onCancel={() => setSelectedIds([])} />
 
         {errors.length === 0 ? (
-          <div className="empty">
-            <span><HugeiconsIcon icon={CancelCircleIcon} size={48} /></span>
-            <p>No errors found</p>
+          <div className="flex flex-col items-center gap-2 py-10 text-sm text-muted-foreground">
+            <HugeiconsIcon icon={CancelCircleIcon} size={48} />
+            <p className="font-medium">No errors found</p>
             <p>{query ? `No errors matching "${query}"` : "Nothing to show for this filter"}</p>
           </div>
         ) : (
-          <div className="dl-data-table">
-            <InfiniteScroll data="errors" itemsElement="#errors-tbody" startElement="#errors-thead">
-              <table className="dl-table">
-                <thead id="errors-thead">
-                  <tr>
-                    <th style={{ width: "2rem" }}>
-                      <input
-                        type="checkbox"
-                        checked={allSelected}
-                        onChange={() => setSelectedIds(allSelected ? [] : selectAllIds(errors))}
-                      />
-                    </th>
-                    <th><SortableHeader column="error_class" label="Error" sort_column={sort_column} sort_direction={sort_direction} /></th>
-                    <th style={{ textAlign: "center", width: "5rem" }}><SortableHeader column="occurrences_count" label="Count" sort_column={sort_column} sort_direction={sort_direction} /></th>
-                    <th style={{ width: "6.5rem" }}>Status</th>
-                    <th style={{ width: "8rem" }}><SortableHeader column="last_seen_at" label="Last Seen" sort_column={sort_column} sort_direction={sort_direction} /></th>
-                    <th style={{ width: "6rem" }}></th>
-                  </tr>
-                </thead>
-                <tbody id="errors-tbody">
-                  {errors.map((error) => (
-                    <ErrorRow
-                      key={error.id}
-                      error={error}
-                      selected={selectedIds.includes(error.id)}
-                      onSelect={() => setSelectedIds(toggleSelect(selectedIds, error.id))}
-                      onOpen={() => { setSheetError(error); setSheetOpen(true); }}
-                      onStatusChange={updateStatus}
+          <InfiniteScroll data="errors" itemsElement="#errors-tbody" startElement="#errors-thead">
+            <Table>
+              <TableHeader id="errors-thead">
+                <TableRow>
+                  <TableHead className="w-8">
+                    <Checkbox
+                      checked={allSelected}
+                      onCheckedChange={() => setSelectedIds(allSelected ? [] : selectAllIds(errors))}
                     />
-                  ))}
-                </tbody>
-              </table>
-            </InfiniteScroll>
-          </div>
+                  </TableHead>
+                  <TableHead><SortableHeader column="error_class" label="Error" sort_column={sort_column} sort_direction={sort_direction} /></TableHead>
+                  <TableHead className="w-20 text-center"><SortableHeader column="occurrences_count" label="Count" sort_column={sort_column} sort_direction={sort_direction} /></TableHead>
+                  <TableHead className="w-24">Status</TableHead>
+                  <TableHead className="w-32"><SortableHeader column="last_seen_at" label="Last Seen" sort_column={sort_column} sort_direction={sort_direction} /></TableHead>
+                  <TableHead className="w-24" />
+                </TableRow>
+              </TableHeader>
+              <TableBody id="errors-tbody">
+                {errors.map((error) => (
+                  <ErrorRow
+                    key={error.id}
+                    error={error}
+                    selected={selectedIds.includes(error.id)}
+                    onSelect={() => setSelectedIds(toggleSelect(selectedIds, error.id))}
+                    onOpen={() => { setSheetError(error); setSheetOpen(true); }}
+                    onStatusChange={updateStatus}
+                  />
+                ))}
+              </TableBody>
+            </Table>
+          </InfiniteScroll>
         )}
       </div>
 
