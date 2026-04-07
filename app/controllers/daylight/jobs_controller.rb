@@ -1,15 +1,14 @@
 # frozen_string_literal: true
 
-require "csv"
-
 module Daylight
   class JobsController < BaseController
     include Daylight::TimeSeries
+    include Daylight::Exportable
 
     before_action :ensure_connected
 
     def index
-      period = params[:period] || "24h"
+      period = current_period
 
       # Daylight-tracked jobs (from AS::Notifications)
       scope = Database::JobRecord.where("occurred_at > ?", period_start(period))
@@ -34,11 +33,9 @@ module Daylight
         direction: "desc"
       )))
 
-      page = (params[:page] || 1).to_i
-      per_page = 50
-      grouped = grouped.limit(per_page + 1).offset((page - 1) * per_page)
-
-      job_classes = grouped.map do |row|
+      count = scope.group(:job_class).count.length
+      pagy, page_rows = pagy(:offset, grouped, count: count, limit: 50)
+      job_classes = page_rows.map do |row|
         {
           job_class: row.job_class,
           total: row.total,
@@ -50,12 +47,8 @@ module Daylight
         }
       end
 
-      has_more = job_classes.length > per_page
-      job_classes = job_classes.first(per_page)
-
-      # Daylight-tracked failures
-      failures_page = (params[:failures_page] || 1).to_i
-      ew_failures = scope.where(status: "failed").order(occurred_at: :desc).limit(per_page + 1).offset((failures_page - 1) * per_page).map do |j|
+      # Daylight-tracked failures (fixed top 50, no pagination)
+      ew_failures = scope.where(status: "failed").order(occurred_at: :desc).limit(50).map do |j|
         {
           id: j.id,
           source: "daylight",
@@ -67,9 +60,6 @@ module Daylight
           occurred_at: j.occurred_at
         }
       end
-
-      ew_has_more = ew_failures.length > per_page
-      ew_failures = ew_failures.first(per_page)
 
       # Solid Queue failures (authoritative — catches everything including jobs that fail before AS::N fires)
       sq_failures = []
@@ -119,14 +109,10 @@ module Daylight
       # Merge failures: SQ failures are authoritative, deduplicate by time+class
       all_failures = merge_failures(sq_failures, ew_failures)
 
-      render inertia: "daylight/jobs/index", props: {
-        job_classes: job_classes,
+      render inertia: {
+        job_classes: InertiaRails.scroll(pagy) { job_classes },
         failures: all_failures,
         period: period,
-        page: page,
-        has_more: has_more,
-        failures_page: failures_page,
-        failures_has_more: ew_has_more,
         totals: {
           total: scope.count,
           completed: scope.where(status: "completed").count,
@@ -140,23 +126,16 @@ module Daylight
     end
 
     def export
-      period = params[:period] || "24h"
-      scope = Database::JobRecord.where("occurred_at > ?", period_start(period))
-      records = scope.order(occurred_at: :desc)
+      records = Database::JobRecord
+        .where("occurred_at > ?", period_start(current_period))
+        .order(occurred_at: :desc)
 
-      if params[:format] == "json"
-        render json: records.map { |j|
-          { id: j.id, job_class: j.job_class, queue: j.queue, status: j.status, duration_ms: j.duration_ms, error_class: j.error_class, error_message: j.error_message, occurred_at: j.occurred_at }
-        }
-      else
-        csv_data = CSV.generate do |csv|
-          csv << %w[id job_class queue status duration_ms error_class error_message occurred_at]
-          records.each do |j|
-            csv << [j.id, j.job_class, j.queue, j.status, j.duration_ms, j.error_class, j.error_message, j.occurred_at]
-          end
-        end
-        send_data csv_data, filename: "daylight-jobs-#{Date.current}.csv", type: "text/csv"
-      end
+      render_export(
+        records,
+        filename: "daylight-jobs",
+        csv_headers: %w[id job_class queue status duration_ms error_class error_message occurred_at],
+        json_row: ->(j) { { id: j.id, job_class: j.job_class, queue: j.queue, status: j.status, duration_ms: j.duration_ms, error_class: j.error_class, error_message: j.error_message, occurred_at: j.occurred_at } }
+      ) { |j| [j.id, j.job_class, j.queue, j.status, j.duration_ms, j.error_class, j.error_message, j.occurred_at] }
     end
 
     private
@@ -172,14 +151,5 @@ module Daylight
       merged.sort_by { |f| f[:occurred_at] }.reverse.first(50)
     end
 
-    def period_start(period)
-      case period
-      when "1h"  then 1.hour.ago
-      when "24h" then 24.hours.ago
-      when "7d"  then 7.days.ago
-      when "30d" then 30.days.ago
-      else 24.hours.ago
-      end
-    end
   end
 end

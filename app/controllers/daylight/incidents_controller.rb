@@ -6,33 +6,24 @@ module Daylight
 
     before_action :ensure_connected
 
+    def default_period = "7d"
+
     def index
-      period = params[:period] || "7d"
+      period = current_period
       scope = Database::IncidentRecord.all
 
       status = params[:status].presence || "open"
       scope = scope.where(status: status) unless status == "all"
-
-      if params[:incident_type].present?
-        scope = scope.where(incident_type: params[:incident_type])
-      end
+      scope = scope.where(incident_type: params[:incident_type]) if params[:incident_type].present?
 
       scope = scope.order(occurred_at: :desc)
       pagy, incidents = pagy(scope, limit: 50)
 
-      counts = {
-        open: Database::IncidentRecord.where(status: "open").count,
-        investigating: Database::IncidentRecord.where(status: "investigating").count,
-        resolved: Database::IncidentRecord.where(status: "resolved").count,
-        false_alarm: Database::IncidentRecord.where(status: "false_alarm").count,
-        total: Database::IncidentRecord.count
-      }
-
       incident_scope = Database::IncidentRecord.where("occurred_at > ?", period_start(period))
 
-      render inertia: "daylight/incidents/index", props: {
+      render inertia: {
         incidents: InertiaRails.scroll(pagy) { incidents.map { |i| serialize_incident(i) } },
-        counts: counts,
+        counts: Database::IncidentRecord.status_counts,
         status: status,
         period: period,
         incident_series: time_series_buckets(incident_scope, period)
@@ -76,7 +67,7 @@ module Daylight
         end
       end
 
-      render inertia: "daylight/incidents/show", props: {
+      render inertia: {
         incident: serialize_incident(incident),
         related_error: related_error,
         related_deploy: related_deploy
@@ -85,25 +76,15 @@ module Daylight
 
     def update
       incident = Database::IncidentRecord.find(params[:id])
-      if %w[open resolved false_alarm].include?(params[:status])
-        attrs = { status: params[:status] }
-        attrs[:resolved_at] = Time.current if params[:status] == "resolved"
-        incident.update!(attrs)
+      case params[:status]
+      when "resolved"    then incident.resolve!
+      when "open"        then incident.reopen!
+      when "false_alarm" then incident.mark_false_alarm!
       end
       redirect_to incidents_path(status: params[:filter_status] || "open")
     end
 
     private
-
-    def period_start(period)
-      case period
-      when "1h"  then 1.hour.ago
-      when "24h" then 24.hours.ago
-      when "7d"  then 7.days.ago
-      when "30d" then 30.days.ago
-      else 7.days.ago
-      end
-    end
 
     def serialize_incident(i)
       {
@@ -121,38 +102,8 @@ module Daylight
         started_at_ago: i.started_at ? helpers.time_ago_in_words(i.started_at) + " ago" : "",
         resolved_at: i.resolved_at,
         occurred_at: i.occurred_at,
-        ai_context: build_ai_context(i)
+        ai_context: i.ai_context
       }
-    end
-
-    def build_ai_context(incident)
-      lines = [
-        "Incident: #{incident.title}",
-        "Type: #{incident.incident_type}",
-        "Severity: #{incident.severity}",
-        "Status: #{incident.status}",
-        "Started: #{incident.started_at}"
-      ]
-      lines << "Summary: #{incident.summary}" if incident.summary.present?
-      lines << "Investigation: #{incident.investigation}" if incident.investigation.present?
-
-      trigger = (JSON.parse(incident.trigger_data) rescue nil)
-      if trigger.is_a?(Hash) && trigger.any?
-        lines << "\nTrigger Data:"
-        trigger.each { |k, v| lines << "  #{k}: #{v}" }
-      end
-
-      if incident.related_error_id
-        err = Database::ErrorRecord.find_by(id: incident.related_error_id)
-        if err
-          lines << "\nRelated Error: #{err.error_class}"
-          lines << "Error Message: #{err.message}"
-          lines << "Occurrences: #{err.occurrences_count}"
-          lines << "Backtrace:\n#{err.backtrace_summary}" if err.backtrace_summary.present?
-        end
-      end
-
-      lines.join("\n")
     end
   end
 end

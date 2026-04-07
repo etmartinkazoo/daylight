@@ -9,33 +9,18 @@ module Daylight
       scope = Database::SolutionRecord.order(generated_at: :desc)
       scope = scope.where(status: status_filter) unless status_filter == "all"
 
-      page = (params[:page] || 1).to_i
-      per_page = 25
-      all_records = scope.limit(per_page + 1).offset((page - 1) * per_page)
-
-      solutions = all_records.first(per_page).map { |s| serialize_solution(s) }
-      has_more = all_records.length > per_page
-
-      counts = {
-        all: Database::SolutionRecord.count,
-        draft: Database::SolutionRecord.where(status: "draft").count,
-        approved: Database::SolutionRecord.where(status: "approved").count,
-        pushed: Database::SolutionRecord.where(status: "pushed").count,
-        rejected: Database::SolutionRecord.where(status: "rejected").count
-      }
+      pagy, solution_records = pagy(scope, limit: 25)
 
       settings = Database.all_settings
 
-      render inertia: "daylight/solutions/index", props: {
-        solutions: solutions,
-        counts: counts,
+      render inertia: {
+        solutions: InertiaRails.scroll(pagy) { solution_records.map { |s| serialize_solution(s) } },
+        counts: Database::SolutionRecord.status_counts,
         status: status_filter,
-        page: page,
-        has_more: has_more,
         last_scan_at: settings["last_solutions_scan_at"],
         last_scan_count: settings["last_solutions_scan_count"],
         last_scan_error: settings["last_solutions_scan_error"],
-        github_configured: settings["github_api_token"].present? && settings["github_repo_url"].present?
+        github_configured: Database.github_configured?
       }
     end
 
@@ -46,14 +31,13 @@ module Daylight
         .order(:created_at)
         .map { |m| { id: m.id, role: m.role, content: m.content, created_at: m.created_at } }
 
-      source_issue = load_source_issue(solution)
-      settings = Database.all_settings
+      source_issue = solution.source_issue
 
-      render inertia: "daylight/solutions/show", props: {
+      render inertia: {
         solution: serialize_solution(solution),
         messages: messages,
         source_issue: source_issue ? serialize_source_issue(source_issue, solution.source_type) : nil,
-        github_configured: settings["github_api_token"].present? && settings["github_repo_url"].present?
+        github_configured: Database.github_configured?
       }
     end
 
@@ -62,9 +46,10 @@ module Daylight
       new_status = params[:status]
 
       if %w[approved rejected draft].include?(new_status)
-        attrs = { status: new_status }
-        attrs[:approved_at] = Time.current if new_status == "approved"
-        solution.update!(attrs)
+        case new_status
+        when "approved" then solution.approve!
+        else                 solution.update!(status: new_status)
+        end
       end
 
       redirect_to solution_path(solution)
@@ -139,14 +124,6 @@ module Daylight
         pushed_at: s.pushed_at,
         message_count: Database::SolutionMessageRecord.where(solution_id: s.id).count
       }
-    end
-
-    def load_source_issue(solution)
-      if solution.source_type == "performance"
-        Database::PerformanceIssueRecord.find_by(id: solution.source_issue_id)
-      else
-        Database::SecurityIssueRecord.find_by(id: solution.source_issue_id)
-      end
     end
 
     def serialize_source_issue(issue, type)

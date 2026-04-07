@@ -76,6 +76,22 @@ module Daylight
       Database.ensure_connected!
     end
 
+    def default_period = "24h"
+
+    def current_period
+      params[:period].presence || default_period
+    end
+
+    def period_start(period)
+      case period
+      when "1h"  then 1.hour.ago
+      when "24h" then 24.hours.ago
+      when "7d"  then 7.days.ago
+      when "30d" then 30.days.ago
+      else 24.hours.ago
+      end
+    end
+
     def render_daylight_error(exception)
       raise exception if Rails.env.test?
 
@@ -100,11 +116,7 @@ module Daylight
 
     # Check at most once per minute if scans are due
     def maybe_enqueue_performance_scan
-      now = Time.current
-      @@last_scan_check ||= Time.at(0)
-      return if now - @@last_scan_check < 60
-
-      @@last_scan_check = now
+      return unless Rails.cache.write("daylight:scan_check", true, expires_in: 60.seconds, unless_exist: true)
 
       Daylight::PerformanceScanJob.perform_later if Daylight::PerformanceScanner.due?
       Daylight::SecurityScanJob.perform_later if Daylight::SecurityScanner.due?

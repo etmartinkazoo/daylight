@@ -1,15 +1,14 @@
 # frozen_string_literal: true
 
-require "csv"
-
 module Daylight
   class MailEventsController < BaseController
     include Daylight::TimeSeries
+    include Daylight::Exportable
 
     before_action :ensure_connected
 
     def index
-      period = params[:period] || "24h"
+      period = current_period
       scope = Database::MailEventRecord.where("occurred_at > ?", period_start(period))
 
       grouped = scope.group(:mailer_class).select(
@@ -29,11 +28,9 @@ module Daylight
         direction: "desc"
       )))
 
-      page = (params[:page] || 1).to_i
-      per_page = 50
-      grouped = grouped.limit(per_page + 1).offset((page - 1) * per_page)
-
-      mailers = grouped.map do |row|
+      count = scope.group(:mailer_class).count.length
+      pagy, page_rows = pagy(:offset, grouped, count: count, limit: 50)
+      mailers = page_rows.map do |row|
         {
           mailer_class: row.mailer_class,
           total: row.total,
@@ -43,17 +40,12 @@ module Daylight
         }
       end
 
-      has_more = mailers.length > per_page
-      mailers = mailers.first(per_page)
-
-      # Individual events for drill-down by mailer
+      # Individual events for drill-down by mailer (fixed top 50, no pagination)
       events = []
-      events_page = (params[:events_page] || 1).to_i
-      events_has_more = false
       if params[:mailer].present?
         events = scope.where(mailer_class: params[:mailer])
           .order(occurred_at: :desc)
-          .limit(per_page + 1).offset((events_page - 1) * per_page)
+          .limit(50)
           .map do |e|
             {
               id: e.id,
@@ -66,8 +58,6 @@ module Daylight
               occurred_at: e.occurred_at
             }
           end
-        events_has_more = events.length > per_page
-        events = events.first(per_page)
       end
 
       total = scope.count
@@ -75,14 +65,10 @@ module Daylight
       failed = scope.where(status: "failed").count
       delivery_rate = total > 0 ? (delivered.to_f / total * 100).round(1) : 0
 
-      render inertia: "daylight/mail_events/index", props: {
-        mailers: mailers,
+      render inertia: {
+        mailers: InertiaRails.scroll(pagy) { mailers },
         events: events,
         selected_mailer: params[:mailer],
-        page: page,
-        has_more: has_more,
-        events_page: events_page,
-        events_has_more: events_has_more,
         period: period,
         totals: {
           total: total,
@@ -96,35 +82,19 @@ module Daylight
     end
 
     def export
-      period = params[:period] || "24h"
-      scope = Database::MailEventRecord.where("occurred_at > ?", period_start(period))
-      records = scope.order(occurred_at: :desc)
+      records = Database::MailEventRecord
+        .where("occurred_at > ?", period_start(current_period))
+        .order(occurred_at: :desc)
 
-      if params[:format] == "json"
-        render json: records.map { |e|
-          { id: e.id, mailer_class: e.mailer_class, action: e.try(:action), status: e.status, duration_ms: e.duration_ms, recipient: e.try(:recipient), error_message: e.try(:error_message), occurred_at: e.occurred_at }
-        }
-      else
-        csv_data = CSV.generate do |csv|
-          csv << %w[id mailer_class action status duration_ms recipient error_message occurred_at]
-          records.each do |e|
-            csv << [e.id, e.mailer_class, e.try(:action), e.status, e.duration_ms, e.try(:recipient), e.try(:error_message), e.occurred_at]
-          end
-        end
-        send_data csv_data, filename: "daylight-mail-events-#{Date.current}.csv", type: "text/csv"
-      end
+      render_export(
+        records,
+        filename: "daylight-mail-events",
+        csv_headers: %w[id mailer_class action status duration_ms recipient error_message occurred_at],
+        json_row: ->(e) { { id: e.id, mailer_class: e.mailer_class, action: e.try(:action), status: e.status, duration_ms: e.duration_ms, recipient: e.try(:recipient), error_message: e.try(:error_message), occurred_at: e.occurred_at } }
+      ) { |e| [e.id, e.mailer_class, e.try(:action), e.status, e.duration_ms, e.try(:recipient), e.try(:error_message), e.occurred_at] }
     end
 
     private
 
-    def period_start(period)
-      case period
-      when "1h"  then 1.hour.ago
-      when "24h" then 24.hours.ago
-      when "7d"  then 7.days.ago
-      when "30d" then 30.days.ago
-      else 24.hours.ago
-      end
-    end
   end
 end

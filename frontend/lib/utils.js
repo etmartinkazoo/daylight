@@ -1,28 +1,25 @@
-import { router } from "@inertiajs/svelte";
+import { clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+import { router } from "@inertiajs/react";
 
-/**
- * Navigate to a path with params, preserving Inertia state.
- * Strips undefined/empty-string values from params.
- */
+export function cn(...inputs) {
+  return twMerge(clsx(inputs));
+}
+
 export function navigate(path, params = {}) {
-  const cleaned = Object.fromEntries(
-    Object.entries(params).filter(([, v]) => v !== undefined && v !== ""),
+  const cleanedParams = Object.fromEntries(
+    Object.entries(params).filter(([_, v]) => v !== null && v !== undefined && v !== "")
   );
-  router.get(path, cleaned, { preserveState: true });
+  router.get(path, cleanedParams, { preserveState: true, replace: true });
 }
 
-/**
- * Toggle an item in a selection array. Returns a new array.
- */
 export function toggleSelect(selectedIds, id) {
-  return selectedIds.includes(id)
-    ? selectedIds.filter((i) => i !== id)
-    : [...selectedIds, id];
+  if (selectedIds.includes(id)) {
+    return selectedIds.filter((i) => i !== id);
+  }
+  return [...selectedIds, id];
 }
 
-/**
- * Return all IDs from an array of objects.
- */
 export function selectAllIds(items) {
   return items.map((item) => item.id);
 }

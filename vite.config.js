@@ -1,9 +1,10 @@
 import { defineConfig } from "vite";
-import { svelte } from "@sveltejs/vite-plugin-svelte";
+import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 
 export default defineConfig({
-  plugins: [svelte()],
+  plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "frontend"),
@@ -13,7 +14,7 @@ export default defineConfig({
     outDir: "app/assets/builds",
     emptyOutDir: true,
     rollupOptions: {
-      input: "frontend/entrypoints/daylight.js",
+      input: "frontend/entrypoints/daylight.jsx",
       output: {
         entryFileNames: "daylight-[hash].js",
         chunkFileNames: "daylight-chunk-[hash].js",

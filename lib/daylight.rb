@@ -2,12 +2,14 @@
 
 require "daylight/version"
 require "daylight/configuration"
+require "daylight/sanitizer"
 require "daylight/database"
 require "daylight/tracker"
 require "daylight/notifier"
 require "daylight/cleanup"
 require "daylight/anomaly_detector"
 require "daylight/incident_investigator"
+require "daylight/trace_waterfall"
 require "daylight/trace_context"
 require "daylight/sampler"
 require "daylight/middleware/catcher"
@@ -17,7 +19,7 @@ require "daylight/subscribers/job_subscriber"
 require "daylight/subscribers/log_subscriber"
 require "daylight/subscribers/http_subscriber"
 require "daylight/subscribers/cache_subscriber"
-require "daylight/engine/engine" if defined?(Rails)
+require "daylight/engine" if defined?(Rails)
 
 module Daylight
   class << self

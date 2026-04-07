@@ -1,15 +1,14 @@
 # frozen_string_literal: true
 
-require "csv"
-
 module Daylight
   class HttpRequestsController < BaseController
     include Daylight::TimeSeries
+    include Daylight::Exportable
 
     before_action :ensure_connected
 
     def index
-      period = params[:period] || "24h"
+      period = current_period
       scope = Database::HttpRequestRecord.where("occurred_at > ?", period_start(period))
 
       grouped = scope.group(:host).select(
@@ -20,11 +19,9 @@ module Daylight
         "SUM(CASE WHEN status_code >= 400 THEN 1 ELSE 0 END) as error_count"
       ).order(Arel.sql("total DESC"))
 
-      page = (params[:page] || 1).to_i
-      per_page = 50
-      grouped = grouped.limit(per_page + 1).offset((page - 1) * per_page)
-
-      hosts = grouped.map do |row|
+      count = scope.group(:host).count.length
+      pagy, page_rows = pagy(:offset, grouped, count: count, limit: 50)
+      hosts = page_rows.map do |row|
         {
           host: row.host,
           total: row.total,
@@ -34,31 +31,20 @@ module Daylight
         }
       end
 
-      has_more = hosts.length > per_page
-      hosts = hosts.first(per_page)
-
-      # Individual requests when a host is selected
+      # Individual requests when a host is selected (fixed top 50, no pagination)
       host_requests = []
-      host_page = (params[:host_page] || 1).to_i
-      host_has_more = false
       if params[:host].present?
         host_requests = scope
           .where(host: params[:host])
           .order(occurred_at: :desc)
-          .limit(per_page + 1).offset((host_page - 1) * per_page)
+          .limit(50)
           .map { |r| serialize_http_request(r) }
-        host_has_more = host_requests.length > per_page
-        host_requests = host_requests.first(per_page)
       end
 
-      render inertia: "daylight/http_requests/index", props: {
-        hosts: hosts,
+      render inertia: {
+        hosts: InertiaRails.scroll(pagy) { hosts },
         host_requests: host_requests,
         selected_host: params[:host],
-        page: page,
-        has_more: has_more,
-        host_page: host_page,
-        host_has_more: host_has_more,
         period: period,
         total_requests: scope.count,
         volume_series: time_series_buckets(scope, period)
@@ -66,35 +52,19 @@ module Daylight
     end
 
     def export
-      period = params[:period] || "24h"
-      scope = Database::HttpRequestRecord.where("occurred_at > ?", period_start(period))
+      scope = Database::HttpRequestRecord.where("occurred_at > ?", period_start(current_period))
       scope = scope.where(host: params[:host]) if params[:host].present?
       records = scope.order(occurred_at: :desc)
 
-      if params[:format] == "json"
-        render json: records.map { |r| serialize_http_request(r) }
-      else
-        csv_data = CSV.generate do |csv|
-          csv << %w[id method url host status_code duration_ms controller_action request_path occurred_at]
-          records.each do |r|
-            csv << [r.id, r.method, r.url, r.host, r.status_code, r.duration_ms, r.controller_action, r.request_path, r.occurred_at]
-          end
-        end
-        send_data csv_data, filename: "daylight-http-requests-#{Date.current}.csv", type: "text/csv"
-      end
+      render_export(
+        records,
+        filename: "daylight-http-requests",
+        csv_headers: %w[id method url host status_code duration_ms controller_action request_path occurred_at],
+        json_row: method(:serialize_http_request)
+      ) { |r| [r.id, r.method, r.url, r.host, r.status_code, r.duration_ms, r.controller_action, r.request_path, r.occurred_at] }
     end
 
     private
-
-    def period_start(period)
-      case period
-      when "1h"  then 1.hour.ago
-      when "24h" then 24.hours.ago
-      when "7d"  then 7.days.ago
-      when "30d" then 30.days.ago
-      else 24.hours.ago
-      end
-    end
 
     def serialize_http_request(r)
       {

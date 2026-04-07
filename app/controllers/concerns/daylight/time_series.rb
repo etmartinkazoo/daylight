@@ -7,9 +7,9 @@ module Daylight
     private
 
     BUCKET_CONFIG = {
-      "1h"  => { count: 12, seconds: 300,   format: "%Y-%m-%dT%H:%M:00Z", step: 5.minutes },
-      "24h" => { count: 24, seconds: 3600,  format: "%Y-%m-%dT%H:00:00Z", step: 1.hour },
-      "7d"  => { count: 28, seconds: 21600, format: "%Y-%m-%dT%H:00:00Z", step: 6.hours },
+      "1h" => { count: 12, seconds: 300, format: "%Y-%m-%dT%H:%M:00Z", step: 5.minutes },
+      "24h" => { count: 24, seconds: 3600, format: "%Y-%m-%dT%H:00:00Z", step: 1.hour },
+      "7d" => { count: 28, seconds: 21600, format: "%Y-%m-%dT%H:00:00Z", step: 6.hours },
       "30d" => { count: 30, seconds: 86400, format: "%Y-%m-%dT00:00:00Z", step: 1.day }
     }.freeze
 
@@ -20,9 +20,9 @@ module Daylight
 
       # Use strftime to bucket timestamps
       rows = scope
-        .where(column => start_time..)
-        .group(Arel.sql("strftime('#{fmt}', #{column})"))
-        .count
+             .where(column => start_time..)
+             .group(Arel.sql("strftime('#{fmt}', #{column})"))
+             .count
 
       # Build complete series with zero-fills
       build_series(start_time, config[:count], config[:step]) do |bucket_time|
@@ -37,9 +37,9 @@ module Daylight
       fmt = config[:format]
 
       rows = scope
-        .where(time_column => start_time..)
-        .group(Arel.sql("strftime('#{fmt}', #{time_column})"))
-        .average(value_column)
+             .where(time_column => start_time..)
+             .group(Arel.sql("strftime('#{fmt}', #{time_column})"))
+             .average(value_column)
 
       build_series(start_time, config[:count], config[:step]) do |bucket_time|
         key = bucket_time.strftime(fmt.gsub("%", "%"))

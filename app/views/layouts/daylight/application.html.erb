@@ -3,10 +3,19 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Daylight</title>
+  <title inertia>Daylight</title>
   <%= csrf_meta_tags %>
   <%= csp_meta_tag %>
   <%= action_cable_meta_tag if respond_to?(:action_cable_meta_tag) %>
+
+  <script>
+    // Prevent FOUC — apply theme before paint
+    (function() {
+      var saved = localStorage.getItem("daylight-theme");
+      var dark = saved === "dark" || (!saved && window.matchMedia("(prefers-color-scheme: dark)").matches);
+      document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+    })();
+  </script>
 
   <% bundle_path = Daylight::Engine.root.join("app", "assets", "builds") %>
   <% if (css = Dir.glob(bundle_path.join("daylight-*.css")).first) %>

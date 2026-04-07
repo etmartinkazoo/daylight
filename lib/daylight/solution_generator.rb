@@ -102,7 +102,7 @@ module Daylight
         solution = Database::SolutionRecord.find(solution_id)
         raise "No AI API key configured" unless Daylight::AI.configured?
 
-        issue = load_source_issue(solution)
+        issue = solution.source_issue
         return unless issue
 
         result = call_ai(issue, solution.source_type)
@@ -311,14 +311,6 @@ module Daylight
         File.read(full_path).truncate(8000)
       rescue StandardError
         nil
-      end
-
-      def load_source_issue(solution)
-        if solution.source_type == "performance"
-          Database::PerformanceIssueRecord.find_by(id: solution.source_issue_id)
-        else
-          Database::SecurityIssueRecord.find_by(id: solution.source_issue_id)
-        end
       end
 
       def extract_title(issue, source_type)

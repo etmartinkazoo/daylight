@@ -5,6 +5,27 @@ require "json"
 
 module Daylight
   module Tracker
+    # Framework-level noise that should never pollute the error tracker.
+    IGNORED_ERRORS = %w[
+      ActionController::RoutingError
+      AbstractController::ActionNotFound
+      ActionController::MethodNotAllowed
+      ActionController::UnknownHttpMethod
+      ActionController::NotImplemented
+      ActionController::UnknownFormat
+      ActionController::InvalidAuthenticityToken
+      ActionController::InvalidCrossOriginRequest
+      ActionDispatch::Http::Parameters::ParseError
+      ActionController::BadRequest
+      ActionController::ParameterMissing
+      ActiveRecord::RecordNotFound
+      ActionController::UnknownAction
+      ActionDispatch::Http::MimeNegotiation::InvalidType
+      Rack::QueryParser::ParameterTypeError
+      Rack::QueryParser::InvalidParameterError
+      CGI::Session::CookieStore::TamperedWithCookie
+    ].map(&:freeze).freeze
+
     class << self
       def record(error, context: {})
         return if ignored?(error)
@@ -51,7 +72,6 @@ module Daylight
           err.last_seen_at = now
           err.message = error.message.truncate(1000)
           err.status = "open" if err.status == "resolved"
-          # Update handled to false if we ever see it unhandled (worst case wins)
           err.handled = false if handled == false
           err.source = source if source.present?
         end
@@ -64,7 +84,7 @@ module Daylight
         occurrence = Database::OccurrenceRecord.create!(
           error_id: err.id,
           backtrace: backtrace.first(30).join("\n"),
-          context: safe_json(context),
+          context: Sanitizer.sanitize_and_serialize(context),
           request_url: req_url&.to_s&.truncate(2000),
           request_method: req_method,
           user_id: user_id,
@@ -84,17 +104,11 @@ module Daylight
           err.update_column(:affected_users_count, count)
         end
 
-        # Notify on new errors or re-opened errors
-        if was_new || was_reopened
-          Notifier.notify(err) rescue nil
-        end
-
-        # Check for anomalies (rate-limited internally)
-        AnomalyDetector.check! rescue nil
+        ActiveSupport::Notifications.instrument("error_recorded.daylight",
+                                                error: err, was_new: was_new, was_reopened: was_reopened)
 
         err
-      rescue Exception => e # rubocop:disable Lint/RescueException -- must not mask the original error (e.g. SystemStackError from circular context)
-        # Never let error tracking break the app
+      rescue Exception => e # rubocop:disable Lint/RescueException
         Rails.logger.error("[Daylight] Failed to record error: #{e.class}: #{e.message}") if defined?(Rails)
         nil
       end
@@ -102,10 +116,11 @@ module Daylight
       private
 
       def generate_fingerprint(error)
-        # Fingerprint by class + first meaningful backtrace line + message prefix
-        location = clean_backtrace(error).first || "unknown"
-        msg_prefix = error.message.to_s.gsub(/\b\d+\b/, "N").truncate(200) # normalize numbers
-        Digest::SHA256.hexdigest("#{error.class.name}:#{location}:#{msg_prefix}")[0..31]
+        # Stable fingerprint — class + normalized message only.
+        # Deliberately excludes backtrace line numbers so the fingerprint
+        # survives deploys that shift line numbers without changing behavior.
+        msg = error.message.to_s.gsub(/\b\d+\b/, "N").truncate(200)
+        Digest::SHA256.hexdigest("#{error.class.name}:#{msg}")[0..31]
       end
 
       def clean_backtrace(error)
@@ -114,42 +129,19 @@ module Daylight
           .reject { |l| l.include?("/gems/") || l.include?("/ruby/") }
           .map { |l| l.sub(Rails.root.to_s + "/", "") rescue l }
 
-        # If no app lines (error originated in a gem), include the first gem lines
-        # plus any app lines further down the stack
         if app_lines.empty?
-          all_cleaned = lines.first(15).map do |l|
+          return lines.first(15).map do |l|
             l.sub(Rails.root.to_s + "/", "")
-              .sub(%r{.*/gems/}, "gems/") rescue l
+             .sub(%r{.*/gems/}, "gems/") rescue l
           end
-          return all_cleaned
         end
 
         app_lines
       end
 
-      def safe_json(hash)
-        seen = {}.compare_by_identity
-        sanitize = ->(obj) do
-          case obj
-          when Hash
-            return "(circular)" if seen.key?(obj)
-            seen[obj] = true
-            obj.each_with_object({}) { |(k, v), h| h[k] = sanitize.call(v) }
-          when Array
-            return "(circular)" if seen.key?(obj)
-            seen[obj] = true
-            obj.map { |v| sanitize.call(v) }
-          else
-            obj
-          end
-        end
-        sanitize.call(hash).to_json
-      rescue => e
-        { "_daylight_serialization_error" => e.message }.to_json
-      end
-
       def ignored?(error)
-        Daylight.configuration.ignored_exceptions.include?(error.class.name)
+        Daylight.configuration.ignored_exceptions.include?(error.class.name) ||
+          IGNORED_ERRORS.include?(error.class.name)
       end
     end
   end

@@ -1,0 +1,10 @@
+Error Class: <%= @error.error_class %>
+Message: <%= @error.message %>
+Occurrences: <%= @error.occurrences_count %>
+First Seen: <%= @error.first_seen_at %>
+Last Seen: <%= @error.last_seen_at %>
+Status: <%= @error.status %>
+Severity: <%= @error.severity %>
+
+Backtrace:
+<%= @error.backtrace_summary %>

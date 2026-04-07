@@ -1,15 +1,14 @@
 # frozen_string_literal: true
 
-require "csv"
-
 module Daylight
   class ScheduledTasksController < BaseController
     include Daylight::TimeSeries
+    include Daylight::Exportable
 
     before_action :ensure_connected
 
     def index
-      period = params[:period] || "24h"
+      period = current_period
       scope = Database::ScheduledTaskRecord.where("occurred_at > ?", period_start(period))
 
       grouped = scope.group(:task_class).select(
@@ -31,11 +30,9 @@ module Daylight
         direction: "desc"
       )))
 
-      page = (params[:page] || 1).to_i
-      per_page = 50
-      grouped = grouped.limit(per_page + 1).offset((page - 1) * per_page)
-
-      task_classes = grouped.map do |row|
+      count = scope.group(:task_class).count.length
+      pagy, page_rows = pagy(:offset, grouped, count: count, limit: 50)
+      task_classes = page_rows.map do |row|
         {
           task_class: row.task_class,
           total: row.total,
@@ -45,9 +42,6 @@ module Daylight
           max_duration: row.max_duration
         }
       end
-
-      has_more = task_classes.length > per_page
-      task_classes = task_classes.first(per_page)
 
       failures = scope.where(status: "failed").order(occurred_at: :desc).limit(25).map do |t|
         {
@@ -60,12 +54,10 @@ module Daylight
         }
       end
 
-      render inertia: "daylight/scheduled_tasks/index", props: {
-        task_classes: task_classes,
+      render inertia: {
+        task_classes: InertiaRails.scroll(pagy) { task_classes },
         failures: failures,
         period: period,
-        page: page,
-        has_more: has_more,
         totals: {
           total: scope.count,
           completed: scope.where(status: "completed").count,
@@ -78,35 +70,19 @@ module Daylight
     end
 
     def export
-      period = params[:period] || "24h"
-      scope = Database::ScheduledTaskRecord.where("occurred_at > ?", period_start(period))
-      records = scope.order(occurred_at: :desc)
+      records = Database::ScheduledTaskRecord
+        .where("occurred_at > ?", period_start(current_period))
+        .order(occurred_at: :desc)
 
-      if params[:format] == "json"
-        render json: records.map { |t|
-          { id: t.id, task_class: t.task_class, status: t.status, duration_ms: t.duration_ms, error_class: t.error_class, error_message: t.error_message, occurred_at: t.occurred_at }
-        }
-      else
-        csv_data = CSV.generate do |csv|
-          csv << %w[id task_class status duration_ms error_class error_message occurred_at]
-          records.each do |t|
-            csv << [t.id, t.task_class, t.status, t.duration_ms, t.error_class, t.error_message, t.occurred_at]
-          end
-        end
-        send_data csv_data, filename: "daylight-scheduled-tasks-#{Date.current}.csv", type: "text/csv"
-      end
+      render_export(
+        records,
+        filename: "daylight-scheduled-tasks",
+        csv_headers: %w[id task_class status duration_ms error_class error_message occurred_at],
+        json_row: ->(t) { { id: t.id, task_class: t.task_class, status: t.status, duration_ms: t.duration_ms, error_class: t.error_class, error_message: t.error_message, occurred_at: t.occurred_at } }
+      ) { |t| [t.id, t.task_class, t.status, t.duration_ms, t.error_class, t.error_message, t.occurred_at] }
     end
 
     private
 
-    def period_start(period)
-      case period
-      when "1h"  then 1.hour.ago
-      when "24h" then 24.hours.ago
-      when "7d"  then 7.days.ago
-      when "30d" then 30.days.ago
-      else 24.hours.ago
-      end
-    end
   end
 end

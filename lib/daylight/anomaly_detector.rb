@@ -2,6 +2,12 @@
 
 module Daylight
   module AnomalyDetector
+    def self.subscribe!
+      ActiveSupport::Notifications.subscribe("error_recorded.daylight") do
+        check!
+      end
+    end
+
     class << self
       def check!
         return unless Daylight.configuration.anomaly_detection_enabled
@@ -134,11 +140,7 @@ module Daylight
       end
 
       def investigate_async(incident)
-        if defined?(ActiveJob) && ActiveJob::Base.queue_adapter.class.name != "ActiveJob::QueueAdapters::InlineAdapter"
-          Daylight::InvestigateIncidentJob.perform_later(incident.id)
-        else
-          Thread.new { IncidentInvestigator.investigate(incident) }
-        end
+        Daylight::InvestigateIncidentJob.perform_later(incident.id)
       rescue StandardError
         Thread.new { IncidentInvestigator.investigate(incident) }
       end

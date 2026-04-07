@@ -58,7 +58,7 @@ module Daylight
           }
         end
 
-      render inertia: "daylight/settings/index", props: {
+      render inertia: {
         settings: {
           github_repo_url: settings["github_repo_url"] || "",
           github_default_branch: settings["github_default_branch"] || "main",
@@ -90,7 +90,7 @@ module Daylight
           last_security_scan_total_warnings: settings["last_security_scan_total_warnings"],
           last_security_scan_error: settings["last_security_scan_error"],
           bullet_diagnostic_expires_at: settings["bullet_diagnostic_expires_at"],
-          bullet_diagnostic_active: bullet_diagnostic_active?(settings["bullet_diagnostic_expires_at"])
+          bullet_diagnostic_active: Database.bullet_diagnostic_active?
         },
         performance_issues: perf_issues,
         security_issues: sec_issues
@@ -114,26 +114,13 @@ module Daylight
 
       settings_params.each do |key, value|
         next unless allowed_keys.include?(key)
-        # Don't overwrite API keys with the masked placeholder
-        if key == "gemini_api_key"
+        if (ts_key = Database::SENSITIVE_KEYS[key])
           next if value.blank? || value.start_with?("••")
           Database.set_setting(key, value)
-          Database.set_setting("gemini_api_key_saved_at", Time.current.iso8601)
-          next
-        end
-        if key == "anthropic_api_key"
-          next if value.blank? || value.start_with?("••")
+          Database.set_setting(ts_key, Time.current.iso8601)
+        else
           Database.set_setting(key, value)
-          Database.set_setting("anthropic_api_key_saved_at", Time.current.iso8601)
-          next
         end
-        if key == "github_api_token"
-          next if value.blank? || value.start_with?("••")
-          Database.set_setting(key, value)
-          Database.set_setting("github_api_token_saved_at", Time.current.iso8601)
-          next
-        end
-        Database.set_setting(key, value)
       end
 
       flash[:success] = "Settings saved"
@@ -224,13 +211,6 @@ module Daylight
 
     def ensure_connected
       Database.ensure_connected!
-    end
-
-    def bullet_diagnostic_active?(expires_at)
-      return false if expires_at.blank?
-      Time.parse(expires_at) > Time.current
-    rescue StandardError
-      false
     end
   end
 end

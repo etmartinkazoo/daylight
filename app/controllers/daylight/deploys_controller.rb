@@ -11,7 +11,7 @@ module Daylight
         .limit(50)
         .map { |d| serialize_deploy(d) }
 
-      render inertia: "daylight/deploys/index", props: {
+      render inertia: {
         deploys: deploys
       }
     end
