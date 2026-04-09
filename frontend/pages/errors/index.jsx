@@ -193,15 +193,6 @@ export default function ErrorsIndex({
                         sort_direction={sort_direction}
                       />
                     </TableHead>
-                    <TableHead className="w-24">Status</TableHead>
-                    <TableHead className="w-32">
-                      <SortableHeader
-                        column="last_seen_at"
-                        label="Last Seen"
-                        sort_column={sort_column}
-                        sort_direction={sort_direction}
-                      />
-                    </TableHead>
                     <TableHead className="w-24" />
                   </TableRow>
                 </TableHeader>
