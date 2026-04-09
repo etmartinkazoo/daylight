@@ -2,8 +2,6 @@
 
 module Daylight
   class ErrorBatchesController < BaseController
-    include Daylight::ErrorsHelper
-
     before_action :ensure_connected
 
     def create
