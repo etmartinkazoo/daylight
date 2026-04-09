@@ -26,7 +26,6 @@ createInertiaApp({
   },
   defaults: {
     future: {
-      useScriptElementForInitialPage: true,
       useDataInertiaHeadAttribute: true,
     },
   },
