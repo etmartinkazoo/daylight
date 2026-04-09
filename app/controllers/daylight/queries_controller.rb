@@ -16,7 +16,9 @@ module Daylight
         "COUNT(*) as total",
         "ROUND(AVG(duration_ms), 1) as avg_duration",
         "ROUND(MAX(duration_ms), 1) as max_duration",
-        "MIN(source_location) as source_location"
+        "MIN(source_location) as source_location",
+        "MIN(controller_action) as controller_action",
+        "MIN(request_path) as request_path"
       ).order(Arel.sql(sort_order_sql(
         default: "avg_duration",
         allowed: {
@@ -28,14 +30,16 @@ module Daylight
       )))
 
       count = scope.group(:normalized_sql).count.length
-      pagy, page_rows = pagy(:offset, grouped, count: count, limit: 50)
+      pagy, page_rows = pagy(:offset, grouped, count: count, limit: 20)
       queries = page_rows.map do |row|
         {
           normalized_sql: row.normalized_sql,
           total: row.total,
           avg_duration: row.avg_duration,
           max_duration: row.max_duration,
-          source_location: row.source_location
+          source_location: row.source_location,
+          controller_action: row.controller_action,
+          request_path: row.request_path
         }
       end
 

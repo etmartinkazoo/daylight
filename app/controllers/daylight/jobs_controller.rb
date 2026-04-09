@@ -34,7 +34,7 @@ module Daylight
       )))
 
       count = scope.group(:job_class).count.length
-      pagy, page_rows = pagy(:offset, grouped, count: count, limit: 50)
+      pagy, page_rows = pagy(:offset, grouped, count: count, limit: 20)
       job_classes = page_rows.map do |row|
         {
           job_class: row.job_class,

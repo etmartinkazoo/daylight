@@ -125,7 +125,7 @@ module Daylight
         incident = Database::IncidentRecord.create!(
           incident_type: type,
           title: title,
-          status: "investigating",
+          status: "open",
           severity: severity,
           trigger_data: trigger_data.to_json,
           related_error_id: related_error_id,
@@ -134,8 +134,6 @@ module Daylight
           occurred_at: now
         )
 
-        # Kick off AI investigation asynchronously
-        investigate_async(incident)
         incident
       end
 

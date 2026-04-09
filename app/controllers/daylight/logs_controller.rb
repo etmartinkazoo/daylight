@@ -18,7 +18,7 @@ module Daylight
         .group(:level)
         .count
 
-      pagy, log_records = pagy(scope.order(occurred_at: :desc), limit: 50)
+      pagy, log_records = pagy(scope.order(occurred_at: :desc), limit: 20)
 
       render inertia: {
         logs: InertiaRails.scroll(pagy) { LogResource.serialize(log_records) },

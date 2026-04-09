@@ -10,28 +10,54 @@ import { ExportButton } from "@/components/ui/export-button";
 import { SortableHeader } from "@/components/ui/sortable-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
-import { Empty, EmptyHeader, EmptyTitle, EmptyDescription } from "@/components/ui/empty";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyTitle,
+  EmptyDescription,
+} from "@/components/ui/empty";
 import { fmt, timeAgo } from "@/lib/formatters.js";
 import { DetailRow } from "@/components/ui/detail-row";
 import { PageHeader } from "@/components/ui/page-header";
 
 export default function QueriesIndex({
-  queries = [], slowest = [], period = "24h", total_queries = 0,
-  volume_series = [], n_plus_one_requests = [],
-  base_path: base = "/daylight", sort_column = null, sort_direction = null,
+  queries = [],
+  slowest = [],
+  period = "24h",
+  total_queries = 0,
+  volume_series = [],
+  n_plus_one_requests = [],
+  base_path: base = "/daylight",
+  sort_column = null,
+  sort_direction = null,
 }) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sheetItem, setSheetItem] = useState(null);
 
-  const avgDuration = queries.length > 0
-    ? queries.reduce((s, q) => s + (q.avg_duration || 0), 0) / queries.length
-    : 0;
-  const maxDuration = queries.length > 0
-    ? Math.max(...queries.map((q) => q.max_duration || 0))
-    : 0;
+  const avgDuration =
+    queries.length > 0
+      ? queries.reduce((s, q) => s + (q.avg_duration || 0), 0) / queries.length
+      : 0;
+  const maxDuration =
+    queries.length > 0
+      ? Math.max(...queries.map((q) => q.max_duration || 0))
+      : 0;
 
   const topQueries = queries
     .slice()
@@ -42,8 +68,13 @@ export default function QueriesIndex({
       value: q.avg_duration || 0,
     }));
 
-  function changePeriod(p) { router.get(`${base}/queries`, { period: p }, { preserveState: true }); }
-  function openQuery(q) { setSheetItem(q); setSheetOpen(true); }
+  function changePeriod(p) {
+    router.get(`${base}/queries`, { period: p }, { preserveState: true });
+  }
+  function openQuery(q) {
+    setSheetItem(q);
+    setSheetOpen(true);
+  }
 
   const sheetAiContext = sheetItem
     ? `SQL Query (slow):\n${sheetItem.sql || sheetItem.normalized_sql}\n\nDuration: ${fmt(sheetItem.duration_ms || sheetItem.avg_duration)}\nMax: ${fmt(sheetItem.max_duration || sheetItem.duration_ms)}\nSource: ${sheetItem.source_location || "unknown"}\nController: ${sheetItem.controller_action || "N/A"}\nPath: ${sheetItem.request_path || "N/A"}\nOccurrences: ${sheetItem.total || 1}`
@@ -52,37 +83,67 @@ export default function QueriesIndex({
   return (
     <AppLayout>
       <div className="flex flex-col gap-6 p-6">
-
         <PageHeader
           title="Slow Queries"
           description={`Queries exceeding 50ms threshold in the last ${period}`}
-          actions={<><ExportButton baseUrl={`${base}/queries/export`} /><PeriodSelect value={period} onChange={changePeriod} /></>}
+          actions={
+            <>
+              <ExportButton baseUrl={`${base}/queries/export`} />
+              <PeriodSelect value={period} onChange={changePeriod} />
+            </>
+          }
         />
 
         {/* Stat cards */}
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           <Card>
-            <CardHeader><CardDescription>Total Slow Queries</CardDescription></CardHeader>
-            <CardContent><p className="text-2xl font-semibold tabular-nums">{total_queries.toLocaleString()}</p></CardContent>
+            <CardHeader>
+              <CardDescription>Total Slow Queries</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-semibold tabular-nums">
+                {total_queries.toLocaleString()}
+              </p>
+            </CardContent>
           </Card>
           <Card>
-            <CardHeader><CardDescription>Unique Patterns</CardDescription></CardHeader>
-            <CardContent><p className="text-2xl font-semibold tabular-nums">{queries.length.toLocaleString()}</p></CardContent>
+            <CardHeader>
+              <CardDescription>Unique Patterns</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-semibold tabular-nums">
+                {queries.length.toLocaleString()}
+              </p>
+            </CardContent>
           </Card>
           <Card>
-            <CardHeader><CardDescription>Avg Duration</CardDescription></CardHeader>
-            <CardContent><p className="text-2xl font-semibold tabular-nums">{fmt(avgDuration)}</p></CardContent>
+            <CardHeader>
+              <CardDescription>Avg Duration</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-semibold tabular-nums">
+                {fmt(avgDuration)}
+              </p>
+            </CardContent>
           </Card>
           <Card>
-            <CardHeader><CardDescription>Slowest Query</CardDescription></CardHeader>
-            <CardContent><p className="text-2xl font-semibold tabular-nums text-red-500">{fmt(maxDuration)}</p></CardContent>
+            <CardHeader>
+              <CardDescription>Slowest Query</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-semibold tabular-nums text-red-500">
+                {fmt(maxDuration)}
+              </p>
+            </CardContent>
           </Card>
         </div>
 
         {volume_series.length > 0 && (
           <InteractiveBarChart
             data={volume_series.map((d) => ({ ...d, queries: d.v }))}
-            series={[{ key: "queries", label: "Slow Queries", color: "#ef4444" }]}
+            series={[
+              { key: "queries", label: "Slow Queries", color: "#ef4444" },
+            ]}
             title="Query Volume"
             description="Slow queries over time"
             height={250}
@@ -94,8 +155,23 @@ export default function QueriesIndex({
           <Card className="border-yellow-200">
             <CardHeader>
               <div className="flex items-center gap-2">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                <CardTitle className="text-sm text-yellow-600">N+1 Query Suspects</CardTitle>
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#f59e0b"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                  <line x1="12" y1="9" x2="12" y2="13" />
+                  <line x1="12" y1="17" x2="12.01" y2="17" />
+                </svg>
+                <CardTitle className="text-sm text-yellow-600">
+                  N+1 Query Suspects
+                </CardTitle>
               </div>
             </CardHeader>
             <Separator />
@@ -113,13 +189,24 @@ export default function QueriesIndex({
                   <TableRow key={`${np.path}:${i}`}>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Badge variant="secondary" className="text-yellow-600 bg-yellow-50">N+1</Badge>
+                        <Badge
+                          variant="secondary"
+                          className="text-yellow-600 bg-yellow-50"
+                        >
+                          N+1
+                        </Badge>
                         <span className="font-mono text-sm">{np.path}</span>
                       </div>
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{np.controller_action || "—"}</TableCell>
-                    <TableCell className="text-right tabular-nums font-medium">{np.query_count}</TableCell>
-                    <TableCell className="text-right tabular-nums text-muted-foreground">{timeAgo(np.occurred_at)}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {np.controller_action || "—"}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums font-medium">
+                      {np.query_count}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums text-muted-foreground">
+                      {timeAgo(np.occurred_at)}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -136,7 +223,12 @@ export default function QueriesIndex({
             </CardHeader>
             <Separator />
             <CardContent className="pt-4">
-              <BarList items={topQueries} color="#ef4444" valueFormatter={fmt} maxItems={5} />
+              <BarList
+                items={topQueries}
+                color="#ef4444"
+                valueFormatter={fmt}
+                maxItems={5}
+              />
             </CardContent>
           </Card>
         )}
@@ -152,29 +244,89 @@ export default function QueriesIndex({
             <Empty>
               <EmptyHeader>
                 <EmptyTitle>No slow queries</EmptyTitle>
-                <EmptyDescription>No slow queries recorded in this period.</EmptyDescription>
+                <EmptyDescription>
+                  No slow queries recorded in this period.
+                </EmptyDescription>
               </EmptyHeader>
             </Empty>
           ) : (
-            <InfiniteScroll data="queries" itemsElement="#queries-tbody" startElement="#queries-thead">
+            <InfiniteScroll
+              data="queries"
+              itemsElement="#queries-tbody"
+              startElement="#queries-thead"
+            >
               <Table>
                 <TableHeader id="queries-thead">
                   <TableRow>
                     <TableHead>Query</TableHead>
-                    <TableHead className="w-16 text-right"><SortableHeader column="total" label="Count" sort_column={sort_column} sort_direction={sort_direction} /></TableHead>
-                    <TableHead className="w-20 text-right"><SortableHeader column="avg_duration" label="Avg" sort_column={sort_column} sort_direction={sort_direction} /></TableHead>
-                    <TableHead className="w-20 text-right"><SortableHeader column="max_duration" label="Max" sort_column={sort_column} sort_direction={sort_direction} /></TableHead>
+                    <TableHead className="w-40">Controller</TableHead>
+                    <TableHead className="w-16 text-right">
+                      <SortableHeader
+                        column="total"
+                        label="Count"
+                        sort_column={sort_column}
+                        sort_direction={sort_direction}
+                      />
+                    </TableHead>
+                    <TableHead className="w-20 text-right">
+                      <SortableHeader
+                        column="avg_duration"
+                        label="Avg"
+                        sort_column={sort_column}
+                        sort_direction={sort_direction}
+                      />
+                    </TableHead>
+                    <TableHead className="w-20 text-right">
+                      <SortableHeader
+                        column="max_duration"
+                        label="Max"
+                        sort_column={sort_column}
+                        sort_direction={sort_direction}
+                      />
+                    </TableHead>
                     <TableHead className="w-40">Source</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody id="queries-tbody">
                   {queries.map((q, i) => (
-                    <TableRow key={`${q.normalized_sql}:${i}`} className="cursor-pointer" onClick={() => openQuery(q)}>
-                      <TableCell className="max-w-0 truncate font-mono text-sm">{q.normalized_sql}</TableCell>
-                      <TableCell className="text-right tabular-nums">{q.total}</TableCell>
-                      <TableCell className={cn("text-right tabular-nums", q.avg_duration > 200 && "text-red-500")}>{fmt(q.avg_duration)}</TableCell>
-                      <TableCell className={cn("text-right tabular-nums", q.max_duration > 500 && "text-red-500")}>{fmt(q.max_duration)}</TableCell>
-                      <TableCell className="font-mono text-sm text-muted-foreground">{q.source_location || "—"}</TableCell>
+                    <TableRow
+                      key={`${q.normalized_sql}:${i}`}
+                      className="cursor-pointer"
+                      onClick={() => openQuery(q)}
+                    >
+                      <TableCell className="max-w-0 truncate font-mono text-sm">
+                        {q.normalized_sql}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {q.controller_action || "—"}
+                        {q.request_path && (
+                          <div className="font-mono text-xs truncate">
+                            {q.request_path}
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {q.total}
+                      </TableCell>
+                      <TableCell
+                        className={cn(
+                          "text-right tabular-nums",
+                          q.avg_duration > 200 && "text-red-500",
+                        )}
+                      >
+                        {fmt(q.avg_duration)}
+                      </TableCell>
+                      <TableCell
+                        className={cn(
+                          "text-right tabular-nums",
+                          q.max_duration > 500 && "text-red-500",
+                        )}
+                      >
+                        {fmt(q.max_duration)}
+                      </TableCell>
+                      <TableCell className="font-mono text-sm text-muted-foreground">
+                        {q.source_location || "—"}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -187,16 +339,30 @@ export default function QueriesIndex({
         {slowest.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm">Slowest Individual Queries</CardTitle>
+              <CardTitle className="text-sm">
+                Slowest Individual Queries
+              </CardTitle>
               <CardDescription>Recent worst offenders</CardDescription>
             </CardHeader>
             <Separator />
             <div className="flex flex-col divide-y">
               {slowest.map((q) => (
-                <Button key={q.id} variant="ghost" className="h-auto w-full justify-between rounded-none px-4 py-3" onClick={() => { setSheetItem(q); setSheetOpen(true); }}>
+                <Button
+                  key={q.id}
+                  variant="ghost"
+                  className="h-auto w-full justify-between rounded-none px-4 py-3"
+                  onClick={() => {
+                    setSheetItem(q);
+                    setSheetOpen(true);
+                  }}
+                >
                   <div className="flex items-center gap-3">
-                    <span className="font-semibold tabular-nums text-red-500">{fmt(q.duration_ms)}</span>
-                    <span className="font-mono text-sm text-muted-foreground">{q.source_location || "—"}</span>
+                    <span className="font-semibold tabular-nums text-red-500">
+                      {fmt(q.duration_ms)}
+                    </span>
+                    <span className="font-mono text-sm text-muted-foreground">
+                      {q.source_location || "—"}
+                    </span>
                   </div>
                   <div className="flex items-center gap-3 text-sm text-muted-foreground">
                     <span>{q.controller_action}</span>
@@ -209,22 +375,58 @@ export default function QueriesIndex({
         )}
       </div>
 
-      <EwSheet open={sheetOpen} onClose={() => setSheetOpen(false)} title="Query Detail" aiContext={sheetAiContext}>
+      <EwSheet
+        open={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        title="Query Detail"
+        aiContext={sheetAiContext}
+      >
         {sheetItem && (
           <div className="flex flex-col divide-y p-4">
-            {sheetItem.controller_action && <DetailRow label="Controller">{sheetItem.controller_action}</DetailRow>}
-            {sheetItem.request_path && <DetailRow label="Path" valueClassName="font-mono text-sm">{sheetItem.request_path}</DetailRow>}
-            {sheetItem.source_location && <DetailRow label="Source" valueClassName="font-mono text-sm">{sheetItem.source_location}</DetailRow>}
-            <DetailRow label="Duration" valueClassName={cn((sheetItem.duration_ms > 200 || sheetItem.avg_duration > 200) && "text-red-500")}>
+            {sheetItem.controller_action && (
+              <DetailRow label="Controller">
+                {sheetItem.controller_action}
+              </DetailRow>
+            )}
+            {sheetItem.request_path && (
+              <DetailRow label="Path" valueClassName="font-mono text-sm">
+                {sheetItem.request_path}
+              </DetailRow>
+            )}
+            {sheetItem.source_location && (
+              <DetailRow label="Source" valueClassName="font-mono text-sm">
+                {sheetItem.source_location}
+              </DetailRow>
+            )}
+            <DetailRow
+              label="Duration"
+              valueClassName={cn(
+                (sheetItem.duration_ms > 200 || sheetItem.avg_duration > 200) &&
+                  "text-red-500",
+              )}
+            >
               {fmt(sheetItem.duration_ms || sheetItem.avg_duration)}
             </DetailRow>
             {sheetItem.max_duration && (
-              <DetailRow label="Max" valueClassName={cn(sheetItem.max_duration > 500 && "text-red-500")}>{fmt(sheetItem.max_duration)}</DetailRow>
+              <DetailRow
+                label="Max"
+                valueClassName={cn(
+                  sheetItem.max_duration > 500 && "text-red-500",
+                )}
+              >
+                {fmt(sheetItem.max_duration)}
+              </DetailRow>
             )}
-            {sheetItem.total && <DetailRow label="Occurrences">{sheetItem.total}</DetailRow>}
+            {sheetItem.total && (
+              <DetailRow label="Occurrences">{sheetItem.total}</DetailRow>
+            )}
             <div className="pt-3">
-              <p className="mb-1 text-sm font-semibold uppercase tracking-wide text-muted-foreground">SQL</p>
-              <pre className="overflow-auto rounded-md bg-muted p-3 text-sm font-mono">{sheetItem.sql || sheetItem.normalized_sql}</pre>
+              <p className="mb-1 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                SQL
+              </p>
+              <pre className="overflow-auto rounded-md bg-muted p-3 text-sm font-mono">
+                {sheetItem.sql || sheetItem.normalized_sql}
+              </pre>
             </div>
           </div>
         )}

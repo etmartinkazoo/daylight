@@ -20,7 +20,7 @@ module Daylight
       ).order(Arel.sql("total DESC"))
 
       count = scope.group(:host).count.length
-      pagy, page_rows = pagy(:offset, grouped, count: count, limit: 50)
+      pagy, page_rows = pagy(:offset, grouped, count: count, limit: 20)
       hosts = page_rows.map do |row|
         {
           host: row.host,

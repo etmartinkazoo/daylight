@@ -26,7 +26,7 @@ module Daylight
       ).order(Arel.sql("total DESC"))
 
       count = scope.group(group_expr).count.length
-      pagy, page_rows = pagy(:offset, grouped, count: count, limit: 50)
+      pagy, page_rows = pagy(:offset, grouped, count: count, limit: 20)
       key_groups = page_rows.map do |row|
         {
           key_pattern: row.key_pattern,

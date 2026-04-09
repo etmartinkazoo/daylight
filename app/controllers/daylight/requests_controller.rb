@@ -40,7 +40,7 @@ module Daylight
       )))
 
       count = scope.group(group_col).count.length
-      pagy, page_rows = pagy(:offset, grouped, count: count, limit: 50)
+      pagy, page_rows = pagy(:offset, grouped, count: count, limit: 20)
       routes_on_page = page_rows.map(&:route)
 
       # Batch-load all durations for routes on this page to compute P95 without N+1

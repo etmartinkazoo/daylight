@@ -6,12 +6,30 @@ import PeriodSelect from "@/components/PeriodSelect";
 import EwSheet from "@/components/errors/EwSheet";
 import { AreaChart } from "@/components/charts/AreaChart";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
 import { timeAgo } from "@/lib/formatters.js";
-import { Empty, EmptyHeader, EmptyTitle, EmptyDescription } from "@/components/ui/empty";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyTitle,
+  EmptyDescription,
+} from "@/components/ui/empty";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DetailRow } from "@/components/ui/detail-row";
 import { PageHeader } from "@/components/ui/page-header";
 
@@ -22,8 +40,13 @@ function levelVariant(l) {
 }
 
 export default function LogsIndex({
-  logs = [], counts = {}, period = "24h", level = null, total_logs = 0,
-  volume_series = [], base_path: base = "/daylight",
+  logs = [],
+  counts = {},
+  period = "24h",
+  level = null,
+  total_logs = 0,
+  volume_series = [],
+  base_path: base = "/daylight",
 }) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sheetItem, setSheetItem] = useState(null);
@@ -39,9 +62,16 @@ export default function LogsIndex({
     { label: "Fatal", value: "fatal", count: fatalCount },
   ];
 
-  function changePeriod(p) { router.get(`${base}/logs`, { period: p, level }, { preserveState: true }); }
-  function changeLevel(l) { router.get(`${base}/logs`, { period, level: l }, { preserveState: true }); }
-  function openLog(log) { setSheetItem(log); setSheetOpen(true); }
+  function changePeriod(p) {
+    router.get(`${base}/logs`, { period: p, level }, { preserveState: true });
+  }
+  function changeLevel(l) {
+    router.get(`${base}/logs`, { period, level: l }, { preserveState: true });
+  }
+  function openLog(log) {
+    setSheetItem(log);
+    setSheetOpen(true);
+  }
 
   const sheetAi = sheetItem
     ? `Log Entry:\nLevel: ${sheetItem.level}\nMessage: ${sheetItem.message}\nController: ${sheetItem.controller || "N/A"}\nPath: ${sheetItem.path || "N/A"}\nTime: ${sheetItem.occurred_at || "N/A"}`
@@ -50,7 +80,6 @@ export default function LogsIndex({
   return (
     <AppLayout>
       <div className="flex flex-col gap-6 p-6">
-
         <PageHeader
           title="Logs"
           description={`Application log entries in the last ${period}`}
@@ -58,34 +87,80 @@ export default function LogsIndex({
         />
 
         {/* Level filter */}
-        <ToggleGroup type="single" value={level ?? "all"} onValueChange={(v) => changeLevel(v === "all" ? null : v)}>
-          {tabs.map((tab) => (
-            <ToggleGroupItem key={tab.label} value={tab.value ?? "all"}>
-              {tab.label}
-              {tab.count > 0 && (
-                <Badge variant="secondary" className="ml-1.5 text-sm">{tab.count.toLocaleString()}</Badge>
-              )}
-            </ToggleGroupItem>
-          ))}
-        </ToggleGroup>
+        <Tabs
+          value={level ?? "all"}
+          onValueChange={(v) => changeLevel(v === "all" ? null : v)}
+        >
+          <TabsList>
+            {tabs.map((tab) => (
+              <TabsTrigger key={tab.label} value={tab.value ?? "all"}>
+                {tab.label}
+                {tab.count > 0 && (
+                  <Badge variant="secondary" className="ml-1.5 text-sm">
+                    {tab.count.toLocaleString()}
+                  </Badge>
+                )}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
 
         {/* Stat cards */}
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           <Card>
-            <CardHeader><CardDescription>Total Logs</CardDescription></CardHeader>
-            <CardContent><p className="text-2xl font-semibold tabular-nums">{total_logs.toLocaleString()}</p></CardContent>
+            <CardHeader>
+              <CardDescription>Total Logs</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-semibold tabular-nums">
+                {total_logs.toLocaleString()}
+              </p>
+            </CardContent>
           </Card>
           <Card>
-            <CardHeader><CardDescription>Warn</CardDescription></CardHeader>
-            <CardContent><p className={cn("text-2xl font-semibold tabular-nums", warnCount > 0 && "text-amber-500")}>{warnCount.toLocaleString()}</p></CardContent>
+            <CardHeader>
+              <CardDescription>Warn</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p
+                className={cn(
+                  "text-2xl font-semibold tabular-nums",
+                  warnCount > 0 && "text-amber-500",
+                )}
+              >
+                {warnCount.toLocaleString()}
+              </p>
+            </CardContent>
           </Card>
           <Card>
-            <CardHeader><CardDescription>Error</CardDescription></CardHeader>
-            <CardContent><p className={cn("text-2xl font-semibold tabular-nums", errorCount > 0 && "text-destructive")}>{errorCount.toLocaleString()}</p></CardContent>
+            <CardHeader>
+              <CardDescription>Error</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p
+                className={cn(
+                  "text-2xl font-semibold tabular-nums",
+                  errorCount > 0 && "text-destructive",
+                )}
+              >
+                {errorCount.toLocaleString()}
+              </p>
+            </CardContent>
           </Card>
           <Card>
-            <CardHeader><CardDescription>Fatal</CardDescription></CardHeader>
-            <CardContent><p className={cn("text-2xl font-semibold tabular-nums", fatalCount > 0 && "text-destructive")}>{fatalCount.toLocaleString()}</p></CardContent>
+            <CardHeader>
+              <CardDescription>Fatal</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p
+                className={cn(
+                  "text-2xl font-semibold tabular-nums",
+                  fatalCount > 0 && "text-destructive",
+                )}
+              >
+                {fatalCount.toLocaleString()}
+              </p>
+            </CardContent>
           </Card>
         </div>
 
@@ -97,7 +172,12 @@ export default function LogsIndex({
             </CardHeader>
             <Separator />
             <CardContent className="pt-4">
-              <AreaChart data={volume_series} width={700} height={80} color="#6366f1" />
+              <AreaChart
+                data={volume_series}
+                width={700}
+                height={80}
+                color="#6366f1"
+              />
             </CardContent>
           </Card>
         )}
@@ -113,11 +193,17 @@ export default function LogsIndex({
             <Empty>
               <EmptyHeader>
                 <EmptyTitle>No log entries</EmptyTitle>
-                <EmptyDescription>No log entries recorded in this period.</EmptyDescription>
+                <EmptyDescription>
+                  No log entries recorded in this period.
+                </EmptyDescription>
               </EmptyHeader>
             </Empty>
           ) : (
-            <InfiniteScroll data="logs" itemsElement="#logs-tbody" startElement="#logs-thead">
+            <InfiniteScroll
+              data="logs"
+              itemsElement="#logs-tbody"
+              startElement="#logs-thead"
+            >
               <Table>
                 <TableHeader id="logs-thead">
                   <TableRow>
@@ -135,11 +221,23 @@ export default function LogsIndex({
                       className="cursor-pointer"
                       onClick={() => openLog(log)}
                     >
-                      <TableCell><Badge variant={levelVariant(log.level)}>{log.level}</Badge></TableCell>
-                      <TableCell className="max-w-0 truncate text-sm">{log.message}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{log.controller_action || "—"}</TableCell>
-                      <TableCell className="font-mono text-sm text-muted-foreground">{log.request_path || "—"}</TableCell>
-                      <TableCell className="text-right tabular-nums text-muted-foreground">{timeAgo(log.occurred_at)}</TableCell>
+                      <TableCell>
+                        <Badge variant={levelVariant(log.level)}>
+                          {log.level}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="max-w-0 truncate text-sm">
+                        {log.message}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {log.controller_action || "—"}
+                      </TableCell>
+                      <TableCell className="font-mono text-sm text-muted-foreground">
+                        {log.request_path || "—"}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums text-muted-foreground">
+                        {timeAgo(log.occurred_at)}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -149,16 +247,41 @@ export default function LogsIndex({
         </Card>
       </div>
 
-      <EwSheet open={sheetOpen} onClose={() => setSheetOpen(false)} title="Log Detail" aiContext={sheetAi}>
+      <EwSheet
+        open={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        title="Log Detail"
+        aiContext={sheetAi}
+      >
         {sheetItem && (
           <div className="flex flex-col divide-y p-4">
-            <DetailRow label="Level"><Badge variant={levelVariant(sheetItem.level)}>{sheetItem.level}</Badge></DetailRow>
-            {sheetItem.controller_action && <DetailRow label="Controller">{sheetItem.controller_action}</DetailRow>}
-            {sheetItem.request_path && <DetailRow label="Path" valueClassName="font-mono text-sm">{sheetItem.request_path}</DetailRow>}
-            {sheetItem.occurred_at && <DetailRow label="Time">{new Date(sheetItem.occurred_at).toLocaleString()}</DetailRow>}
+            <DetailRow label="Level">
+              <Badge variant={levelVariant(sheetItem.level)}>
+                {sheetItem.level}
+              </Badge>
+            </DetailRow>
+            {sheetItem.controller_action && (
+              <DetailRow label="Controller">
+                {sheetItem.controller_action}
+              </DetailRow>
+            )}
+            {sheetItem.request_path && (
+              <DetailRow label="Path" valueClassName="font-mono text-sm">
+                {sheetItem.request_path}
+              </DetailRow>
+            )}
+            {sheetItem.occurred_at && (
+              <DetailRow label="Time">
+                {new Date(sheetItem.occurred_at).toLocaleString()}
+              </DetailRow>
+            )}
             <div className="pt-3">
-              <p className="mb-1 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Message</p>
-              <pre className="overflow-auto rounded-md bg-muted p-3 text-sm font-mono whitespace-pre-wrap">{sheetItem.message}</pre>
+              <p className="mb-1 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                Message
+              </p>
+              <pre className="overflow-auto rounded-md bg-muted p-3 text-sm font-mono whitespace-pre-wrap">
+                {sheetItem.message}
+              </pre>
             </div>
           </div>
         )}

@@ -9,7 +9,7 @@ module Daylight
       scope = Database::SolutionRecord.order(generated_at: :desc)
       scope = scope.where(status: status_filter) unless status_filter == "all"
 
-      pagy, solution_records = pagy(scope, limit: 25)
+      pagy, solution_records = pagy(scope, limit: 20)
 
       settings = Database.all_settings
 
