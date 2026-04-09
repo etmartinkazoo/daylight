@@ -12,11 +12,16 @@ module Daylight
     end
 
     def source_issue
-      if source_type == "performance"
+      case source_type
+      when "performance"
         PerformanceIssueRecord.find_by(id: source_issue_id)
-      else
+      when "security"
         SecurityIssueRecord.find_by(id: source_issue_id)
       end
+    end
+
+    def incident
+      IncidentRecord.find_by(id: incident_id) if incident_id
     end
   end
 end

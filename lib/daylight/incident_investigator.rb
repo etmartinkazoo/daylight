@@ -25,7 +25,7 @@ module Daylight
 
         begin
           response = Timeout.timeout(INVESTIGATION_TIMEOUT) do
-            chat = Daylight::AI.chat
+            chat = Daylight::AI.chat(model: "claude-sonnet-4-6")
             chat.ask(prompt)
           end
 
@@ -86,7 +86,7 @@ module Daylight
             {
               error_class: err&.error_class,
               message: err&.message&.truncate(300),
-              backtrace: err&.backtrace_summary&.truncate(500),
+              backtrace: err&.backtrace_summary,
               request_url: o.request_url,
               occurred_at: o.occurred_at
             }
@@ -116,8 +116,11 @@ module Daylight
 
         # Git diff (if deploy found and GitHub configured)
         if ctx[:deploys].any?
-          ctx[:git_diff] = fetch_git_diff(ctx[:deploys].first)
+          ctx[:git_diff] = fetch_git_diff(ctx[:deploys])
         end
+
+        # Source files from backtrace + deploy diff
+        ctx[:source_files] = fetch_source_files(ctx, ctx[:deploys].first)
 
         # Affected requests (sample from window)
         ctx[:requests] = Database::RequestRecord
@@ -197,7 +200,14 @@ module Daylight
         end
 
         if ctx[:git_diff].present?
-          prompt += "\n## Git Diff (most recent deploy)\n```diff\n#{ctx[:git_diff].truncate(3000)}\n```\n"
+          prompt += "\n## Git Diff (deploy range)\n```diff\n#{ctx[:git_diff].truncate(5000)}\n```\n"
+        end
+
+        if ctx[:source_files]&.any?
+          prompt += "\n## Source Files\n"
+          ctx[:source_files].each do |path, content|
+            prompt += "\n### `#{path}`\n```ruby\n#{content}\n```\n"
+          end
         end
 
         if ctx[:requests].any?
@@ -226,33 +236,148 @@ module Daylight
         prompt
       end
 
-      def fetch_git_diff(deploy)
-        return nil unless deploy[:git_sha].present?
+      def fetch_git_diff(deploys)
+        return nil unless deploys.any? && deploys.first[:git_sha].present?
 
+        owner, repo = github_owner_repo
+        return nil unless owner
+
+        head_sha = deploys.first[:git_sha]
+
+        # Compare between the latest and previous deploy to capture all changes
+        if deploys.size >= 2 && deploys.second[:git_sha].present?
+          base_sha = deploys.second[:git_sha]
+          path = "/repos/#{owner}/#{repo}/compare/#{base_sha}...#{head_sha}"
+        else
+          # Only one deploy — fall back to single commit diff
+          path = "/repos/#{owner}/#{repo}/commits/#{head_sha}"
+        end
+
+        github_request(path, accept: "application/vnd.github.v3.diff")
+      rescue StandardError
+        nil
+      end
+
+      # Fetch source files from GitHub at the deploy SHA.
+      # Prioritizes backtrace files, then files changed in the deploy diff.
+      def fetch_source_files(ctx, deploy)
+        owner, repo = github_owner_repo
+        return {} unless owner
+
+        sha = deploy&.dig(:git_sha)
+        return {} unless sha.present?
+
+        file_paths = []
+
+        # 1. Extract file paths from primary error backtrace (top frames)
+        if ctx[:primary_error]&.dig(:backtrace).present?
+          file_paths.concat(extract_app_paths(ctx[:primary_error][:backtrace]))
+        end
+
+        # 2. Extract from recent occurrence backtraces
+        ctx[:errors]&.each do |e|
+          file_paths.concat(extract_app_paths(e[:backtrace].to_s))
+        end
+
+        # 3. Extract changed files from the git diff
+        if ctx[:git_diff].present?
+          ctx[:git_diff].scan(%r{^diff --git a/(\S+) b/\S+}m).flatten.each do |path|
+            file_paths << path if path.match?(%r{^(app|lib|config)/.*\.rb$})
+          end
+        end
+
+        file_paths = file_paths.uniq.first(10)
+        return {} if file_paths.empty?
+
+        source_files = {}
+        total_chars = 0
+        max_total = 25_000
+        max_per_file = 4_000
+
+        file_paths.each do |path|
+          break if total_chars >= max_total
+
+          content = fetch_file_content(owner, repo, path, sha)
+          next unless content
+
+          truncated = truncate_around_relevant_lines(content, path, ctx, max_per_file)
+          source_files[path] = truncated
+          total_chars += truncated.length
+        end
+
+        source_files
+      rescue StandardError
+        {}
+      end
+
+      def extract_app_paths(backtrace_text)
+        backtrace_text.to_s.scan(%r{((?:app|lib|config)/\S+\.rb)(?::\d+)?}).flatten.uniq
+      end
+
+      # Truncate file content, keeping lines around backtrace references when possible
+      def truncate_around_relevant_lines(content, path, ctx, max_chars)
+        lines = content.lines
+        return content if content.length <= max_chars
+
+        # Find line numbers referenced in backtraces for this file
+        referenced_lines = []
+        backtrace_text = ctx.dig(:primary_error, :backtrace).to_s
+        backtrace_text.scan(/#{Regexp.escape(path)}:(\d+)/).flatten.each do |ln|
+          referenced_lines << ln.to_i
+        end
+
+        if referenced_lines.any?
+          # Extract windows around referenced lines
+          chunks = []
+          referenced_lines.sort.each do |line_num|
+            window_start = [line_num - 30, 1].max
+            window_end = [line_num + 30, lines.length].min
+            chunks << "# ... (line #{window_start})\n"
+            chunks.concat(lines[(window_start - 1)..(window_end - 1)] || [])
+          end
+          chunks.join.truncate(max_chars)
+        else
+          # No specific line references — take the beginning of the file
+          content.truncate(max_chars)
+        end
+      end
+
+      def fetch_file_content(owner, repo, path, sha)
+        response = github_request(
+          "/repos/#{owner}/#{repo}/contents/#{path}?ref=#{sha}",
+          accept: "application/vnd.github.v3.raw"
+        )
+        response.presence
+      rescue StandardError
+        nil
+      end
+
+      def github_owner_repo
         github_url = Database.get_setting("github_repo_url")
-        return nil unless github_url.present?
+        return [nil, nil] unless github_url.present?
 
-        # Extract owner/repo from URL
         match = github_url.match(%r{github\.com[:/]([^/]+)/([^/.]+)})
-        return nil unless match
+        return [nil, nil] unless match
 
-        owner, repo = match[1], match[2]
-        sha = deploy[:git_sha]
+        [match[1], match[2]]
+      end
 
-        uri = URI("https://api.github.com/repos/#{owner}/#{repo}/commits/#{sha}")
+      def github_request(path, accept: "application/vnd.github.v3+json")
+        token = Database.get_setting("github_api_token")
+        uri = URI("https://api.github.com#{path}")
+
         req = Net::HTTP::Get.new(uri)
-        req["Accept"] = "application/vnd.github.v3.diff"
+        req["Accept"] = accept
         req["User-Agent"] = "Daylight"
+        req["Authorization"] = "Bearer #{token}" if token.present?
 
         http = Net::HTTP.new(uri.host, uri.port)
         http.use_ssl = true
         http.open_timeout = 5
-        http.read_timeout = 10
+        http.read_timeout = 15
 
         response = http.request(req)
         response.code == "200" ? response.body : nil
-      rescue StandardError
-        nil
       end
     end
   end
