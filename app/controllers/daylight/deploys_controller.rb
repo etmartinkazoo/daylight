@@ -6,10 +6,9 @@ module Daylight
     skip_before_action :verify_authenticity_token, only: [:create]
 
     def index
-      deploys = Database::DeployRecord
-        .order(deployed_at: :desc)
-        .limit(50)
-        .map { |d| serialize_deploy(d) }
+      deploys = DeployResource.serialize(
+        Database::DeployRecord.order(deployed_at: :desc).limit(50)
+      )
 
       render inertia: {
         deploys: deploys
@@ -33,16 +32,5 @@ module Daylight
     end
 
     private
-
-    def serialize_deploy(d)
-      {
-        id: d.id,
-        version: d.version,
-        description: d.description,
-        git_sha: d.git_sha,
-        deployed_by: d.deployed_by,
-        deployed_at: d.deployed_at
-      }
-    end
   end
 end

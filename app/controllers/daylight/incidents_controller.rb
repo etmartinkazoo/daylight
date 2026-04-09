@@ -22,7 +22,7 @@ module Daylight
       incident_scope = Database::IncidentRecord.where("occurred_at > ?", period_start(period))
 
       render inertia: {
-        incidents: InertiaRails.scroll(pagy) { incidents.map { |i| serialize_incident(i) } },
+        incidents: InertiaRails.scroll(pagy) { IncidentResource.serialize(incidents) },
         counts: Database::IncidentRecord.status_counts,
         status: status,
         period: period,
@@ -33,42 +33,18 @@ module Daylight
     def show
       incident = Database::IncidentRecord.find(params[:id])
 
-      # Load related error if present
-      related_error = nil
-      if incident.related_error_id
+      related_error = if incident.related_error_id
         err = Database::ErrorRecord.find_by(id: incident.related_error_id)
-        if err
-          related_error = {
-            id: err.id,
-            error_class: err.error_class,
-            message: err.message,
-            backtrace_summary: err.backtrace_summary,
-            occurrences_count: err.occurrences_count,
-            status: err.status,
-            affected_users_count: err.try(:affected_users_count) || 0,
-            first_seen_at: err.first_seen_at,
-            last_seen_at: err.last_seen_at
-          }
-        end
+        err ? ErrorResource.serialize(err) : nil
       end
 
-      # Load related deploy if present
-      related_deploy = nil
-      if incident.related_deploy_id
+      related_deploy = if incident.related_deploy_id
         dep = Database::DeployRecord.find_by(id: incident.related_deploy_id)
-        if dep
-          related_deploy = {
-            id: dep.id,
-            version: dep.version,
-            git_sha: dep.git_sha,
-            deployed_by: dep.deployed_by,
-            deployed_at: dep.deployed_at
-          }
-        end
+        dep ? DeployResource.serialize(dep) : nil
       end
 
       render inertia: {
-        incident: serialize_incident(incident),
+        incident: IncidentResource.serialize(incident),
         related_error: related_error,
         related_deploy: related_deploy
       }
@@ -85,25 +61,5 @@ module Daylight
     end
 
     private
-
-    def serialize_incident(i)
-      {
-        id: i.id,
-        incident_type: i.incident_type,
-        title: i.title,
-        summary: i.summary,
-        status: i.status,
-        severity: i.severity,
-        trigger_data: (JSON.parse(i.trigger_data) rescue {}),
-        investigation: i.investigation,
-        related_error_id: i.related_error_id,
-        related_deploy_id: i.related_deploy_id,
-        started_at: i.started_at,
-        started_at_ago: i.started_at ? helpers.time_ago_in_words(i.started_at) + " ago" : "",
-        resolved_at: i.resolved_at,
-        occurred_at: i.occurred_at,
-        ai_context: i.ai_context
-      }
-    end
   end
 end

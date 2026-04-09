@@ -1,7 +1,8 @@
 import { useState } from "react";
+import { Link } from "@inertiajs/react";
 import { cn } from "@/lib/utils";
-import DaylightLayout from "../DaylightLayout";
-import EwSheet from "../errors/EwSheet";
+import AppLayout from "@/layouts/app-layout";
+import EwSheet from "@/components/errors/EwSheet";
 import { DonutChart } from "@/components/charts/DonutChart";
 import { AreaChart } from "@/components/charts/AreaChart";
 import { formatTimeLong } from "@/lib/formatters.js";
@@ -9,15 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-
-function SheetRow({ label, children, className }) {
-  return (
-    <div className={cn("flex items-center justify-between py-3 text-sm", className)}>
-      <span className="text-muted-foreground">{label}</span>
-      <span>{children}</span>
-    </div>
-  );
-}
+import { DetailRow } from "@/components/ui/detail-row";
+import { PageHeader } from "@/components/ui/page-header";
 
 export default function HealthIndex({
   system = {}, database = {}, jobs = {}, errors = {}, apdex = null,
@@ -40,14 +34,13 @@ export default function HealthIndex({
   ];
 
   return (
-    <DaylightLayout>
+    <AppLayout>
       <div className="flex flex-col gap-6 p-6">
 
-        {/* Page header */}
-        <div>
-          <h1 className="text-xl font-semibold">Health Dashboard</h1>
-          <p className="mt-1 text-sm text-muted-foreground">System monitoring and performance overview</p>
-        </div>
+        <PageHeader
+          title="Health Dashboard"
+          description="System monitoring and performance overview"
+        />
 
         {/* System Info */}
         <div className="flex flex-col gap-3">
@@ -153,7 +146,7 @@ export default function HealthIndex({
             <Card style={{ borderColor: `${apdexColor}30` }}>
               <CardContent className="flex items-center gap-4 pt-6">
                 <div className="flex flex-col">
-                  <span className="text-xs text-muted-foreground uppercase tracking-wide">Apdex Score</span>
+                  <span className="text-sm text-muted-foreground uppercase tracking-wide">Apdex Score</span>
                   <span className="text-3xl font-bold tabular-nums" style={{ color: apdexColor }}>{apdex.toFixed(2)}</span>
                   <span className="text-sm text-muted-foreground">
                     {apdex >= 0.9 ? "Excellent" : apdex >= 0.7 ? "Fair" : "Poor"}
@@ -178,7 +171,7 @@ export default function HealthIndex({
                   <CardHeader><CardDescription>Open Errors</CardDescription></CardHeader>
                   <CardContent className="flex flex-col gap-1">
                     <p className={cn("text-2xl font-semibold tabular-nums", errors.open > 0 && "text-red-500")}>{errors.open ?? 0}</p>
-                    <p className="text-xs text-muted-foreground">Currently unresolved</p>
+                    <p className="text-sm text-muted-foreground">Currently unresolved</p>
                     {error_sparkline.length >= 2 && (
                       <div className="mt-1"><AreaChart data={error_sparkline} width={120} height={32} color="#ef4444" /></div>
                     )}
@@ -188,27 +181,27 @@ export default function HealthIndex({
                   <CardHeader><CardDescription>Last 24 Hours</CardDescription></CardHeader>
                   <CardContent className="flex flex-col gap-1">
                     <p className="text-2xl font-semibold tabular-nums">{errors.last_24h ?? 0}</p>
-                    <p className="text-xs text-muted-foreground">Errors in past day</p>
+                    <p className="text-sm text-muted-foreground">Errors in past day</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardHeader><CardDescription>Last 7 Days</CardDescription></CardHeader>
                   <CardContent className="flex flex-col gap-1">
                     <p className="text-2xl font-semibold tabular-nums">{errors.last_7d ?? 0}</p>
-                    <p className="text-xs text-muted-foreground">Errors in past week</p>
+                    <p className="text-sm text-muted-foreground">Errors in past week</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardHeader><CardDescription>Total Errors</CardDescription></CardHeader>
                   <CardContent className="flex flex-col gap-1">
                     <p className="text-2xl font-semibold tabular-nums">{errors.total ?? 0}</p>
-                    <p className="text-xs text-muted-foreground">All time</p>
+                    <p className="text-sm text-muted-foreground">All time</p>
                   </CardContent>
                 </Card>
               </div>
             </div>
             {errors.open > 0 && (
-              <a href={`${base}/errors`} className="text-sm text-primary hover:underline">View open errors →</a>
+              <Link href={`${base}/errors`} className="text-sm text-primary hover:underline">View open errors →</Link>
             )}
           </div>
 
@@ -230,7 +223,7 @@ export default function HealthIndex({
                     <CardHeader><CardDescription>Ready</CardDescription></CardHeader>
                     <CardContent className="flex flex-col gap-1">
                       <p className="text-2xl font-semibold tabular-nums">{jobs.ready ?? 0}</p>
-                      <p className="text-xs text-muted-foreground">Queued for processing</p>
+                      <p className="text-sm text-muted-foreground">Queued for processing</p>
                       {request_sparkline.length >= 2 && (
                         <div className="mt-1"><AreaChart data={request_sparkline} width={120} height={32} color="#3b82f6" /></div>
                       )}
@@ -240,28 +233,28 @@ export default function HealthIndex({
                     <CardHeader><CardDescription>Scheduled</CardDescription></CardHeader>
                     <CardContent className="flex flex-col gap-1">
                       <p className="text-2xl font-semibold tabular-nums">{jobs.scheduled ?? 0}</p>
-                      <p className="text-xs text-muted-foreground">Waiting to run</p>
+                      <p className="text-sm text-muted-foreground">Waiting to run</p>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardHeader><CardDescription>Running</CardDescription></CardHeader>
                     <CardContent className="flex flex-col gap-1">
                       <p className="text-2xl font-semibold tabular-nums">{jobs.claimed ?? 0}</p>
-                      <p className="text-xs text-muted-foreground">Currently executing</p>
+                      <p className="text-sm text-muted-foreground">Currently executing</p>
                     </CardContent>
                   </Card>
                   <Card className={cn(jobs.failed > 0 && "border-red-200")}>
                     <CardHeader><CardDescription>Failed</CardDescription></CardHeader>
                     <CardContent className="flex flex-col gap-1">
                       <p className={cn("text-2xl font-semibold tabular-nums", jobs.failed > 0 && "text-red-500")}>{jobs.failed ?? 0}</p>
-                      <p className="text-xs text-muted-foreground">Requires attention</p>
+                      <p className="text-sm text-muted-foreground">Requires attention</p>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardHeader><CardDescription>Processes</CardDescription></CardHeader>
                     <CardContent className="flex flex-col gap-1">
                       <p className="text-2xl font-semibold tabular-nums">{jobs.processes ?? 0}</p>
-                      <p className="text-xs text-muted-foreground">Active workers</p>
+                      <p className="text-sm text-muted-foreground">Active workers</p>
                     </CardContent>
                   </Card>
                 </div>
@@ -278,9 +271,9 @@ export default function HealthIndex({
                           <div className="flex w-full flex-col gap-0.5">
                             <div className="flex items-center justify-between">
                               <span className="text-sm font-medium">{f.job_class || "Unknown"}</span>
-                              <span className="text-xs text-muted-foreground">{formatTimeLong(f.failed_at)}</span>
+                              <span className="text-sm text-muted-foreground">{formatTimeLong(f.failed_at)}</span>
                             </div>
-                            <span className="text-xs text-red-500">{f.error_class}: {f.error_message}</span>
+                            <span className="text-sm text-red-500">{f.error_class}: {f.error_message}</span>
                           </div>
                         </Button>
                       ))}
@@ -296,18 +289,18 @@ export default function HealthIndex({
       <EwSheet open={sheetOpen} onClose={() => setSheetOpen(false)} title={sheetTitle}>
         {sheetData && (
           <div className="flex flex-col divide-y p-4">
-            <SheetRow label="Job Class">{sheetData.job_class}</SheetRow>
-            <SheetRow label="Error Class"><span className="text-red-500">{sheetData.error_class}</span></SheetRow>
-            <SheetRow label="Failed At">{formatTimeLong(sheetData.failed_at)}</SheetRow>
+            <DetailRow label="Job Class">{sheetData.job_class}</DetailRow>
+            <DetailRow label="Error Class" valueClassName="text-red-500">{sheetData.error_class}</DetailRow>
+            <DetailRow label="Failed At">{formatTimeLong(sheetData.failed_at)}</DetailRow>
             {sheetData.error_message && (
               <div className="pt-3">
-                <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Error Message</p>
-                <pre className="overflow-auto rounded-md bg-muted p-3 text-xs font-mono">{sheetData.error_message}</pre>
+                <p className="mb-1 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Error Message</p>
+                <pre className="overflow-auto rounded-md bg-muted p-3 text-sm font-mono">{sheetData.error_message}</pre>
               </div>
             )}
           </div>
         )}
       </EwSheet>
-    </DaylightLayout>
+    </AppLayout>
   );
 }

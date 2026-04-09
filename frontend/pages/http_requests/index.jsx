@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { router, InfiniteScroll } from "@inertiajs/react";
 import { cn } from "@/lib/utils";
-import DaylightLayout from "../DaylightLayout";
-import PeriodSelect from "../PeriodSelect";
-import EwSheet from "../errors/EwSheet";
+import AppLayout from "@/layouts/app-layout";
+import PeriodSelect from "@/components/PeriodSelect";
+import EwSheet from "@/components/errors/EwSheet";
 import { AreaChart } from "@/components/charts/AreaChart";
 import { SortableHeader } from "@/components/ui/sortable-header";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,10 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
+import { Empty, EmptyHeader, EmptyTitle, EmptyDescription } from "@/components/ui/empty";
 import { fmt, timeAgo, statusCodeClass } from "@/lib/formatters.js";
+import { DetailRow } from "@/components/ui/detail-row";
+import { PageHeader } from "@/components/ui/page-header";
 
 export default function HttpRequestsIndex({
   hosts = [], host_requests = [], selected_host = null,
@@ -44,17 +47,14 @@ export default function HttpRequestsIndex({
   }
 
   return (
-    <DaylightLayout>
+    <AppLayout>
       <div className="flex flex-col gap-6 p-6">
 
-        {/* Page header */}
-        <div className="flex items-start justify-between">
-          <div className="flex flex-col gap-1">
-            <h1 className="text-xl font-semibold">Outgoing HTTP</h1>
-            <p className="text-sm text-muted-foreground">{total_requests.toLocaleString()} requests in the last {period}</p>
-          </div>
-          <PeriodSelect value={period} onChange={changePeriod} />
-        </div>
+        <PageHeader
+          title="Outgoing HTTP"
+          description={`${total_requests.toLocaleString()} requests in the last ${period}`}
+          actions={<PeriodSelect value={period} onChange={changePeriod} />}
+        />
 
         {selected_host && host_requests.length > 0 ? (
           <>
@@ -80,7 +80,7 @@ export default function HttpRequestsIndex({
                   {host_requests.map((req) => (
                     <TableRow key={req.id || `${req.url}${req.occurred_at}`} className="cursor-pointer" onClick={() => openRequest(req)}>
                       <TableCell><Badge variant={statusBadgeVariant(req.status_code)}>{req.status_code}</Badge></TableCell>
-                      <TableCell className="max-w-0 truncate font-mono text-xs">{req.url}</TableCell>
+                      <TableCell className="max-w-0 truncate font-mono text-sm">{req.url}</TableCell>
                       <TableCell className={cn("text-right tabular-nums", req.duration_ms > 2000 && "text-red-500")}>{fmt(req.duration_ms)}</TableCell>
                       <TableCell className="text-right tabular-nums text-muted-foreground">{timeAgo(req.occurred_at)}</TableCell>
                     </TableRow>
@@ -133,10 +133,12 @@ export default function HttpRequestsIndex({
               </CardHeader>
               <Separator />
               {hosts.length === 0 ? (
-                <div className="flex flex-col items-center gap-2 py-10 text-sm text-muted-foreground">
-                  <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-                  <span>No outgoing HTTP requests recorded in this period.</span>
-                </div>
+                <Empty>
+                  <EmptyHeader>
+                    <EmptyTitle>No outgoing HTTP requests</EmptyTitle>
+                    <EmptyDescription>No outgoing HTTP requests recorded in this period.</EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
               ) : (
                 <InfiniteScroll data="hosts" itemsElement="#hosts-tbody" startElement="#hosts-thead">
                   <Table>
@@ -171,39 +173,20 @@ export default function HttpRequestsIndex({
       <EwSheet open={sheetOpen} onClose={() => setSheetOpen(false)} title="HTTP Request Detail" aiContext={sheetAi}>
         {sheetItem && (
           <div className="flex flex-col divide-y p-4">
-            {sheetItem.method && (
-              <div className="flex items-center justify-between py-3 text-sm">
-                <span className="text-muted-foreground">Method</span>
-                <span>{sheetItem.method}</span>
-              </div>
-            )}
-            <div className="flex items-center justify-between py-3 text-sm">
-              <span className="text-muted-foreground">URL</span>
-              <span className="font-mono text-xs">{sheetItem.url}</span>
-            </div>
-            <div className="flex items-center justify-between py-3 text-sm">
-              <span className="text-muted-foreground">Status</span>
-              <Badge variant={statusBadgeVariant(sheetItem.status_code)}>{sheetItem.status_code}</Badge>
-            </div>
-            <div className="flex items-center justify-between py-3 text-sm">
-              <span className="text-muted-foreground">Duration</span>
-              <span className={cn(sheetItem.duration_ms > 2000 && "text-red-500")}>{fmt(sheetItem.duration_ms)}</span>
-            </div>
-            {sheetItem.occurred_at && (
-              <div className="flex items-center justify-between py-3 text-sm">
-                <span className="text-muted-foreground">Time</span>
-                <span>{new Date(sheetItem.occurred_at).toLocaleString()}</span>
-              </div>
-            )}
+            {sheetItem.method && <DetailRow label="Method">{sheetItem.method}</DetailRow>}
+            <DetailRow label="URL" valueClassName="font-mono text-sm">{sheetItem.url}</DetailRow>
+            <DetailRow label="Status"><Badge variant={statusBadgeVariant(sheetItem.status_code)}>{sheetItem.status_code}</Badge></DetailRow>
+            <DetailRow label="Duration" valueClassName={cn(sheetItem.duration_ms > 2000 && "text-red-500")}>{fmt(sheetItem.duration_ms)}</DetailRow>
+            {sheetItem.occurred_at && <DetailRow label="Time">{new Date(sheetItem.occurred_at).toLocaleString()}</DetailRow>}
             {sheetItem.response_body && (
               <div className="pt-3">
-                <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Response</p>
-                <pre className="overflow-auto rounded-md bg-muted p-3 text-xs font-mono">{sheetItem.response_body}</pre>
+                <p className="mb-1 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Response</p>
+                <pre className="overflow-auto rounded-md bg-muted p-3 text-sm font-mono">{sheetItem.response_body}</pre>
               </div>
             )}
           </div>
         )}
       </EwSheet>
-    </DaylightLayout>
+    </AppLayout>
   );
 }

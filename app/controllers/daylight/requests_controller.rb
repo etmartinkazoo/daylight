@@ -77,21 +77,20 @@ module Daylight
       route_requests = []
       selected_request = nil
       if params[:route].present?
-        route_requests = scope.where("#{group_col} = ?", params[:route])
-          .order(occurred_at: :desc)
-          .limit(50)
-          .map { |r| serialize_request(r) }
+        route_requests = RequestResource.serialize(
+          scope.where("#{group_col} = ?", params[:route]).order(occurred_at: :desc).limit(50)
+        )
 
         # Single request detail with linked queries
         if params[:request_id].present?
           req = Database::RequestRecord.find_by(id: params[:request_id])
           if req
             trace_id = req.try(:trace_id)
-            queries = Database::QueryRecord.where(request_id: req.id).order(:occurred_at).map do |q|
-              { id: q.id, sql: q.sql, duration_ms: q.duration_ms, source_location: q.source_location }
-            end
+            queries = QueryRecordResource.serialize(
+              Database::QueryRecord.where(request_id: req.id).order(:occurred_at)
+            )
 
-            selected_request = serialize_request(req).merge(
+            selected_request = RequestResource.serialize(req).merge(
               queries: queries,
               waterfall: TraceWaterfall.new(req).events,
               trace_id: trace_id
@@ -131,27 +130,10 @@ module Daylight
         records,
         filename: "daylight-requests",
         csv_headers: %w[id method path route_pattern controller_action status_code duration_ms db_duration_ms view_duration_ms query_count ip occurred_at],
-        json_row: method(:serialize_request)
+        json_row: ->(r) { RequestResource.serialize(r) }
       ) { |r| [r.id, r.method, r.path, r.route_pattern, r.controller_action, r.status_code, r.duration_ms, r.db_duration_ms, r.view_duration_ms, r.query_count, r.ip, r.occurred_at] }
     end
 
     private
-
-    def serialize_request(r)
-      {
-        id: r.id,
-        method: r.method,
-        path: r.path,
-        route_pattern: r.route_pattern,
-        controller_action: r.controller_action,
-        status_code: r.status_code,
-        duration_ms: r.duration_ms,
-        db_duration_ms: r.db_duration_ms,
-        view_duration_ms: r.view_duration_ms,
-        query_count: r.query_count,
-        ip: r.ip,
-        occurred_at: r.occurred_at
-      }
-    end
   end
 end

@@ -48,18 +48,7 @@ module Daylight
       end
 
       # Daylight-tracked failures (fixed top 50, no pagination)
-      ew_failures = scope.where(status: "failed").order(occurred_at: :desc).limit(50).map do |j|
-        {
-          id: j.id,
-          source: "daylight",
-          job_class: j.job_class,
-          queue: j.queue,
-          duration_ms: j.duration_ms,
-          error_class: j.error_class,
-          error_message: j.error_message,
-          occurred_at: j.occurred_at
-        }
-      end
+      ew_failures = JobResource.serialize(scope.where(status: "failed").order(occurred_at: :desc).limit(50))
 
       # Solid Queue failures (authoritative — catches everything including jobs that fail before AS::N fires)
       sq_failures = []

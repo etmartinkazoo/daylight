@@ -14,7 +14,7 @@ module Daylight
       settings = Database.all_settings
 
       render inertia: {
-        solutions: InertiaRails.scroll(pagy) { solution_records.map { |s| serialize_solution(s) } },
+        solutions: InertiaRails.scroll(pagy) { SolutionResource.serialize(solution_records) },
         counts: Database::SolutionRecord.status_counts,
         status: status_filter,
         last_scan_at: settings["last_solutions_scan_at"],
@@ -26,17 +26,23 @@ module Daylight
 
     def show
       solution = Database::SolutionRecord.find(params[:id])
-      messages = Database::SolutionMessageRecord
-        .where(solution_id: solution.id)
-        .order(:created_at)
-        .map { |m| { id: m.id, role: m.role, content: m.content, created_at: m.created_at } }
+      messages = SolutionMessageResource.serialize(
+        Database::SolutionMessageRecord.where(solution_id: solution.id).order(:created_at)
+      )
 
       source_issue = solution.source_issue
+      serialized_source_issue = if source_issue
+        if solution.source_type == "performance"
+          PerformanceIssueResource.serialize(source_issue)
+        else
+          SecurityIssueResource.serialize(source_issue)
+        end
+      end
 
       render inertia: {
-        solution: serialize_solution(solution),
+        solution: SolutionResource.serialize(solution),
         messages: messages,
-        source_issue: source_issue ? serialize_source_issue(source_issue, solution.source_type) : nil,
+        source_issue: serialized_source_issue,
         github_configured: Database.github_configured?
       }
     end
@@ -105,34 +111,5 @@ module Daylight
     end
 
     private
-
-    def serialize_solution(s)
-      {
-        id: s.id,
-        source_type: s.source_type,
-        source_issue_id: s.source_issue_id,
-        title: s.title,
-        problem_description: s.problem_description,
-        proposed_fix: s.proposed_fix,
-        file_paths: (JSON.parse(s.file_paths) rescue []),
-        status: s.status,
-        severity: s.severity,
-        pr_url: s.pr_url,
-        pr_branch: s.pr_branch,
-        generated_at: s.generated_at,
-        approved_at: s.approved_at,
-        pushed_at: s.pushed_at,
-        message_count: Database::SolutionMessageRecord.where(solution_id: s.id).count
-      }
-    end
-
-    def serialize_source_issue(issue, type)
-      base = { id: issue.id, title: issue.title, severity: issue.severity }
-      if type == "performance"
-        base.merge(issue_type: issue.issue_type, sql_pattern: issue.sql_pattern, source_location: issue.source_location)
-      else
-        base.merge(warning_type: issue.warning_type, file_path: issue.file_path, line_number: issue.line_number)
-      end
-    end
   end
 end

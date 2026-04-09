@@ -34,11 +34,9 @@ module Daylight
       # Individual requests when a host is selected (fixed top 50, no pagination)
       host_requests = []
       if params[:host].present?
-        host_requests = scope
-          .where(host: params[:host])
-          .order(occurred_at: :desc)
-          .limit(50)
-          .map { |r| serialize_http_request(r) }
+        host_requests = HttpRequestResource.serialize(
+          scope.where(host: params[:host]).order(occurred_at: :desc).limit(50)
+        )
       end
 
       render inertia: {
@@ -60,24 +58,10 @@ module Daylight
         records,
         filename: "daylight-http-requests",
         csv_headers: %w[id method url host status_code duration_ms controller_action request_path occurred_at],
-        json_row: method(:serialize_http_request)
+        json_row: ->(r) { HttpRequestResource.serialize(r) }
       ) { |r| [r.id, r.method, r.url, r.host, r.status_code, r.duration_ms, r.controller_action, r.request_path, r.occurred_at] }
     end
 
     private
-
-    def serialize_http_request(r)
-      {
-        id: r.id,
-        method: r.method,
-        url: r.url,
-        host: r.host,
-        status_code: r.status_code,
-        duration_ms: r.duration_ms,
-        controller_action: r.controller_action,
-        request_path: r.request_path,
-        occurred_at: r.occurred_at
-      }
-    end
   end
 end

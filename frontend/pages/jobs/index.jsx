@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { router, InfiniteScroll } from "@inertiajs/react";
 import { cn } from "@/lib/utils";
-import DaylightLayout from "../DaylightLayout";
-import PeriodSelect from "../PeriodSelect";
-import EwSheet from "../errors/EwSheet";
+import AppLayout from "@/layouts/app-layout";
+import PeriodSelect from "@/components/PeriodSelect";
+import EwSheet from "@/components/errors/EwSheet";
 import { DonutChart } from "@/components/charts/DonutChart";
 import { InteractiveBarChart } from "@/components/charts/InteractiveBarChart";
 import { ExportButton } from "@/components/ui/export-button";
@@ -13,7 +13,10 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
+import { Empty, EmptyHeader, EmptyTitle, EmptyDescription } from "@/components/ui/empty";
 import { fmt, timeAgo, formatTime } from "@/lib/formatters.js";
+import { DetailRow } from "@/components/ui/detail-row";
+import { PageHeader } from "@/components/ui/page-header";
 
 export default function JobsIndex({
   job_classes = [], failures = [], period = "24h", totals = {}, solid_queue = null,
@@ -61,20 +64,14 @@ export default function JobsIndex({
   })();
 
   return (
-    <DaylightLayout>
+    <AppLayout>
       <div className="flex flex-col gap-6 p-6">
 
-        {/* Page header */}
-        <div className="flex items-start justify-between">
-          <div className="flex flex-col gap-1">
-            <h1 className="text-xl font-semibold">Jobs</h1>
-            <p className="text-sm text-muted-foreground">Background job monitoring and performance</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <ExportButton baseUrl={`${base}/jobs/export`} />
-            <PeriodSelect value={period} onChange={changePeriod} />
-          </div>
-        </div>
+        <PageHeader
+          title="Jobs"
+          description="Background job monitoring and performance"
+          actions={<><ExportButton baseUrl={`${base}/jobs/export`} /><PeriodSelect value={period} onChange={changePeriod} /></>}
+        />
 
         {/* Stats + donut */}
         <div className="flex items-start gap-4">
@@ -121,23 +118,23 @@ export default function JobsIndex({
             <div className="flex flex-wrap gap-3">
               <Button variant="outline" className="flex flex-col h-auto gap-1 px-6 py-4" onClick={() => openSqStat("Ready Jobs", solid_queue.ready_jobs)}>
                 <span className="text-2xl font-bold tabular-nums">{solid_queue.ready}</span>
-                <span className="text-xs text-muted-foreground">Ready</span>
+                <span className="text-sm text-muted-foreground">Ready</span>
               </Button>
               <Button variant="outline" className="flex flex-col h-auto gap-1 px-6 py-4" onClick={() => openSqStat("Scheduled Jobs", solid_queue.scheduled_jobs)}>
                 <span className="text-2xl font-bold tabular-nums">{solid_queue.scheduled}</span>
-                <span className="text-xs text-muted-foreground">Scheduled</span>
+                <span className="text-sm text-muted-foreground">Scheduled</span>
               </Button>
               <Button variant="outline" className="flex flex-col h-auto gap-1 px-6 py-4" onClick={() => openSqStat("Running Jobs", solid_queue.claimed_jobs)}>
                 <span className="text-2xl font-bold tabular-nums">{solid_queue.claimed}</span>
-                <span className="text-xs text-muted-foreground">Running</span>
+                <span className="text-sm text-muted-foreground">Running</span>
               </Button>
               <Button variant={solid_queue.failed > 0 ? "destructive" : "outline"} className="flex flex-col h-auto gap-1 px-6 py-4">
                 <span className="text-2xl font-bold tabular-nums">{solid_queue.failed}</span>
-                <span className="text-xs">Failed</span>
+                <span className="text-sm">Failed</span>
               </Button>
               <Button variant="outline" className="flex flex-col h-auto gap-1 px-6 py-4" onClick={() => openSqStat("Worker Processes", solid_queue.worker_processes)}>
                 <span className="text-2xl font-bold tabular-nums">{solid_queue.processes}</span>
-                <span className="text-xs text-muted-foreground">Workers</span>
+                <span className="text-sm text-muted-foreground">Workers</span>
               </Button>
             </div>
           </div>
@@ -211,11 +208,12 @@ export default function JobsIndex({
             </Card>
           </div>
         ) : job_classes.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 py-10 text-sm text-muted-foreground">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-            <p className="font-medium">No job data yet</p>
-            <p>Jobs will appear here once they start running.</p>
-          </div>
+          <Empty>
+            <EmptyHeader>
+              <EmptyTitle>No job data yet</EmptyTitle>
+              <EmptyDescription>Jobs will appear here once they start running.</EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         ) : null}
       </div>
 
@@ -230,10 +228,10 @@ export default function JobsIndex({
                     <div key={item.id} className="flex items-center justify-between py-3 text-sm">
                       <div className="flex flex-col gap-0.5">
                         <span className="font-medium">{item.job_class || item.kind || "—"}</span>
-                        {item.queue && <span className="text-xs text-muted-foreground">{item.queue}</span>}
-                        {item.hostname && <span className="text-xs text-muted-foreground">{item.hostname}:{item.pid}</span>}
+                        {item.queue && <span className="text-sm text-muted-foreground">{item.queue}</span>}
+                        {item.hostname && <span className="text-sm text-muted-foreground">{item.hostname}:{item.pid}</span>}
                       </div>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-sm text-muted-foreground">
                         {item.scheduled_at ? formatTime(item.scheduled_at)
                           : item.claimed_at ? formatTime(item.claimed_at)
                           : item.last_heartbeat_at ? `heartbeat: ${timeAgo(item.last_heartbeat_at)}`
@@ -248,26 +246,26 @@ export default function JobsIndex({
               </>
             ) : sheetType === "class" ? (
               <>
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Job Class</span><span>{sheetItem.job_class}</span></div>
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Total</span><span>{sheetItem.total}</span></div>
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Completed</span><span className="text-green-500">{sheetItem.completed_count}</span></div>
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Failed</span><span className={cn(sheetItem.failed_count > 0 && "text-red-500")}>{sheetItem.failed_count}</span></div>
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Queued</span><span>{sheetItem.queued_count}</span></div>
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Avg Duration</span><span>{fmt(sheetItem.avg_duration)}</span></div>
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Max Duration</span><span className={cn(sheetItem.max_duration > 10000 && "text-yellow-500")}>{fmt(sheetItem.max_duration)}</span></div>
+                <DetailRow label="Job Class">{sheetItem.job_class}</DetailRow>
+                <DetailRow label="Total">{sheetItem.total}</DetailRow>
+                <DetailRow label="Completed" valueClassName="text-green-500">{sheetItem.completed_count}</DetailRow>
+                <DetailRow label="Failed" valueClassName={cn(sheetItem.failed_count > 0 && "text-red-500")}>{sheetItem.failed_count}</DetailRow>
+                <DetailRow label="Queued">{sheetItem.queued_count}</DetailRow>
+                <DetailRow label="Avg Duration">{fmt(sheetItem.avg_duration)}</DetailRow>
+                <DetailRow label="Max Duration" valueClassName={cn(sheetItem.max_duration > 10000 && "text-yellow-500")}>{fmt(sheetItem.max_duration)}</DetailRow>
               </>
             ) : (
               <>
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Job Class</span><span>{sheetItem.job_class}</span></div>
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Queue</span><span>{sheetItem.queue || "—"}</span></div>
-                {sheetItem.duration_ms && <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Duration</span><span>{fmt(sheetItem.duration_ms)}</span></div>}
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Failed At</span><span>{formatTime(sheetItem.occurred_at)}</span></div>
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Error Class</span><span className="text-red-500">{sheetItem.error_class || "—"}</span></div>
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Source</span><span><Badge variant="secondary">{sheetItem.source === "solid_queue" ? "Solid Queue" : "Daylight"}</Badge></span></div>
+                <DetailRow label="Job Class">{sheetItem.job_class}</DetailRow>
+                <DetailRow label="Queue">{sheetItem.queue || "—"}</DetailRow>
+                {sheetItem.duration_ms && <DetailRow label="Duration">{fmt(sheetItem.duration_ms)}</DetailRow>}
+                <DetailRow label="Failed At">{formatTime(sheetItem.occurred_at)}</DetailRow>
+                <DetailRow label="Error Class" valueClassName="text-red-500">{sheetItem.error_class || "—"}</DetailRow>
+                <DetailRow label="Source"><Badge variant="secondary">{sheetItem.source === "solid_queue" ? "Solid Queue" : "Daylight"}</Badge></DetailRow>
                 {sheetItem.error_message && (
                   <div className="pt-3">
-                    <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Error Message</p>
-                    <pre className="overflow-auto rounded-md bg-muted p-3 text-xs font-mono">{sheetItem.error_message}</pre>
+                    <p className="mb-1 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Error Message</p>
+                    <pre className="overflow-auto rounded-md bg-muted p-3 text-sm font-mono">{sheetItem.error_message}</pre>
                   </div>
                 )}
               </>
@@ -275,6 +273,6 @@ export default function JobsIndex({
           </div>
         )}
       </EwSheet>
-    </DaylightLayout>
+    </AppLayout>
   );
 }

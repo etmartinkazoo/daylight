@@ -13,6 +13,17 @@ module Daylight
   class Engine < ::Rails::Engine
     isolate_namespace Daylight
 
+    initializer "daylight.alba" do
+      Alba.backend = :active_support
+    end
+
+    # After every code reload (development), record classes lose their
+    # establish_connection config. Reset the flag so ensure_connected!
+    # re-establishes the SQLite connection on the next request.
+    config.to_prepare do
+      Daylight::Database.reset_connection!
+    end
+
     # Serve pre-built frontend assets from the gem at /daylight/assets/
     initializer "daylight.static_assets" do |app|
       builds_path = root.join("app", "assets", "builds")

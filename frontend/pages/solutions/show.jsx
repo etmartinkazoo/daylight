@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { router } from "@inertiajs/react";
-import DaylightLayout from "../DaylightLayout";
+import { router, Link } from "@inertiajs/react";
+import AppLayout from "@/layouts/app-layout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -74,13 +74,13 @@ export default function SolutionShow({
   }
 
   return (
-    <DaylightLayout>
+    <AppLayout>
       <div className="flex flex-col gap-6 p-6">
         <Button variant="ghost" size="sm" className="w-fit -ml-1" asChild>
-          <a href={`${base}/solutions`}>
+          <Link href={`${base}/solutions`}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
             All Solutions
-          </a>
+          </Link>
         </Button>
 
         <div className="flex flex-col gap-2">
@@ -89,10 +89,10 @@ export default function SolutionShow({
             {solution.severity && <Badge variant={severityVariant[solution.severity] || "secondary"}>{solution.severity}</Badge>}
             {solution.source_type && <Badge variant={sourceVariant[solution.source_type?.toLowerCase()] || "secondary"}>{solution.source_type}</Badge>}
             <Badge variant={statusVariant[solution.status] || "secondary"}>{solution.status}</Badge>
-            <span className="text-xs text-muted-foreground">Generated {timeAgo(solution.generated_at)} &middot; {formatTimeLong(solution.generated_at)}</span>
+            <span className="text-sm text-muted-foreground">Generated {timeAgo(solution.generated_at)} &middot; {formatTimeLong(solution.generated_at)}</span>
           </div>
-          {solution.approved_at && <span className="text-xs text-muted-foreground">Approved {formatTimeLong(solution.approved_at)}</span>}
-          {solution.pushed_at && <span className="text-xs text-muted-foreground">Pushed {formatTimeLong(solution.pushed_at)}</span>}
+          {solution.approved_at && <span className="text-sm text-muted-foreground">Approved {formatTimeLong(solution.approved_at)}</span>}
+          {solution.pushed_at && <span className="text-sm text-muted-foreground">Pushed {formatTimeLong(solution.pushed_at)}</span>}
         </div>
 
         <div className="grid grid-cols-[1fr_360px] gap-5 items-start">
@@ -142,7 +142,7 @@ export default function SolutionShow({
                 <CardHeader className="border-b py-3"><CardTitle className="text-sm">Files Changed</CardTitle></CardHeader>
                 <CardContent className="pt-4 flex flex-col gap-1">
                   {solution.file_paths.map((fp, i) => (
-                    <code key={i} className="text-xs font-mono bg-muted/50 px-2 py-1 rounded">{fp}</code>
+                    <code key={i} className="text-sm font-mono bg-muted/50 px-2 py-1 rounded">{fp}</code>
                   ))}
                 </CardContent>
               </Card>
@@ -155,12 +155,12 @@ export default function SolutionShow({
               <CardTitle className="text-sm flex items-center gap-1.5">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                 Chat
-                {solution.message_count > 0 && <Badge variant="secondary" className="h-4 px-1 text-xs">{solution.message_count}</Badge>}
+                {solution.message_count > 0 && <Badge variant="secondary" className="h-4 px-1 text-sm">{solution.message_count}</Badge>}
               </CardTitle>
             </CardHeader>
             <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-3 min-h-0" ref={messagesRef}>
               {chatMessages.length === 0 ? (
-                <p className="text-xs text-muted-foreground text-center py-4">Ask questions or request changes to this solution.</p>
+                <p className="text-sm text-muted-foreground text-center py-4">Ask questions or request changes to this solution.</p>
               ) : chatMessages.map((msg) => (
                 <div key={msg.id} className={`flex flex-col gap-1 ${msg.role === "user" ? "items-end" : "items-start"}`}>
                   <div className={`rounded-lg px-3 py-2 text-sm max-w-[90%] ${msg.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
@@ -168,7 +168,7 @@ export default function SolutionShow({
                       <div className="prose prose-xs max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: markdownToHtml(msg.content) }} />
                     ) : msg.content}
                   </div>
-                  <span className="text-xs text-muted-foreground">{timeAgo(msg.created_at)}</span>
+                  <span className="text-sm text-muted-foreground">{timeAgo(msg.created_at)}</span>
                 </div>
               ))}
               {sending && (
@@ -236,12 +236,12 @@ export default function SolutionShow({
               <a href={solution.pr_url} target="_blank" rel="noopener noreferrer">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                 View Pull Request
-                {solution.pr_branch && <code className="text-xs font-mono ml-1">{solution.pr_branch}</code>}
+                {solution.pr_branch && <code className="text-sm font-mono ml-1">{solution.pr_branch}</code>}
               </a>
             </Button>
           )}
         </div>
       </div>
-    </DaylightLayout>
+    </AppLayout>
   );
 }

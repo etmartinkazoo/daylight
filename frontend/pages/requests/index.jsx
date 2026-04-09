@@ -1,12 +1,11 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { router, InfiniteScroll } from "@inertiajs/react";
 import { cn } from "@/lib/utils";
-import DaylightLayout from "../DaylightLayout";
-import PeriodSelect from "../PeriodSelect";
-import EwSheet from "../errors/EwSheet";
+import AppLayout from "@/layouts/app-layout";
+import PeriodSelect from "@/components/PeriodSelect";
+import EwSheet from "@/components/errors/EwSheet";
 import { BarList } from "@/components/charts/BarList";
 import { InteractiveBarChart } from "@/components/charts/InteractiveBarChart";
-import { AutoRefresh } from "@/components/ui/auto-refresh";
 import { ExportButton } from "@/components/ui/export-button";
 import { SortableHeader } from "@/components/ui/sortable-header";
 import { Button } from "@/components/ui/button";
@@ -14,7 +13,10 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
+import { Empty, EmptyHeader, EmptyTitle, EmptyDescription } from "@/components/ui/empty";
 import { fmt, timeAgo, formatTime, statusCodeClass, methodColor } from "@/lib/formatters.js";
+import { DetailRow } from "@/components/ui/detail-row";
+import { PageHeader } from "@/components/ui/page-header";
 
 function levelVariant(l) {
   if (l === "error" || l === "fatal") return "destructive";
@@ -31,20 +33,7 @@ export default function RequestsIndex({
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sheetItem, setSheetItem] = useState(null);
   const [sheetType, setSheetType] = useState("endpoint");
-  const [refreshInterval, setRefreshInterval] = useState(0);
-  const intervalRef = useRef(null);
-
-  useEffect(() => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    if (refreshInterval > 0) {
-      intervalRef.current = setInterval(() => {
-        router.reload({ preserveState: true, preserveScroll: true });
-      }, refreshInterval);
-    }
-    return () => clearInterval(intervalRef.current);
-  }, [refreshInterval]);
-
-  const apdexColor = apdex == null ? "#64748b" : apdex >= 0.9 ? "#22c55e" : apdex >= 0.7 ? "#f59e0b" : "#ef4444";
+const apdexColor = apdex == null ? "#64748b" : apdex >= 0.9 ? "#22c55e" : apdex >= 0.7 ? "#f59e0b" : "#ef4444";
 
   const statTotal = endpoints.reduce((s, ep) => s + (ep.total || 0), 0);
   const statAvg = statTotal === 0 ? 0
@@ -110,21 +99,14 @@ export default function RequestsIndex({
   }
 
   return (
-    <DaylightLayout>
+    <AppLayout>
       <div className="flex flex-col gap-6 p-6">
 
-        {/* Page header */}
-        <div className="flex items-start justify-between">
-          <div className="flex flex-col gap-1">
-            <h1 className="text-xl font-semibold">Requests</h1>
-            <p className="text-sm text-muted-foreground">{total_requests.toLocaleString()} requests in the last {period}</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <AutoRefresh interval={refreshInterval} onChange={setRefreshInterval} />
-            <ExportButton baseUrl={`${base}/requests/export`} />
-            <PeriodSelect value={period} onChange={changePeriod} />
-          </div>
-        </div>
+        <PageHeader
+          title="Requests"
+          description={`${total_requests.toLocaleString()} requests in the last ${period}`}
+          actions={<><ExportButton baseUrl={`${base}/requests/export`} /><PeriodSelect value={period} onChange={changePeriod} /></>}
+        />
 
         {selected_route && route_requests.length > 0 ? (
           <>
@@ -153,11 +135,11 @@ export default function RequestsIndex({
                   {route_requests.map((req) => (
                     <TableRow key={req.id} className="cursor-pointer" onClick={() => openRequest(req)}>
                       <TableCell><Badge variant={statusBadgeVariant(req.status_code)}>{req.status_code}</Badge></TableCell>
-                      <TableCell className="font-mono text-xs">{req.path}</TableCell>
+                      <TableCell className="font-mono text-sm">{req.path}</TableCell>
                       <TableCell className={cn("text-right tabular-nums", req.duration_ms > 500 && "text-yellow-500")}>{fmt(req.duration_ms)}</TableCell>
                       <TableCell className="text-right tabular-nums">{fmt(req.db_duration_ms)}</TableCell>
                       <TableCell className="text-right tabular-nums">{req.query_count}</TableCell>
-                      <TableCell className="font-mono text-xs text-muted-foreground">{req.ip}</TableCell>
+                      <TableCell className="font-mono text-sm text-muted-foreground">{req.ip}</TableCell>
                       <TableCell className="text-right tabular-nums text-muted-foreground">{timeAgo(req.occurred_at)}</TableCell>
                     </TableRow>
                   ))}
@@ -229,11 +211,12 @@ export default function RequestsIndex({
 
             {/* Endpoints table */}
             {endpoints.length === 0 ? (
-              <div className="flex flex-col items-center gap-2 py-10 text-sm text-muted-foreground">
-                <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-                <p className="font-medium">No request data yet</p>
-                <p>Requests are tracked automatically once your app starts serving traffic.</p>
-              </div>
+              <Empty>
+                <EmptyHeader>
+                  <EmptyTitle>No request data yet</EmptyTitle>
+                  <EmptyDescription>Requests are tracked automatically once your app starts serving traffic.</EmptyDescription>
+                </EmptyHeader>
+              </Empty>
             ) : (
               <Card>
                 <InfiniteScroll data="endpoints" itemsElement="#endpoints-tbody" startElement="#endpoints-thead">
@@ -255,8 +238,8 @@ export default function RequestsIndex({
                         <TableRow key={`${ep.route}:${i}`} className="cursor-pointer" onClick={() => selectEndpoint(ep)}>
                           <TableCell>
                             <div className="flex items-center gap-2">
-                              <span className="rounded px-1.5 py-0.5 text-xs font-semibold" style={{ background: `${methodColor(ep.method)}15`, color: methodColor(ep.method) }}>{ep.method}</span>
-                              <span className="font-mono text-xs">{ep.route?.replace(/^(GET|POST|PATCH|PUT|DELETE)\s/, "") || ep.route}</span>
+                              <span className="rounded px-1.5 py-0.5 text-sm font-semibold" style={{ background: `${methodColor(ep.method)}15`, color: methodColor(ep.method) }}>{ep.method}</span>
+                              <span className="font-mono text-sm">{ep.route?.replace(/^(GET|POST|PATCH|PUT|DELETE)\s/, "") || ep.route}</span>
                             </div>
                           </TableCell>
                           <TableCell className="text-right tabular-nums">{ep.total}</TableCell>
@@ -282,41 +265,40 @@ export default function RequestsIndex({
           <div className="flex flex-col divide-y p-4">
             {sheetType === "endpoint" ? (
               <>
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Route</span><span className="font-mono text-xs">{sheetItem.route}</span></div>
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Requests</span><span>{sheetItem.total}</span></div>
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Avg Duration</span><span>{fmt(sheetItem.avg_duration)}</span></div>
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">P95 Duration</span><span className={cn(sheetItem.p95_duration > 500 && "text-yellow-500")}>{fmt(sheetItem.p95_duration)}</span></div>
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Max Duration</span><span className={cn(sheetItem.max_duration > 1000 && "text-yellow-500")}>{fmt(sheetItem.max_duration)}</span></div>
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Avg DB</span><span>{fmt(sheetItem.avg_db_duration)}</span></div>
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Avg Queries</span><span>{Math.round(sheetItem.avg_query_count)}</span></div>
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">2xx</span><span>{sheetItem.ok_count}</span></div>
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">4xx</span><span className={cn(sheetItem.client_error_count > 0 && "text-yellow-500")}>{sheetItem.client_error_count}</span></div>
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">5xx</span><span className={cn(sheetItem.server_error_count > 0 && "text-red-500")}>{sheetItem.server_error_count}</span></div>
+                <DetailRow label="Route" valueClassName="font-mono text-sm">{sheetItem.route}</DetailRow>
+                <DetailRow label="Requests">{sheetItem.total}</DetailRow>
+                <DetailRow label="Avg Duration">{fmt(sheetItem.avg_duration)}</DetailRow>
+                <DetailRow label="P95 Duration" valueClassName={cn(sheetItem.p95_duration > 500 && "text-yellow-500")}>{fmt(sheetItem.p95_duration)}</DetailRow>
+                <DetailRow label="Max Duration" valueClassName={cn(sheetItem.max_duration > 1000 && "text-yellow-500")}>{fmt(sheetItem.max_duration)}</DetailRow>
+                <DetailRow label="Avg DB">{fmt(sheetItem.avg_db_duration)}</DetailRow>
+                <DetailRow label="Avg Queries">{Math.round(sheetItem.avg_query_count)}</DetailRow>
+                <DetailRow label="2xx">{sheetItem.ok_count}</DetailRow>
+                <DetailRow label="4xx" valueClassName={cn(sheetItem.client_error_count > 0 && "text-yellow-500")}>{sheetItem.client_error_count}</DetailRow>
+                <DetailRow label="5xx" valueClassName={cn(sheetItem.server_error_count > 0 && "text-red-500")}>{sheetItem.server_error_count}</DetailRow>
               </>
             ) : (
               <>
-                <div className="flex items-center justify-between py-3 text-sm">
-                  <span className="text-muted-foreground">Method</span>
-                  <span className="rounded px-1.5 py-0.5 text-xs font-semibold" style={{ background: `${methodColor(sheetItem.method)}15`, color: methodColor(sheetItem.method) }}>{sheetItem.method}</span>
-                </div>
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Path</span><span className="font-mono text-xs">{sheetItem.path}</span></div>
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Controller</span><span>{sheetItem.controller_action}</span></div>
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Status</span><Badge variant={statusBadgeVariant(sheetItem.status_code)}>{sheetItem.status_code}</Badge></div>
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Duration</span><span className={cn(sheetItem.duration_ms > 500 && "text-yellow-500")}>{fmt(sheetItem.duration_ms)}</span></div>
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">DB Time</span><span>{fmt(sheetItem.db_duration_ms)}</span></div>
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">View Time</span><span>{fmt(sheetItem.view_duration_ms)}</span></div>
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Queries</span><span>{sheetItem.query_count}</span></div>
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">IP</span><span className="font-mono text-xs">{sheetItem.ip}</span></div>
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Time</span><span>{formatTime(sheetItem.occurred_at)}</span></div>
+                <DetailRow label="Method">
+                  <span className="rounded px-1.5 py-0.5 text-sm font-semibold" style={{ background: `${methodColor(sheetItem.method)}15`, color: methodColor(sheetItem.method) }}>{sheetItem.method}</span>
+                </DetailRow>
+                <DetailRow label="Path" valueClassName="font-mono text-sm">{sheetItem.path}</DetailRow>
+                <DetailRow label="Controller">{sheetItem.controller_action}</DetailRow>
+                <DetailRow label="Status"><Badge variant={statusBadgeVariant(sheetItem.status_code)}>{sheetItem.status_code}</Badge></DetailRow>
+                <DetailRow label="Duration" valueClassName={cn(sheetItem.duration_ms > 500 && "text-yellow-500")}>{fmt(sheetItem.duration_ms)}</DetailRow>
+                <DetailRow label="DB Time">{fmt(sheetItem.db_duration_ms)}</DetailRow>
+                <DetailRow label="View Time">{fmt(sheetItem.view_duration_ms)}</DetailRow>
+                <DetailRow label="Queries">{sheetItem.query_count}</DetailRow>
+                <DetailRow label="IP" valueClassName="font-mono text-sm">{sheetItem.ip}</DetailRow>
+                <DetailRow label="Time">{formatTime(sheetItem.occurred_at)}</DetailRow>
 
                 {/* Waterfall / query timeline */}
                 {sheetItem.waterfall?.length > 0 ? (
                   <div className="pt-3">
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Request Timeline ({sheetItem.waterfall.length} events)</p>
+                    <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Request Timeline ({sheetItem.waterfall.length} events)</p>
                     <div className="flex flex-col gap-2">
                       {sheetItem.waterfall.map((evt, i) => (
-                        <div key={i} className="flex items-start gap-2 rounded-md bg-muted/50 px-3 py-2 text-xs">
-                          <Badge variant="outline" className="shrink-0 text-xs">{evt.type}</Badge>
+                        <div key={i} className="flex items-start gap-2 rounded-md bg-muted/50 px-3 py-2 text-sm">
+                          <Badge variant="outline" className="shrink-0 text-sm">{evt.type}</Badge>
                           <div className="flex flex-1 flex-col gap-0.5">
                             <span className="font-mono">{evt.detail}</span>
                             {evt.duration_ms && (
@@ -332,16 +314,16 @@ export default function RequestsIndex({
                   </div>
                 ) : sheetItem.queries?.length > 0 ? (
                   <div className="pt-3">
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Query Timeline ({sheetItem.queries.length})</p>
+                    <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Query Timeline ({sheetItem.queries.length})</p>
                     <div className="flex flex-col gap-2">
                       {sheetItem.queries.map((q) => (
                         <div key={q.id} className="flex flex-col gap-1 rounded-md bg-muted/50 p-3">
                           <div className="flex items-center gap-2">
                             <div className="h-1.5 rounded-full bg-primary/30" style={{ width: `${Math.max(Math.min((q.duration_ms / sheetItem.duration_ms) * 100, 100), 3)}%` }} />
-                            <span className={cn("text-xs font-semibold tabular-nums", q.duration_ms > 100 && "text-yellow-500")}>{fmt(q.duration_ms)}</span>
-                            <span className="text-xs text-muted-foreground">{q.source_location || ""}</span>
+                            <span className={cn("text-sm font-semibold tabular-nums", q.duration_ms > 100 && "text-yellow-500")}>{fmt(q.duration_ms)}</span>
+                            <span className="text-sm text-muted-foreground">{q.source_location || ""}</span>
                           </div>
-                          <pre className="overflow-auto text-xs font-mono text-muted-foreground">{q.sql}</pre>
+                          <pre className="overflow-auto text-sm font-mono text-muted-foreground">{q.sql}</pre>
                         </div>
                       ))}
                     </div>
@@ -354,6 +336,6 @@ export default function RequestsIndex({
           </div>
         )}
       </EwSheet>
-    </DaylightLayout>
+    </AppLayout>
   );
 }

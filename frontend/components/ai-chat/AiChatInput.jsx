@@ -1,6 +1,10 @@
 import { useRef, useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowRight01Icon } from "@hugeicons/core-free-icons";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Badge } from "@/components/ui/badge";
 import { typeIcon, typeColor } from "./utils.js";
 
 export default function AiChatInput({
@@ -105,60 +109,60 @@ export default function AiChatInput({
   }
 
   return (
-    <>
+    <div className="shrink-0 border-t">
       {references.length > 0 && (
-        <div className="ai-refs">
+        <div className="flex flex-wrap gap-1.5 px-3 pt-2">
           {references.map((ref, i) => (
-            <span key={i} className="ai-ref-pill" style={{ "--ref-color": typeColor(ref.type) }}>
-              <span className="ai-ref-icon">{typeIcon(ref.type)}</span>
-              <span className="ai-ref-label">{ref.label}</span>
-              <button className="ai-ref-remove" onClick={() => removeReference(i)}>&times;</button>
-            </span>
+            <Badge key={i} variant="secondary" className="flex items-center gap-1 rounded-full pl-2 pr-1 py-0.5 text-sm font-normal">
+              <span className="text-muted-foreground">{typeIcon(ref.type)}</span>
+              <span>{ref.label}</span>
+              <Button variant="ghost" size="icon-sm" className="h-4 w-4 ml-0.5" onClick={() => removeReference(i)}>
+                &times;
+              </Button>
+            </Badge>
           ))}
         </div>
       )}
 
       {!chatId && (
-        <div className="ai-scope-bar">
-          <span className="ai-scope-label">Scope:</span>
-          {["focused", "standard", "wide"].map((scope) => (
-            <button
-              key={scope}
-              className={`ai-scope-btn${chatScope === scope ? " active" : ""}`}
-              onClick={() => onChatScopeChange?.(scope)}
-            >
-              {scope.charAt(0).toUpperCase() + scope.slice(1)}
-            </button>
-          ))}
+        <div className="flex items-center gap-1 px-3 py-1.5 border-b">
+          <span className="text-sm text-muted-foreground mr-1">Scope:</span>
+          <ToggleGroup type="single" value={chatScope} onValueChange={(v) => v && onChatScopeChange?.(v)} className="gap-0.5">
+            {["focused", "standard", "wide"].map((scope) => (
+              <ToggleGroupItem key={scope} value={scope} className="h-6 px-2 text-sm">
+                {scope.charAt(0).toUpperCase() + scope.slice(1)}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
         </div>
       )}
 
-      <div className="ai-input-wrap">
+      <div className="relative px-3 pb-3 pt-2">
         {mentionOpen && (
-          <div className="mention-popup">
+          <div className="absolute bottom-full left-3 right-3 mb-1 bg-popover border rounded-md shadow-md z-50 overflow-y-auto max-h-48">
             {mentionLoading && mentionResults.length === 0 ? (
-              <div className="mention-loading">Searching...</div>
+              <div className="px-3 py-2 text-sm text-muted-foreground">Searching...</div>
             ) : mentionResults.length === 0 ? (
-              <div className="mention-empty">{mentionQuery ? "No results" : "Type to search..."}</div>
+              <div className="px-3 py-2 text-sm text-muted-foreground">{mentionQuery ? "No results" : "Type to search..."}</div>
             ) : mentionResults.map((item, i) => (
               <div
                 key={i}
-                className={`mention-item${i === mentionIndex ? " active" : ""}`}
+                className={`flex items-center gap-2 px-3 py-2 text-sm cursor-pointer ${i === mentionIndex ? "bg-muted" : "hover:bg-muted"}`}
                 onMouseDown={(e) => { e.preventDefault(); selectMention(item); }}
                 onMouseEnter={() => setMentionIndex(i)}
               >
-                <span className="mention-type-badge" style={{ "--ref-color": typeColor(item.type) }}>{typeIcon(item.type)}</span>
-                <div className="mention-item-info">
-                  <span className="mention-item-name">{item.label}</span>
-                  {item.hint && <span className="mention-item-hint">{item.hint}</span>}
+                <Badge variant="secondary" className="w-5 h-5 rounded flex items-center justify-center text-[10px] font-medium p-0 shrink-0">{typeIcon(item.type)}</Badge>
+                <div className="flex flex-col min-w-0">
+                  <span className="font-medium truncate text-foreground">{item.label}</span>
+                  {item.hint && <span className="text-muted-foreground truncate text-[10px]">{item.hint}</span>}
                 </div>
               </div>
             ))}
           </div>
         )}
 
-        <div className="ai-input-area">
-          <textarea
+        <div className="flex items-end gap-2 bg-muted/50 rounded-lg border px-3 py-2">
+          <Textarea
             ref={inputElRef}
             value={input}
             onKeyDown={handleKeydown}
@@ -166,14 +170,19 @@ export default function AiChatInput({
             onChange={(e) => onInputChange(e.target.value)}
             placeholder={references.length > 0 ? "Ask about the referenced items..." : "Ask anything... (@ to mention)"}
             rows={1}
-            className="ai-input"
+            className="flex-1 resize-none border-0 shadow-none bg-transparent p-0 min-h-5 max-h-32 focus-visible:ring-0"
             disabled={sending}
           />
-          <button className="ai-send" onClick={onSend} disabled={sending || !input.trim()}>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={onSend}
+            disabled={sending || !input.trim()}
+          >
             <HugeiconsIcon icon={ArrowRight01Icon} size={16} />
-          </button>
+          </Button>
         </div>
       </div>
-    </>
+    </div>
   );
 }

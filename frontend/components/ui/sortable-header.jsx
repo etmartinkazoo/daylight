@@ -18,8 +18,8 @@ export function SortableHeader({ column, label, sort_column, sort_direction, cla
   return (
     <button
       className={cn(
-        "inline-flex items-center gap-1 bg-transparent border-none p-0 font-[inherit] text-[0.8125rem] font-medium cursor-pointer select-none whitespace-nowrap transition-colors",
-        isActive ? "text-[var(--color-fg)]" : "text-[var(--color-muted)] hover:text-[var(--color-fg)]",
+        "inline-flex items-center gap-1 bg-transparent border-none p-0 font-[inherit] text-sm font-medium cursor-pointer select-none whitespace-nowrap transition-colors",
+        isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground",
         className,
       )}
       onClick={handleClick}

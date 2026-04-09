@@ -10,6 +10,8 @@ module Daylight
     scope :unhandled,   -> { where(handled: false) }
     scope :performance, -> { where(severity: "performance") }
     scope :recent,      ->(since = 24.hours.ago) { where("last_seen_at > ?", since) }
+    scope :for_status,  ->(status) { status == "all" ? all : where(status: status) }
+    scope :search,      ->(q) { where("error_class LIKE ? OR message LIKE ?", "%#{q}%", "%#{q}%") }
 
     def self.status_counts
       {

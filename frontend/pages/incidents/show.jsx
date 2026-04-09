@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { router } from "@inertiajs/react";
-import DaylightLayout from "../DaylightLayout";
-import EwSheet from "../errors/EwSheet";
+import { router, Link } from "@inertiajs/react";
+import AppLayout from "@/layouts/app-layout";
+import EwSheet from "@/components/errors/EwSheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -19,13 +19,13 @@ export default function IncidentShow({ incident = {}, related_error = null, rela
   function updateStatus(newStatus) { router.patch(`${base}/incidents/${incident.id}`, { status: newStatus }); }
 
   return (
-    <DaylightLayout>
+    <AppLayout>
       <div className="flex flex-col gap-6 p-6">
         <Button variant="ghost" size="sm" className="w-fit -ml-1" asChild>
-          <a href={`${base}/incidents`}>
+          <Link href={`${base}/incidents`}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
             All Incidents
-          </a>
+          </Link>
         </Button>
 
         <div className="flex flex-col gap-3">
@@ -37,7 +37,7 @@ export default function IncidentShow({ incident = {}, related_error = null, rela
               {incident.status === "investigating" && <span className="mr-1 size-1.5 rounded-full bg-amber-500 animate-pulse inline-block" />}
               {incident.status === "false_alarm" ? "False Alarm" : incident.status}
             </Badge>
-            <span className="text-xs text-muted-foreground">Started {timeAgo(incident.started_at)} &middot; {formatTimeLong(incident.started_at)}</span>
+            <span className="text-sm text-muted-foreground">Started {timeAgo(incident.started_at)} &middot; {formatTimeLong(incident.started_at)}</span>
           </div>
         </div>
 
@@ -66,7 +66,7 @@ export default function IncidentShow({ incident = {}, related_error = null, rela
               {triggerEntries.map(([key, value]) => (
                 <div key={key} className="flex px-4 py-2 gap-4 text-sm">
                   <dt className="text-muted-foreground w-32 shrink-0 capitalize">{key.replace(/_/g, " ")}</dt>
-                  <dd className="font-mono text-xs">{typeof value === "object" ? JSON.stringify(value) : value}</dd>
+                  <dd className="font-mono text-sm">{typeof value === "object" ? JSON.stringify(value) : value}</dd>
                 </div>
               ))}
             </CardContent>
@@ -78,7 +78,7 @@ export default function IncidentShow({ incident = {}, related_error = null, rela
             <CardHeader className="border-b py-3"><CardTitle className="text-sm">Related Deploy</CardTitle></CardHeader>
             <CardContent className="p-0 divide-y divide-border">
               {related_deploy.version && <div className="flex px-4 py-2 gap-4 text-sm"><dt className="text-muted-foreground w-32 shrink-0">Version</dt><dd>{related_deploy.version}</dd></div>}
-              {related_deploy.git_sha && <div className="flex px-4 py-2 gap-4 text-sm"><dt className="text-muted-foreground w-32 shrink-0">Git SHA</dt><dd className="font-mono text-xs">{related_deploy.git_sha}</dd></div>}
+              {related_deploy.git_sha && <div className="flex px-4 py-2 gap-4 text-sm"><dt className="text-muted-foreground w-32 shrink-0">Git SHA</dt><dd className="font-mono text-sm">{related_deploy.git_sha}</dd></div>}
               {related_deploy.deployed_by && <div className="flex px-4 py-2 gap-4 text-sm"><dt className="text-muted-foreground w-32 shrink-0">Deployed by</dt><dd>{related_deploy.deployed_by}</dd></div>}
               {related_deploy.deployed_at && <div className="flex px-4 py-2 gap-4 text-sm"><dt className="text-muted-foreground w-32 shrink-0">Deployed at</dt><dd>{formatTimeLong(related_deploy.deployed_at)}</dd></div>}
             </CardContent>
@@ -89,8 +89,8 @@ export default function IncidentShow({ incident = {}, related_error = null, rela
           <Card>
             <CardHeader className="border-b py-3"><CardTitle className="text-sm">Related Error</CardTitle></CardHeader>
             <CardContent className="p-0 divide-y divide-border">
-              {related_error.error_class && <div className="flex px-4 py-2 gap-4 text-sm"><dt className="text-muted-foreground w-32 shrink-0">Error Class</dt><dd className="font-mono text-destructive text-xs">{related_error.error_class}</dd></div>}
-              {related_error.message && <div className="flex px-4 py-2 gap-4 text-sm"><dt className="text-muted-foreground w-32 shrink-0">Message</dt><dd className="text-xs">{related_error.message}</dd></div>}
+              {related_error.error_class && <div className="flex px-4 py-2 gap-4 text-sm"><dt className="text-muted-foreground w-32 shrink-0">Error Class</dt><dd className="font-mono text-destructive text-sm">{related_error.error_class}</dd></div>}
+              {related_error.message && <div className="flex px-4 py-2 gap-4 text-sm"><dt className="text-muted-foreground w-32 shrink-0">Message</dt><dd className="text-sm">{related_error.message}</dd></div>}
               {related_error.occurrences_count != null && <div className="flex px-4 py-2 gap-4 text-sm"><dt className="text-muted-foreground w-32 shrink-0">Occurrences</dt><dd>{related_error.occurrences_count}</dd></div>}
               {related_error.id && (
                 <div className="px-4 py-3">
@@ -117,7 +117,7 @@ export default function IncidentShow({ incident = {}, related_error = null, rela
                 <div className="size-4 rounded-full border-2 border-muted-foreground/30 border-t-muted-foreground animate-spin shrink-0" />
                 <div className="flex flex-col gap-0.5">
                   <span className="font-medium text-foreground">AI is investigating this incident...</span>
-                  <span className="text-xs">Analysis in progress. This page will update when complete.</span>
+                  <span className="text-sm">Analysis in progress. This page will update when complete.</span>
                 </div>
               </div>
             ) : (
@@ -135,6 +135,6 @@ export default function IncidentShow({ incident = {}, related_error = null, rela
       >
         <div className="text-sm text-muted-foreground">Use the AI tab to ask questions about this incident.</div>
       </EwSheet>
-    </DaylightLayout>
+    </AppLayout>
   );
 }

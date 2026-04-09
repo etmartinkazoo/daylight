@@ -43,21 +43,9 @@ module Daylight
       # Individual events for drill-down by mailer (fixed top 50, no pagination)
       events = []
       if params[:mailer].present?
-        events = scope.where(mailer_class: params[:mailer])
-          .order(occurred_at: :desc)
-          .limit(50)
-          .map do |e|
-            {
-              id: e.id,
-              mailer_class: e.mailer_class,
-              action: e.try(:action),
-              status: e.status,
-              duration_ms: e.duration_ms,
-              recipient: e.try(:recipient),
-              error_message: e.try(:error_message),
-              occurred_at: e.occurred_at
-            }
-          end
+        events = MailEventResource.serialize(
+          scope.where(mailer_class: params[:mailer]).order(occurred_at: :desc).limit(50)
+        )
       end
 
       total = scope.count
@@ -90,7 +78,7 @@ module Daylight
         records,
         filename: "daylight-mail-events",
         csv_headers: %w[id mailer_class action status duration_ms recipient error_message occurred_at],
-        json_row: ->(e) { { id: e.id, mailer_class: e.mailer_class, action: e.try(:action), status: e.status, duration_ms: e.duration_ms, recipient: e.try(:recipient), error_message: e.try(:error_message), occurred_at: e.occurred_at } }
+        json_row: ->(e) { MailEventResource.serialize(e) }
       ) { |e| [e.id, e.mailer_class, e.try(:action), e.status, e.duration_ms, e.try(:recipient), e.try(:error_message), e.occurred_at] }
     end
 

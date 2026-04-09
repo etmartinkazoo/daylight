@@ -21,7 +21,7 @@ module Daylight
       pagy, log_records = pagy(scope.order(occurred_at: :desc), limit: 50)
 
       render inertia: {
-        logs: InertiaRails.scroll(pagy) { log_records.map { |l| serialize_log(l) } },
+        logs: InertiaRails.scroll(pagy) { LogResource.serialize(log_records) },
         counts: counts,
         period: period,
         level: params[:level],
@@ -39,21 +39,10 @@ module Daylight
         records,
         filename: "daylight-logs",
         csv_headers: %w[id level message controller_action request_path occurred_at],
-        json_row: method(:serialize_log)
+        json_row: ->(l) { LogResource.serialize(l) }
       ) { |l| [l.id, l.level, l.message, l.controller_action, l.request_path, l.occurred_at] }
     end
 
     private
-
-    def serialize_log(l)
-      {
-        id: l.id,
-        level: l.level,
-        message: l.message,
-        controller_action: l.controller_action,
-        request_path: l.request_path,
-        occurred_at: l.occurred_at
-      }
-    end
   end
 end

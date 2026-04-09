@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { router, InfiniteScroll } from "@inertiajs/react";
 import { cn } from "@/lib/utils";
-import DaylightLayout from "../DaylightLayout";
-import PeriodSelect from "../PeriodSelect";
-import EwSheet from "../errors/EwSheet";
+import AppLayout from "@/layouts/app-layout";
+import PeriodSelect from "@/components/PeriodSelect";
+import EwSheet from "@/components/errors/EwSheet";
 import { AreaChart } from "@/components/charts/AreaChart";
 import { DonutChart } from "@/components/charts/DonutChart";
 import { SortableHeader } from "@/components/ui/sortable-header";
@@ -11,6 +11,9 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
 import { fmt } from "@/lib/formatters.js";
+import { Empty, EmptyHeader, EmptyTitle, EmptyDescription } from "@/components/ui/empty";
+import { DetailRow } from "@/components/ui/detail-row";
+import { PageHeader } from "@/components/ui/page-header";
 
 function hitRateColor(rate) {
   if (rate == null) return "";
@@ -44,17 +47,14 @@ export default function CacheIndex({
   function openPattern(p) { setSheetItem(p); setSheetOpen(true); }
 
   return (
-    <DaylightLayout>
+    <AppLayout>
       <div className="flex flex-col gap-6 p-6">
 
-        {/* Page header */}
-        <div className="flex items-start justify-between">
-          <div className="flex flex-col gap-1">
-            <h1 className="text-xl font-semibold">Cache</h1>
-            <p className="text-sm text-muted-foreground">Cache performance and key patterns in the last {period}</p>
-          </div>
-          <PeriodSelect value={period} onChange={changePeriod} />
-        </div>
+        <PageHeader
+          title="Cache"
+          description={`Cache performance and key patterns in the last ${period}`}
+          actions={<PeriodSelect value={period} onChange={changePeriod} />}
+        />
 
         {/* Stat cards */}
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
@@ -129,13 +129,12 @@ export default function CacheIndex({
           </CardHeader>
           <Separator />
           {key_groups.length === 0 ? (
-            <div className="flex flex-col items-center gap-2 py-10 text-sm text-muted-foreground">
-              <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                <polyline points="22 4 12 14.01 9 11.01" />
-              </svg>
-              <span>No cache events recorded in this period.</span>
-            </div>
+            <Empty>
+              <EmptyHeader>
+                <EmptyTitle>No cache events</EmptyTitle>
+                <EmptyDescription>No cache events recorded in this period.</EmptyDescription>
+              </EmptyHeader>
+            </Empty>
           ) : (
             <InfiniteScroll data="key_groups" itemsElement="#cache-tbody" startElement="#cache-thead">
               <Table>
@@ -158,7 +157,7 @@ export default function CacheIndex({
                       className="cursor-pointer"
                       onClick={() => openPattern(p)}
                     >
-                      <TableCell className="max-w-0 truncate font-mono text-xs">{p.key_pattern}</TableCell>
+                      <TableCell className="max-w-0 truncate font-mono text-sm">{p.key_pattern}</TableCell>
                       <TableCell className="text-right tabular-nums">{p.reads}</TableCell>
                       <TableCell className="text-right tabular-nums">
                         <span className={hitRateColor(p.hit_rate)}>
@@ -178,40 +177,18 @@ export default function CacheIndex({
       {/* Detail sheet */}
       <EwSheet open={sheetOpen} onClose={() => setSheetOpen(false)} title="Cache Pattern Detail" aiContext={sheetAi}>
         {sheetItem && (
-          <div className="flex flex-col gap-0 divide-y p-4">
-            <div className="flex items-center justify-between py-3 text-sm">
-              <span className="text-muted-foreground">Key Pattern</span>
-              <span className="font-mono text-xs">{sheetItem.key_pattern}</span>
-            </div>
-            <div className="flex items-center justify-between py-3 text-sm">
-              <span className="text-muted-foreground">Reads</span>
-              <span>{sheetItem.reads}</span>
-            </div>
-            <div className="flex items-center justify-between py-3 text-sm">
-              <span className="text-muted-foreground">Hit Rate</span>
-              <span className={hitRateColor(sheetItem.hit_rate)}>
-                {sheetItem.hit_rate != null ? `${sheetItem.hit_rate.toFixed(1)}%` : "—"}
-              </span>
-            </div>
-            <div className="flex items-center justify-between py-3 text-sm">
-              <span className="text-muted-foreground">Avg Duration</span>
-              <span>{fmt(sheetItem.avg_duration)}</span>
-            </div>
-            {sheetItem.max_duration && (
-              <div className="flex items-center justify-between py-3 text-sm">
-                <span className="text-muted-foreground">Max Duration</span>
-                <span>{fmt(sheetItem.max_duration)}</span>
-              </div>
-            )}
-            {sheetItem.total && (
-              <div className="flex items-center justify-between py-3 text-sm">
-                <span className="text-muted-foreground">Total Events</span>
-                <span>{sheetItem.total}</span>
-              </div>
-            )}
+          <div className="flex flex-col divide-y p-4">
+            <DetailRow label="Key Pattern" valueClassName="font-mono text-sm">{sheetItem.key_pattern}</DetailRow>
+            <DetailRow label="Reads">{sheetItem.reads}</DetailRow>
+            <DetailRow label="Hit Rate" valueClassName={hitRateColor(sheetItem.hit_rate)}>
+              {sheetItem.hit_rate != null ? `${sheetItem.hit_rate.toFixed(1)}%` : "—"}
+            </DetailRow>
+            <DetailRow label="Avg Duration">{fmt(sheetItem.avg_duration)}</DetailRow>
+            {sheetItem.max_duration && <DetailRow label="Max Duration">{fmt(sheetItem.max_duration)}</DetailRow>}
+            {sheetItem.total && <DetailRow label="Total Events">{sheetItem.total}</DetailRow>}
           </div>
         )}
       </EwSheet>
-    </DaylightLayout>
+    </AppLayout>
   );
 }

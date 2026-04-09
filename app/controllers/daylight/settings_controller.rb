@@ -8,55 +8,17 @@ module Daylight
       settings = Database.all_settings
 
       # Performance scan results
-      perf_issues = Database::PerformanceIssueRecord
-        .where(status: "open")
-        .order(detected_at: :desc)
-        .limit(25)
-        .map do |i|
-          {
-            id: i.id,
-            issue_type: i.issue_type,
-            severity: i.severity,
-            title: i.title,
-            description: i.description,
-            sql_pattern: i.sql_pattern,
-            source_location: i.source_location,
-            controller_action: i.controller_action,
-            occurrences: i.occurrences,
-            avg_duration_ms: i.avg_duration_ms,
-            max_duration_ms: i.max_duration_ms,
-            total_time_ms: i.total_time_ms,
-            solution: i.solution,
-            status: i.status,
-            detected_at: i.detected_at
-          }
-        end
+      perf_issues = PerformanceIssueResource.serialize(
+        Database::PerformanceIssueRecord.where(status: "open").order(detected_at: :desc).limit(25)
+      )
 
       # Security scan results
-      sec_issues = Database::SecurityIssueRecord
-        .where(status: "open")
-        .order(Arel.sql("CASE severity WHEN 'critical' THEN 0 WHEN 'warning' THEN 1 ELSE 2 END, detected_at DESC"))
-        .limit(50)
-        .map do |i|
-          {
-            id: i.id,
-            issue_type: i.issue_type,
-            warning_type: i.warning_type,
-            severity: i.severity,
-            confidence: i.confidence,
-            title: i.title,
-            description: i.description,
-            file_path: i.file_path,
-            line_number: i.line_number,
-            code_snippet: i.code_snippet,
-            check_name: i.check_name,
-            link: i.link,
-            fingerprint: i.fingerprint,
-            solution: i.solution,
-            status: i.status,
-            detected_at: i.detected_at
-          }
-        end
+      sec_issues = SecurityIssueResource.serialize(
+        Database::SecurityIssueRecord
+          .where(status: "open")
+          .order(Arel.sql("CASE severity WHEN 'critical' THEN 0 WHEN 'warning' THEN 1 ELSE 2 END, detected_at DESC"))
+          .limit(50)
+      )
 
       render inertia: {
         settings: {

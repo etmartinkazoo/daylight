@@ -40,33 +40,16 @@ module Daylight
       end
 
       # Slowest individual queries (fixed top 25, no pagination)
-      slowest = scope.order(duration_ms: :desc).limit(25).map do |q|
-        {
-          id: q.id,
-          sql: q.sql,
-          duration_ms: q.duration_ms,
-          source_location: q.source_location,
-          controller_action: q.controller_action,
-          request_path: q.request_path,
-          occurred_at: q.occurred_at
-        }
-      end
+      slowest = QueryRecordResource.serialize(scope.order(duration_ms: :desc).limit(25))
 
       # N+1 requests in period
-      n_plus_one_requests = Database::RequestRecord
-        .where("occurred_at > ?", period_start(period))
-        .where(n_plus_one: true)
-        .order(occurred_at: :desc)
-        .limit(20)
-        .map do |r|
-          {
-            id: r.id,
-            path: r.path,
-            controller_action: r.controller_action,
-            query_count: r.query_count,
-            occurred_at: r.occurred_at
-          }
-        end
+      n_plus_one_requests = RequestResource.serialize(
+        Database::RequestRecord
+          .where("occurred_at > ?", period_start(period))
+          .where(n_plus_one: true)
+          .order(occurred_at: :desc)
+          .limit(20)
+      )
 
       render inertia: {
         queries: InertiaRails.scroll(pagy) { queries },

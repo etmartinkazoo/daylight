@@ -52,6 +52,10 @@ module Daylight
         @connected = true
       end
 
+      def reset_connection!
+        @connected = false
+      end
+
       def bullet_diagnostic_active?
         expires_at = all_settings["bullet_diagnostic_expires_at"]
         return false if expires_at.blank?

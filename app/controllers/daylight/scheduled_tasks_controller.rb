@@ -43,16 +43,7 @@ module Daylight
         }
       end
 
-      failures = scope.where(status: "failed").order(occurred_at: :desc).limit(25).map do |t|
-        {
-          id: t.id,
-          task_class: t.task_class,
-          duration_ms: t.duration_ms,
-          error_class: t.error_class,
-          error_message: t.error_message,
-          occurred_at: t.occurred_at
-        }
-      end
+      failures = ScheduledTaskResource.serialize(scope.where(status: "failed").order(occurred_at: :desc).limit(25))
 
       render inertia: {
         task_classes: InertiaRails.scroll(pagy) { task_classes },
@@ -78,7 +69,7 @@ module Daylight
         records,
         filename: "daylight-scheduled-tasks",
         csv_headers: %w[id task_class status duration_ms error_class error_message occurred_at],
-        json_row: ->(t) { { id: t.id, task_class: t.task_class, status: t.status, duration_ms: t.duration_ms, error_class: t.error_class, error_message: t.error_message, occurred_at: t.occurred_at } }
+        json_row: ->(t) { ScheduledTaskResource.serialize(t) }
       ) { |t| [t.id, t.task_class, t.status, t.duration_ms, t.error_class, t.error_message, t.occurred_at] }
     end
 

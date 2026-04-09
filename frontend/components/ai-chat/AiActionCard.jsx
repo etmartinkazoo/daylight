@@ -1,20 +1,21 @@
+import { Button } from "@/components/ui/button";
 import { actionLabel } from "./utils.js";
 
 export default function AiActionCard({ action, executing = false, result = null, onExecute }) {
   return (
-    <div className="ai-action-card">
-      <div className="ai-action-info">
-        <span className="ai-action-type">{action.type.replace(/_/g, " ")}</span>
-        <span className="ai-action-label">{actionLabel(action)}</span>
+    <div className="flex items-center justify-between gap-3 rounded-md border bg-muted/30 px-3 py-2 text-sm">
+      <div className="flex flex-col gap-0.5">
+        <span className="font-medium text-foreground capitalize">{action.type.replace(/_/g, " ")}</span>
+        <span className="text-muted-foreground">{actionLabel(action)}</span>
       </div>
       {result ? (
-        <span className={`ai-action-result${result.success ? " success" : " error"}`}>
+        <span className={`text-sm shrink-0 ${result.success ? "text-green-600" : "text-destructive"}`}>
           {result.success ? result.message : result.error}
         </span>
       ) : (
-        <button className="ai-action-approve" disabled={executing} onClick={() => onExecute?.(action)}>
+        <Button size="xs" disabled={executing} onClick={() => onExecute?.(action)}>
           {executing ? "Running..." : "Approve"}
-        </button>
+        </Button>
       )}
     </div>
   );

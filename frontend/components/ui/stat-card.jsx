@@ -1,20 +1,27 @@
 import { cn } from "@/lib/utils.js";
 
-export function StatCard({ label, value, color, danger }) {
+const valueClass = {
+  success: "text-emerald-600 dark:text-emerald-400",
+  warning: "text-amber-500 dark:text-amber-400",
+  muted: "text-muted-foreground",
+};
+
+export function StatCard({ label, value, variant, color, danger }) {
   return (
-    <div
-      className={cn(
-        "bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl p-5 flex flex-col gap-1 transition-shadow hover:shadow-[var(--shadow-md)]",
-        danger && "border-[var(--color-danger-border)]",
-      )}
-    >
-      <span className="text-[0.8125rem] font-medium text-[var(--color-muted)]">{label}</span>
+    <div className={cn("flex flex-col gap-2 px-5 py-4", danger && "bg-destructive/[0.035]")}>
+      <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground leading-none">
+        {label}
+      </span>
       <span
         className={cn(
-          "text-[1.75rem] font-bold leading-none tabular-nums tracking-tight",
-          danger ? "text-[var(--color-danger)]" : "text-[var(--color-fg)]",
+          "text-[22px] font-bold tabular-nums leading-none tracking-tight",
+          danger
+            ? "text-destructive"
+            : variant
+              ? valueClass[variant]
+              : "text-foreground",
         )}
-        style={color && !danger ? { color } : undefined}
+        style={color && !danger && !variant ? { color } : undefined}
       >
         {value}
       </span>

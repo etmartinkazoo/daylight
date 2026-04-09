@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { router, InfiniteScroll } from "@inertiajs/react";
 import { cn } from "@/lib/utils";
-import DaylightLayout from "../DaylightLayout";
-import PeriodSelect from "../PeriodSelect";
-import EwSheet from "../errors/EwSheet";
+import AppLayout from "@/layouts/app-layout";
+import PeriodSelect from "@/components/PeriodSelect";
+import EwSheet from "@/components/errors/EwSheet";
 import { InteractiveBarChart } from "@/components/charts/InteractiveBarChart";
 import { ExportButton } from "@/components/ui/export-button";
 import { SortableHeader } from "@/components/ui/sortable-header";
@@ -12,6 +12,9 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
 import { fmt, timeAgo, formatTime } from "@/lib/formatters.js";
+import { DetailRow } from "@/components/ui/detail-row";
+import { PageHeader } from "@/components/ui/page-header";
+import { Empty, EmptyHeader, EmptyTitle, EmptyDescription } from "@/components/ui/empty";
 
 export default function ScheduledTasksIndex({
   task_classes = [], failures = [], totals = {}, period = "24h",
@@ -45,20 +48,14 @@ export default function ScheduledTasksIndex({
   }));
 
   return (
-    <DaylightLayout>
+    <AppLayout>
       <div className="flex flex-col gap-6 p-6">
 
-        {/* Page header */}
-        <div className="flex items-start justify-between">
-          <div className="flex flex-col gap-1">
-            <h1 className="text-xl font-semibold">Scheduled Tasks</h1>
-            <p className="text-sm text-muted-foreground">Recurring task monitoring and performance</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <ExportButton baseUrl={`${base}/scheduled_tasks/export`} />
-            <PeriodSelect value={period} onChange={changePeriod} />
-          </div>
-        </div>
+        <PageHeader
+          title="Scheduled Tasks"
+          description="Recurring task monitoring and performance"
+          actions={<><ExportButton baseUrl={`${base}/scheduled_tasks/export`} /><PeriodSelect value={period} onChange={changePeriod} /></>}
+        />
 
         {/* Stat cards */}
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
@@ -157,13 +154,12 @@ export default function ScheduledTasksIndex({
             </Card>
           </div>
         ) : task_classes.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 py-10 text-sm text-muted-foreground">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-            </svg>
-            <p className="font-medium">No scheduled task data yet</p>
-            <p>Tasks will appear here once they start running.</p>
-          </div>
+          <Empty>
+            <EmptyHeader>
+              <EmptyTitle>No scheduled task data yet</EmptyTitle>
+              <EmptyDescription>Tasks will appear here once they start running.</EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         ) : null}
       </div>
 
@@ -172,23 +168,23 @@ export default function ScheduledTasksIndex({
           <div className="flex flex-col divide-y p-4">
             {sheetType === "class" ? (
               <>
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Task Class</span><span>{sheetItem.task_class}</span></div>
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Total</span><span>{sheetItem.total}</span></div>
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Completed</span><span className="text-green-500">{sheetItem.completed_count}</span></div>
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Failed</span><span className={cn(sheetItem.failed_count > 0 && "text-red-500")}>{sheetItem.failed_count}</span></div>
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Avg Duration</span><span>{fmt(sheetItem.avg_duration)}</span></div>
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Max Duration</span><span className={cn(sheetItem.max_duration > 10000 && "text-yellow-500")}>{fmt(sheetItem.max_duration)}</span></div>
+                <DetailRow label="Task Class">{sheetItem.task_class}</DetailRow>
+                <DetailRow label="Total">{sheetItem.total}</DetailRow>
+                <DetailRow label="Completed" valueClassName="text-green-500">{sheetItem.completed_count}</DetailRow>
+                <DetailRow label="Failed" valueClassName={cn(sheetItem.failed_count > 0 && "text-red-500")}>{sheetItem.failed_count}</DetailRow>
+                <DetailRow label="Avg Duration">{fmt(sheetItem.avg_duration)}</DetailRow>
+                <DetailRow label="Max Duration" valueClassName={cn(sheetItem.max_duration > 10000 && "text-yellow-500")}>{fmt(sheetItem.max_duration)}</DetailRow>
               </>
             ) : (
               <>
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Task Class</span><span>{sheetItem.task_class}</span></div>
-                {sheetItem.duration_ms && <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Duration</span><span>{fmt(sheetItem.duration_ms)}</span></div>}
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Failed At</span><span>{formatTime(sheetItem.occurred_at)}</span></div>
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Error Class</span><span className="text-red-500">{sheetItem.error_class || "—"}</span></div>
+                <DetailRow label="Task Class">{sheetItem.task_class}</DetailRow>
+                {sheetItem.duration_ms && <DetailRow label="Duration">{fmt(sheetItem.duration_ms)}</DetailRow>}
+                <DetailRow label="Failed At">{formatTime(sheetItem.occurred_at)}</DetailRow>
+                <DetailRow label="Error Class" valueClassName="text-red-500">{sheetItem.error_class || "—"}</DetailRow>
                 {sheetItem.error_message && (
                   <div className="pt-3">
-                    <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Error Message</p>
-                    <pre className="overflow-auto rounded-md bg-muted p-3 text-xs font-mono">{sheetItem.error_message}</pre>
+                    <p className="mb-1 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Error Message</p>
+                    <pre className="overflow-auto rounded-md bg-muted p-3 text-sm font-mono">{sheetItem.error_message}</pre>
                   </div>
                 )}
               </>
@@ -196,6 +192,6 @@ export default function ScheduledTasksIndex({
           </div>
         )}
       </EwSheet>
-    </DaylightLayout>
+    </AppLayout>
   );
 }

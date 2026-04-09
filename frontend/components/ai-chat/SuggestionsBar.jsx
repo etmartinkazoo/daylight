@@ -1,11 +1,13 @@
+import { Button } from "@/components/ui/button";
+
 export default function SuggestionsBar({ suggestions = [], onSelect }) {
   if (suggestions.length === 0) return null;
   return (
-    <div className="suggestions">
+    <div className="flex flex-wrap gap-1.5 mt-2">
       {suggestions.map((s, i) => (
-        <button key={i} className="suggestion" onClick={() => onSelect?.(s)}>
+        <Button key={i} variant="outline" size="xs" className="rounded-full font-normal" onClick={() => onSelect?.(s)}>
           {s}
-        </button>
+        </Button>
       ))}
     </div>
   );

@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { router, InfiniteScroll } from "@inertiajs/react";
 import { cn } from "@/lib/utils";
-import DaylightLayout from "../DaylightLayout";
-import PeriodSelect from "../PeriodSelect";
-import EwSheet from "../errors/EwSheet";
+import AppLayout from "@/layouts/app-layout";
+import PeriodSelect from "@/components/PeriodSelect";
+import EwSheet from "@/components/errors/EwSheet";
 import { InteractiveBarChart } from "@/components/charts/InteractiveBarChart";
 import { ExportButton } from "@/components/ui/export-button";
 import { SortableHeader } from "@/components/ui/sortable-header";
@@ -12,6 +12,9 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
 import { fmt, timeAgo, formatTime } from "@/lib/formatters.js";
+import { Empty, EmptyHeader, EmptyTitle, EmptyDescription } from "@/components/ui/empty";
+import { DetailRow } from "@/components/ui/detail-row";
+import { PageHeader } from "@/components/ui/page-header";
 
 export default function MailEventsIndex({
   mailers = [], events = [], totals = {}, period = "24h", selected_mailer = null,
@@ -51,20 +54,14 @@ export default function MailEventsIndex({
   const deliveryRateColor = deliveryRate >= 95 ? "text-green-500" : deliveryRate >= 80 ? "text-yellow-500" : "text-red-500";
 
   return (
-    <DaylightLayout>
+    <AppLayout>
       <div className="flex flex-col gap-6 p-6">
 
-        {/* Page header */}
-        <div className="flex items-start justify-between">
-          <div className="flex flex-col gap-1">
-            <h1 className="text-xl font-semibold">Mail &amp; Notifications</h1>
-            <p className="text-sm text-muted-foreground">Email and notification delivery monitoring</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <ExportButton baseUrl={`${base}/mail_events/export`} />
-            <PeriodSelect value={period} onChange={changePeriod} />
-          </div>
-        </div>
+        <PageHeader
+          title="Mail & Notifications"
+          description="Email and notification delivery monitoring"
+          actions={<><ExportButton baseUrl={`${base}/mail_events/export`} /><PeriodSelect value={period} onChange={changePeriod} /></>}
+        />
 
         {/* Stat cards */}
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
@@ -159,13 +156,12 @@ export default function MailEventsIndex({
             </Card>
           </div>
         ) : mailers.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 py-10 text-sm text-muted-foreground">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
-            </svg>
-            <p className="font-medium">No mail data yet</p>
-            <p>Mail events will appear here once your app starts sending emails.</p>
-          </div>
+          <Empty>
+            <EmptyHeader>
+              <EmptyTitle>No mail data yet</EmptyTitle>
+              <EmptyDescription>Mail events will appear here once your app starts sending emails.</EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         ) : null}
       </div>
 
@@ -174,25 +170,25 @@ export default function MailEventsIndex({
           <div className="flex flex-col divide-y p-4">
             {sheetType === "mailer" ? (
               <>
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Mailer Class</span><span>{sheetItem.mailer_class}</span></div>
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Total</span><span>{sheetItem.total}</span></div>
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Delivered</span><span className="text-green-500">{sheetItem.delivered_count}</span></div>
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Failed</span><span className={cn(sheetItem.failed_count > 0 && "text-red-500")}>{sheetItem.failed_count}</span></div>
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Avg Duration</span><span>{fmt(sheetItem.avg_duration)}</span></div>
+                <DetailRow label="Mailer Class">{sheetItem.mailer_class}</DetailRow>
+                <DetailRow label="Total">{sheetItem.total}</DetailRow>
+                <DetailRow label="Delivered" valueClassName="text-green-500">{sheetItem.delivered_count}</DetailRow>
+                <DetailRow label="Failed" valueClassName={cn(sheetItem.failed_count > 0 && "text-red-500")}>{sheetItem.failed_count}</DetailRow>
+                <DetailRow label="Avg Duration">{fmt(sheetItem.avg_duration)}</DetailRow>
               </>
             ) : (
               <>
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Mailer Class</span><span>{sheetItem.mailer_class}</span></div>
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Subject</span><span>{sheetItem.subject || "—"}</span></div>
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Recipients</span><span>{sheetItem.recipients || "—"}</span></div>
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Channel</span><Badge variant="secondary">{sheetItem.channel || "email"}</Badge></div>
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Status</span><Badge variant={statusVariant(sheetItem.status)}>{sheetItem.status || "—"}</Badge></div>
-                {sheetItem.duration_ms && <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Duration</span><span>{fmt(sheetItem.duration_ms)}</span></div>}
-                <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Time</span><span>{formatTime(sheetItem.occurred_at)}</span></div>
+                <DetailRow label="Mailer Class">{sheetItem.mailer_class}</DetailRow>
+                <DetailRow label="Subject">{sheetItem.subject || "—"}</DetailRow>
+                <DetailRow label="Recipients">{sheetItem.recipients || "—"}</DetailRow>
+                <DetailRow label="Channel"><Badge variant="secondary">{sheetItem.channel || "email"}</Badge></DetailRow>
+                <DetailRow label="Status"><Badge variant={statusVariant(sheetItem.status)}>{sheetItem.status || "—"}</Badge></DetailRow>
+                {sheetItem.duration_ms && <DetailRow label="Duration">{fmt(sheetItem.duration_ms)}</DetailRow>}
+                <DetailRow label="Time">{formatTime(sheetItem.occurred_at)}</DetailRow>
                 {sheetItem.error_message && (
                   <div className="pt-3">
-                    <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Error</p>
-                    <pre className="overflow-auto rounded-md bg-muted p-3 text-xs font-mono">{sheetItem.error_message}</pre>
+                    <p className="mb-1 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Error</p>
+                    <pre className="overflow-auto rounded-md bg-muted p-3 text-sm font-mono">{sheetItem.error_message}</pre>
                   </div>
                 )}
               </>
@@ -200,6 +196,6 @@ export default function MailEventsIndex({
           </div>
         )}
       </EwSheet>
-    </DaylightLayout>
+    </AppLayout>
   );
 }

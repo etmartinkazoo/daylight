@@ -1,6 +1,7 @@
 import "./daylight.css";
 import { createInertiaApp } from "@inertiajs/react";
 import { createRoot } from "react-dom/client";
+import PersistentLayout from "@/layouts/persistent-layout";
 
 createInertiaApp({
   resolve: (name) => {
@@ -11,6 +12,11 @@ createInertiaApp({
     if (!page) {
       throw new Error(`[Daylight] Page not found: ${name}`);
     }
+
+    // Set PersistentLayout as default for all pages (handles Toaster + ThemeProvider).
+    // Pages can override by setting their own .layout property.
+    page.default.layout ??= (page) => <PersistentLayout>{page}</PersistentLayout>;
+
     return page;
   },
   setup({ el, App, props }) {
@@ -24,5 +30,7 @@ createInertiaApp({
       useDataInertiaHeadAttribute: true,
     },
   },
-  progress: false,
+  progress: {
+    color: "#f59e0b",
+  },
 });

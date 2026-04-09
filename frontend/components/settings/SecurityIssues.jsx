@@ -2,7 +2,7 @@ import { useState } from "react";
 import { router } from "@inertiajs/react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import IssueCard from "./IssueCard.jsx";
+import IssueCard from "@/components/settings/IssueCard.jsx";
 
 const secTypeLabels = {
   injection: "Injection",

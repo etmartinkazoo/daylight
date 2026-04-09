@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { router, InfiniteScroll } from "@inertiajs/react";
 import { cn } from "@/lib/utils";
-import DaylightLayout from "../DaylightLayout";
-import PeriodSelect from "../PeriodSelect";
-import EwSheet from "../errors/EwSheet";
+import AppLayout from "@/layouts/app-layout";
+import PeriodSelect from "@/components/PeriodSelect";
+import EwSheet from "@/components/errors/EwSheet";
 import { BarList } from "@/components/charts/BarList";
 import { InteractiveBarChart } from "@/components/charts/InteractiveBarChart";
 import { ExportButton } from "@/components/ui/export-button";
@@ -13,7 +13,10 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
+import { Empty, EmptyHeader, EmptyTitle, EmptyDescription } from "@/components/ui/empty";
 import { fmt, timeAgo } from "@/lib/formatters.js";
+import { DetailRow } from "@/components/ui/detail-row";
+import { PageHeader } from "@/components/ui/page-header";
 
 export default function QueriesIndex({
   queries = [], slowest = [], period = "24h", total_queries = 0,
@@ -47,20 +50,14 @@ export default function QueriesIndex({
     : "";
 
   return (
-    <DaylightLayout>
+    <AppLayout>
       <div className="flex flex-col gap-6 p-6">
 
-        {/* Page header */}
-        <div className="flex items-start justify-between">
-          <div className="flex flex-col gap-1">
-            <h1 className="text-xl font-semibold">Slow Queries</h1>
-            <p className="text-sm text-muted-foreground">Queries exceeding 50ms threshold in the last {period}</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <ExportButton baseUrl={`${base}/queries/export`} />
-            <PeriodSelect value={period} onChange={changePeriod} />
-          </div>
-        </div>
+        <PageHeader
+          title="Slow Queries"
+          description={`Queries exceeding 50ms threshold in the last ${period}`}
+          actions={<><ExportButton baseUrl={`${base}/queries/export`} /><PeriodSelect value={period} onChange={changePeriod} /></>}
+        />
 
         {/* Stat cards */}
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
@@ -117,7 +114,7 @@ export default function QueriesIndex({
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Badge variant="secondary" className="text-yellow-600 bg-yellow-50">N+1</Badge>
-                        <span className="font-mono text-xs">{np.path}</span>
+                        <span className="font-mono text-sm">{np.path}</span>
                       </div>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">{np.controller_action || "—"}</TableCell>
@@ -152,10 +149,12 @@ export default function QueriesIndex({
           </CardHeader>
           <Separator />
           {queries.length === 0 ? (
-            <div className="flex flex-col items-center gap-2 py-10 text-sm text-muted-foreground">
-              <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
-              <span>No slow queries recorded in this period.</span>
-            </div>
+            <Empty>
+              <EmptyHeader>
+                <EmptyTitle>No slow queries</EmptyTitle>
+                <EmptyDescription>No slow queries recorded in this period.</EmptyDescription>
+              </EmptyHeader>
+            </Empty>
           ) : (
             <InfiniteScroll data="queries" itemsElement="#queries-tbody" startElement="#queries-thead">
               <Table>
@@ -171,11 +170,11 @@ export default function QueriesIndex({
                 <TableBody id="queries-tbody">
                   {queries.map((q, i) => (
                     <TableRow key={`${q.normalized_sql}:${i}`} className="cursor-pointer" onClick={() => openQuery(q)}>
-                      <TableCell className="max-w-0 truncate font-mono text-xs">{q.normalized_sql}</TableCell>
+                      <TableCell className="max-w-0 truncate font-mono text-sm">{q.normalized_sql}</TableCell>
                       <TableCell className="text-right tabular-nums">{q.total}</TableCell>
                       <TableCell className={cn("text-right tabular-nums", q.avg_duration > 200 && "text-red-500")}>{fmt(q.avg_duration)}</TableCell>
                       <TableCell className={cn("text-right tabular-nums", q.max_duration > 500 && "text-red-500")}>{fmt(q.max_duration)}</TableCell>
-                      <TableCell className="font-mono text-xs text-muted-foreground">{q.source_location || "—"}</TableCell>
+                      <TableCell className="font-mono text-sm text-muted-foreground">{q.source_location || "—"}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -197,9 +196,9 @@ export default function QueriesIndex({
                 <Button key={q.id} variant="ghost" className="h-auto w-full justify-between rounded-none px-4 py-3" onClick={() => { setSheetItem(q); setSheetOpen(true); }}>
                   <div className="flex items-center gap-3">
                     <span className="font-semibold tabular-nums text-red-500">{fmt(q.duration_ms)}</span>
-                    <span className="font-mono text-xs text-muted-foreground">{q.source_location || "—"}</span>
+                    <span className="font-mono text-sm text-muted-foreground">{q.source_location || "—"}</span>
                   </div>
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
                     <span>{q.controller_action}</span>
                     <span>{timeAgo(q.occurred_at)}</span>
                   </div>
@@ -213,29 +212,23 @@ export default function QueriesIndex({
       <EwSheet open={sheetOpen} onClose={() => setSheetOpen(false)} title="Query Detail" aiContext={sheetAiContext}>
         {sheetItem && (
           <div className="flex flex-col divide-y p-4">
-            {sheetItem.controller_action && <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Controller</span><span>{sheetItem.controller_action}</span></div>}
-            {sheetItem.request_path && <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Path</span><span className="font-mono text-xs">{sheetItem.request_path}</span></div>}
-            {sheetItem.source_location && <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Source</span><span className="font-mono text-xs">{sheetItem.source_location}</span></div>}
-            <div className="flex items-center justify-between py-3 text-sm">
-              <span className="text-muted-foreground">Duration</span>
-              <span className={cn((sheetItem.duration_ms > 200 || sheetItem.avg_duration > 200) && "text-red-500")}>
-                {fmt(sheetItem.duration_ms || sheetItem.avg_duration)}
-              </span>
-            </div>
+            {sheetItem.controller_action && <DetailRow label="Controller">{sheetItem.controller_action}</DetailRow>}
+            {sheetItem.request_path && <DetailRow label="Path" valueClassName="font-mono text-sm">{sheetItem.request_path}</DetailRow>}
+            {sheetItem.source_location && <DetailRow label="Source" valueClassName="font-mono text-sm">{sheetItem.source_location}</DetailRow>}
+            <DetailRow label="Duration" valueClassName={cn((sheetItem.duration_ms > 200 || sheetItem.avg_duration > 200) && "text-red-500")}>
+              {fmt(sheetItem.duration_ms || sheetItem.avg_duration)}
+            </DetailRow>
             {sheetItem.max_duration && (
-              <div className="flex items-center justify-between py-3 text-sm">
-                <span className="text-muted-foreground">Max</span>
-                <span className={cn(sheetItem.max_duration > 500 && "text-red-500")}>{fmt(sheetItem.max_duration)}</span>
-              </div>
+              <DetailRow label="Max" valueClassName={cn(sheetItem.max_duration > 500 && "text-red-500")}>{fmt(sheetItem.max_duration)}</DetailRow>
             )}
-            {sheetItem.total && <div className="flex items-center justify-between py-3 text-sm"><span className="text-muted-foreground">Occurrences</span><span>{sheetItem.total}</span></div>}
+            {sheetItem.total && <DetailRow label="Occurrences">{sheetItem.total}</DetailRow>}
             <div className="pt-3">
-              <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">SQL</p>
-              <pre className="overflow-auto rounded-md bg-muted p-3 text-xs font-mono">{sheetItem.sql || sheetItem.normalized_sql}</pre>
+              <p className="mb-1 text-sm font-semibold uppercase tracking-wide text-muted-foreground">SQL</p>
+              <pre className="overflow-auto rounded-md bg-muted p-3 text-sm font-mono">{sheetItem.sql || sheetItem.normalized_sql}</pre>
             </div>
           </div>
         )}
       </EwSheet>
-    </DaylightLayout>
+    </AppLayout>
   );
 }

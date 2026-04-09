@@ -3,6 +3,8 @@ import { usePage } from "@inertiajs/react";
 import { consumer } from "@/utils/cable";
 import AiChatMessages from "@/components/ai-chat/AiChatMessages";
 import AiChatInput from "@/components/ai-chat/AiChatInput";
+import { Button } from "@/components/ui/button";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { playNotificationSound } from "@/lib/notification-sounds.js";
 
 export default function EwAiChat({ context = "", appContext = "" }) {
@@ -33,7 +35,6 @@ export default function EwAiChat({ context = "", appContext = "" }) {
 
   useEffect(() => { chatIdRef.current = chatId; }, [chatId]);
 
-  // Reset when context changes
   useEffect(() => {
     if (context) {
       setMessages([]);
@@ -175,21 +176,23 @@ export default function EwAiChat({ context = "", appContext = "" }) {
   }
 
   return (
-    <div className="ew-ai-chat">
+    <div className="flex flex-col h-full">
       {aiModels.length > 1 && (
-        <div className="ew-ai-model-row">
-          <select
-            className="ew-ai-model-select"
-            value={selectedModel}
-            onChange={(e) => setSelectedModel(e.target.value)}
-            disabled={!!chatId}
-          >
-            {aiModels.map((model) => (
-              <option key={model.value} value={model.value}>{model.label}</option>
-            ))}
-          </select>
+        <div className="flex items-center gap-2 px-3 py-2 border-b shrink-0">
+          <Select value={selectedModel} onValueChange={setSelectedModel} disabled={!!chatId}>
+            <SelectTrigger className="h-7 text-sm flex-1">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {aiModels.map((model) => (
+                <SelectItem key={model.value} value={model.value}>{model.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           {chatId && (
-            <button className="ew-ai-new" onClick={newChat} title="New chat">+ New</button>
+            <Button variant="ghost" size="xs" onClick={newChat}>
+              + New
+            </Button>
           )}
         </div>
       )}

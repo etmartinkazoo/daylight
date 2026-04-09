@@ -3,7 +3,8 @@ import { usePage } from "@inertiajs/react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import EwAiChat from "./EwAiChat";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import EwAiChat from "@/components/errors/EwAiChat";
 
 const statusVariant = { open: "destructive", resolved: "secondary", ignored: "outline" };
 
@@ -44,7 +45,7 @@ export default function ErrorSheet({ open, onClose, error, onStatusChange }) {
 
   return (
     <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
-      <SheetContent className="flex flex-col gap-0 p-0 sm:max-w-md" showCloseButton={false}>
+      <SheetContent className="flex flex-col gap-0 p-0 sm:max-w-lg" showCloseButton={false}>
         <SheetHeader className="border-b px-4 py-3">
           <div className="flex items-center justify-between gap-2">
             <SheetTitle className="truncate text-sm font-mono">{error?.error_class || "Error"}</SheetTitle>
@@ -52,24 +53,33 @@ export default function ErrorSheet({ open, onClose, error, onStatusChange }) {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </Button>
           </div>
-          <div className="flex gap-1 pt-1">
-            <Button variant={tab === "info" ? "secondary" : "ghost"} size="sm" onClick={() => setTab("info")}>Info</Button>
-            <Button variant={tab === "ai" ? "secondary" : "ghost"} size="sm" onClick={() => { setTab("ai"); setTimeout(() => aiChatRef.current?.focus?.(), 50); }}>AI</Button>
-          </div>
+          <Tabs value={tab} onValueChange={(v) => {
+            if (!v) return;
+            setTab(v);
+            if (v === "ai") setTimeout(() => aiChatRef.current?.focus?.(), 50);
+          }}>
+            <TabsList className="h-8">
+              <TabsTrigger value="info" className="text-sm px-3">Info</TabsTrigger>
+              <TabsTrigger value="ai" className="text-sm px-3">AI</TabsTrigger>
+            </TabsList>
+          </Tabs>
         </SheetHeader>
 
-        <div className="flex-1 overflow-y-auto">
-          {tab === "ai" ? (
+        {tab === "ai" ? (
+          <div className="flex-1 min-h-0 flex flex-col">
             <EwAiChat ref={aiChatRef} context={error?.ai_context || ""} appContext={appContextStr} />
-          ) : error ? (
+          </div>
+        ) : (
+          <div className="flex-1 overflow-y-auto">
+          {error ? (
             <div className="p-4 flex flex-col gap-4">
               <div className="flex items-center gap-2">
                 <Badge variant={statusVariant[error.status] || "outline"}>{error.status}</Badge>
-                <span className="text-xs text-muted-foreground">{error.occurrences_count} occurrence{error.occurrences_count === 1 ? "" : "s"}</span>
+                <span className="text-sm text-muted-foreground">{error.occurrences_count} occurrence{error.occurrences_count === 1 ? "" : "s"}</span>
               </div>
 
               <div className="flex flex-col gap-1">
-                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Message</span>
+                <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Message</span>
                 <p className="text-sm">{error.message}</p>
               </div>
 
@@ -77,10 +87,10 @@ export default function ErrorSheet({ open, onClose, error, onStatusChange }) {
                 const lastOcc = error.recent_occurrences[0];
                 return (lastOcc.request_url || lastOcc.context?.route || lastOcc.context?.controller_action) ? (
                   <div className="flex flex-col gap-1">
-                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Where</span>
+                    <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Where</span>
                     <dl className="text-sm divide-y divide-border rounded-md border">
                       {lastOcc.request_method && lastOcc.request_url && (
-                        <div className="flex gap-3 px-3 py-2"><dt className="text-muted-foreground w-20 shrink-0">URL</dt><dd className="font-mono text-xs break-all">{lastOcc.request_method} {lastOcc.request_url}</dd></div>
+                        <div className="flex gap-3 px-3 py-2"><dt className="text-muted-foreground w-20 shrink-0">URL</dt><dd className="font-mono text-sm break-all">{lastOcc.request_method} {lastOcc.request_url}</dd></div>
                       )}
                       {lastOcc.context?.route && <div className="flex gap-3 px-3 py-2"><dt className="text-muted-foreground w-20 shrink-0">Route</dt><dd>{lastOcc.context.route}</dd></div>}
                       {lastOcc.context?.controller_action && <div className="flex gap-3 px-3 py-2"><dt className="text-muted-foreground w-20 shrink-0">Controller</dt><dd>{lastOcc.context.controller_action}</dd></div>}
@@ -99,15 +109,15 @@ export default function ErrorSheet({ open, onClose, error, onStatusChange }) {
 
               {error.backtrace_summary && (
                 <div className="flex flex-col gap-1">
-                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Backtrace</span>
-                  <pre className="text-xs font-mono bg-muted/50 rounded-md p-3 overflow-x-auto">{error.backtrace_summary}</pre>
+                  <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Backtrace</span>
+                  <pre className="text-sm font-mono bg-muted/50 rounded-md p-3 overflow-x-auto">{error.backtrace_summary}</pre>
                 </div>
               )}
 
               {error.recent_occurrences?.length > 1 && (
                 <div className="flex flex-col gap-1">
-                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Recent Occurrences</span>
-                  <ul className="text-xs divide-y divide-border rounded-md border">
+                  <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Recent Occurrences</span>
+                  <ul className="text-sm divide-y divide-border rounded-md border">
                     {error.recent_occurrences.map((occ) => (
                       <li key={occ.id} className="flex flex-wrap gap-x-3 gap-y-0.5 px-3 py-2">
                         <span className="text-muted-foreground">{occ.occurred_at}</span>
@@ -135,7 +145,8 @@ export default function ErrorSheet({ open, onClose, error, onStatusChange }) {
               </div>
             </div>
           ) : null}
-        </div>
+          </div>
+        )}
       </SheetContent>
     </Sheet>
   );

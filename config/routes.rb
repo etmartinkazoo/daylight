@@ -1,10 +1,14 @@
 # frozen_string_literal: true
 
 Daylight::Engine.routes.draw do
-  resources :errors, only: [:index, :show, :update, :destroy] do
-    collection do
-      post :batch
-    end
+  namespace :errors, path: "errors" do
+    get "resolved", to: "resolved#index", as: :resolved
+    get "ignored",  to: "ignored#index",  as: :ignored
+    get "all",      to: "all#index",      as: :all
+  end
+
+  resources :errors, only: [:index, :show, :update, :destroy], constraints: { id: /\d+/ } do
+    collection { post :batch }
   end
 
   resources :requests, only: [:index]
