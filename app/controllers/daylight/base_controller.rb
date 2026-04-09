@@ -10,6 +10,11 @@ module Daylight
 
     layout "daylight/application"
 
+    inertia_config(
+      use_script_element_for_initial_page: true,
+      use_data_inertia_head_attribute: true
+    )
+
     rescue_from StandardError, with: :render_daylight_error
 
     before_action :authenticate_daylight!
