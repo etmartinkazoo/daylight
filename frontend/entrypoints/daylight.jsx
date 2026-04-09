@@ -24,12 +24,6 @@ createInertiaApp({
       createRoot(el).render(<App {...props} />);
     }
   },
-  defaults: {
-    future: {
-      useScriptElementForInitialPage: true,
-      useDataInertiaHeadAttribute: true,
-    },
-  },
   progress: {
     color: "#f59e0b",
   },

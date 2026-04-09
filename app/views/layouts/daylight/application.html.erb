@@ -7,6 +7,7 @@
   <%= csrf_meta_tags %>
   <%= csp_meta_tag %>
   <%= action_cable_meta_tag if respond_to?(:action_cable_meta_tag) %>
+  <%= inertia_head if respond_to?(:inertia_head) %>
 
   <script>
     // Prevent FOUC — apply theme before paint
