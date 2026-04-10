@@ -17,6 +17,13 @@ module Daylight
       Alba.backend = :active_support
     end
 
+    initializer "daylight.inertia" do
+      InertiaRails.configure do |config|
+        config.use_script_element_for_initial_page = true
+        config.use_data_inertia_head_attribute = true
+      end
+    end
+
     # After every code reload (development), record classes lose their
     # establish_connection config. Reset the flag so ensure_connected!
     # re-establishes the SQLite connection on the next request.
