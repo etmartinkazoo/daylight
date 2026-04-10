@@ -5,7 +5,7 @@ module Daylight
     include InertiaRails::Controller
     include Daylight::Periodable
     include Daylight::Sortable
-    include Pagy::Method
+    include Pagy::Backend
 
     protect_from_forgery with: :exception
 
