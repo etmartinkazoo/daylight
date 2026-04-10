@@ -29,7 +29,7 @@ module Daylight
       scope.reorder(col => dir)
     end
 
-    # For aggregated/grouped queries, returns a SQL ORDER BY expression.
+    # For aggregated/grouped queries, returns an Arel ORDER BY expression.
     def sort_order_sql(default:, allowed: {}, direction: "desc")
       col = params[:sort].presence
       dir = params[:direction].presence
@@ -41,7 +41,7 @@ module Daylight
       @_sort_column = resolved_col
       @_sort_direction = dir
 
-      "#{resolved_expr} #{dir}"
+      Arel.sql("#{resolved_expr} #{dir}")
     end
 
     def sort_props

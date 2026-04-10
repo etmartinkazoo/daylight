@@ -1,4 +1,4 @@
-import { router } from "@inertiajs/react";
+import { Link } from "@inertiajs/react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,9 +16,9 @@ function severityBorderClass(severity) {
 
 export default function SolutionCard({ solution, base }) {
   return (
+    <Link href={`${base}/solutions/${solution.id}`} className="block">
     <Card
       className={`cursor-pointer hover:shadow-sm transition-shadow ${severityBorderClass(solution.severity)}`}
-      onClick={() => router.get(`${base}/solutions/${solution.id}`)}
     >
       <CardContent className="flex flex-col gap-2">
           <div className="flex items-center justify-between gap-2">
@@ -68,5 +68,6 @@ export default function SolutionCard({ solution, base }) {
           </div>
       </CardContent>
     </Card>
+    </Link>
   );
 }

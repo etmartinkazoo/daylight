@@ -65,46 +65,22 @@ module Daylight
     end
 
     def jobs_info
-      info = { available: false }
+      sq = SolidQueueStats.new
+      return { available: false } unless sq.available?
 
-      if defined?(SolidQueue)
-        info[:available] = true
+      stats = sq.stats
+      return { available: true, error: "query failed" } unless stats
 
-        begin
-          info[:ready] = SolidQueue::ReadyExecution.count
-          info[:scheduled] = SolidQueue::ScheduledExecution.count
-          info[:failed] = SolidQueue::FailedExecution.count
-          info[:claimed] = SolidQueue::ClaimedExecution.count
-          info[:blocked] = SolidQueue::BlockedExecution.count if SolidQueue.const_defined?(:BlockedExecution)
-          info[:processes] = SolidQueue::Process.count
-          info[:recent_failures] = SolidQueue::FailedExecution
-            .order(created_at: :desc)
-            .limit(10)
-            .map do |f|
-              job = f.job
-              {
-                id: f.id,
-                job_class: job&.class_name,
-                error_class: f.error&.dig("exception_class"),
-                error_message: f.error&.dig("message")&.truncate(200),
-                failed_at: f.created_at
-              }
-            end
-        rescue StandardError => e
-          info[:error] = e.message
-        end
-      end
-
-      info
+      stats.merge(available: true)
     end
 
     def errors_info
       Daylight::Database.ensure_connected!
       {
         total: Daylight::Database::ErrorRecord.count,
-        open: Daylight::Database::ErrorRecord.where(status: "open").count,
-        last_24h: Daylight::Database::OccurrenceRecord.where("occurred_at > ?", 24.hours.ago).count,
-        last_7d: Daylight::Database::OccurrenceRecord.where("occurred_at > ?", 7.days.ago).count
+        open: Daylight::Database::ErrorRecord.open.count,
+        last_24h: Daylight::Database::OccurrenceRecord.where(occurred_at: 24.hours.ago..).count,
+        last_7d: Daylight::Database::OccurrenceRecord.where(occurred_at: 7.days.ago..).count
       }
     rescue StandardError
       { total: 0, open: 0, last_24h: 0, last_7d: 0 }
@@ -132,7 +108,7 @@ module Daylight
 
     def compute_apdex
       Daylight::Database.ensure_connected!
-      Database::RequestRecord.apdex(Database::RequestRecord.where("occurred_at > ?", 24.hours.ago))
+      Database::RequestRecord.apdex(Database::RequestRecord.where(occurred_at: 24.hours.ago..))
     rescue StandardError
       nil
     end

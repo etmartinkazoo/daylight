@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { usePage } from "@inertiajs/react";
+import { usePage, Form } from "@inertiajs/react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +8,7 @@ import EwAiChat from "@/components/errors/EwAiChat";
 
 const statusVariant = { open: "destructive", resolved: "secondary", ignored: "outline" };
 
-export default function ErrorSheet({ open, onClose, error, onStatusChange }) {
+export default function ErrorSheet({ open, onClose, error, returnStatus = "open" }) {
   const { props } = usePage();
   const base = props?.base_path || "/daylight";
   const ewSettings = props.ew_settings || {};
@@ -38,9 +38,8 @@ export default function ErrorSheet({ open, onClose, error, onStatusChange }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [open, tab, onClose]);
 
-  function handleAction(newStatus) {
-    onStatusChange?.(error.id, newStatus);
-    onClose();
+  function statusFormAction(newStatus) {
+    return `${base}/errors/${error?.id}`;
   }
 
   return (
@@ -133,11 +132,17 @@ export default function ErrorSheet({ open, onClose, error, onStatusChange }) {
               <div className="flex items-center gap-2 flex-wrap border-t pt-4">
                 {error.status === "open" ? (
                   <>
-                    <Button size="sm" onClick={() => handleAction("resolved")}>Resolve</Button>
-                    <Button size="sm" variant="outline" onClick={() => handleAction("ignored")}>Ignore</Button>
+                    <Form method="patch" action={statusFormAction()} data={{ status: "resolved", return_status: returnStatus }} options={{ onSuccess: onClose }} className="inline">
+                      {() => <Button type="submit" size="sm">Resolve</Button>}
+                    </Form>
+                    <Form method="patch" action={statusFormAction()} data={{ status: "ignored", return_status: returnStatus }} options={{ onSuccess: onClose }} className="inline">
+                      {() => <Button type="submit" size="sm" variant="outline">Ignore</Button>}
+                    </Form>
                   </>
                 ) : (
-                  <Button size="sm" variant="outline" onClick={() => handleAction("open")}>Reopen</Button>
+                  <Form method="patch" action={statusFormAction()} data={{ status: "open", return_status: returnStatus }} options={{ onSuccess: onClose }} className="inline">
+                    {() => <Button type="submit" size="sm" variant="outline">Reopen</Button>}
+                  </Form>
                 )}
                 <Button size="sm" variant="ghost" asChild>
                   <a href={`${base}/errors/${error.id}`}>View full detail &rarr;</a>

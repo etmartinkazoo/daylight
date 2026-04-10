@@ -2,6 +2,6 @@
 
 module Daylight
   class SolutionMessageResource < BaseResource
-    attributes :id, :role, :content, :created_at
+    attributes :id, :solution_id, :role, :content, :created_at
   end
 end

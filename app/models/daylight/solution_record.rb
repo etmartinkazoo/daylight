@@ -4,6 +4,12 @@ module Daylight
   class SolutionRecord < Record
     self.table_name = "daylight_solutions"
 
+    has_many :messages, class_name: "Daylight::SolutionMessageRecord", foreign_key: :solution_id, dependent: :destroy
+    belongs_to :incident, class_name: "Daylight::IncidentRecord", optional: true
+
+    validates :source_type, :source_issue_id, :title, :severity, :generated_at, presence: true
+    validates :status, inclusion: { in: %w[draft approved pushed rejected] }
+
     extend Database::HasStatusCounts
     count_statuses :all, :draft, :approved, :pushed, :rejected, total: false
 
@@ -18,10 +24,6 @@ module Daylight
       when "security"
         SecurityIssueRecord.find_by(id: source_issue_id)
       end
-    end
-
-    def incident
-      IncidentRecord.find_by(id: incident_id) if incident_id
     end
   end
 end

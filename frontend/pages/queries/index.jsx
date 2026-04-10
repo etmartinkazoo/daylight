@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { router, InfiniteScroll } from "@inertiajs/react";
+import { InfiniteScroll } from "@inertiajs/react";
 import { cn } from "@/lib/utils";
 import AppLayout from "@/layouts/app-layout";
 import PeriodSelect from "@/components/PeriodSelect";
@@ -68,9 +68,7 @@ export default function QueriesIndex({
       value: q.avg_duration || 0,
     }));
 
-  function changePeriod(p) {
-    router.get(`${base}/queries`, { period: p }, { preserveState: true });
-  }
+
   function openQuery(q) {
     setSheetItem(q);
     setSheetOpen(true);
@@ -89,7 +87,7 @@ export default function QueriesIndex({
           actions={
             <>
               <ExportButton baseUrl={`${base}/queries/export`} />
-              <PeriodSelect value={period} onChange={changePeriod} />
+              <PeriodSelect value={period} href={`${base}/queries`} />
             </>
           }
         />

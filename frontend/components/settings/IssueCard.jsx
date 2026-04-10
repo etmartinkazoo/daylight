@@ -1,10 +1,11 @@
+import { Form } from "@inertiajs/react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { timeAgo } from "@/lib/formatters.js";
 
 const severityVariant = { critical: "destructive", warning: "outline", info: "secondary" };
 
-export default function IssueCard({ issue, expanded, onToggle, onDismiss, variant = "performance", typeLabel = "", typeClass = "" }) {
+export default function IssueCard({ issue, expanded, onToggle, dismissAction, variant = "performance", typeLabel = "", typeClass = "" }) {
   return (
     <div className={`rounded-lg border bg-card text-card-foreground shadow-xs ${issue.severity === "critical" ? "border-destructive/50" : issue.severity === "warning" ? "border-amber-500/40" : "border-border"}`}>
       <button
@@ -142,8 +143,12 @@ export default function IssueCard({ issue, expanded, onToggle, onDismiss, varian
                 </a>
               </Button>
             )}
-            <Button size="sm" variant="outline" onClick={() => onDismiss(issue.id, "fixed")}>Mark Fixed</Button>
-            <Button size="sm" variant="ghost" onClick={() => onDismiss(issue.id, "ignored")}>Ignore</Button>
+            <Form method="patch" action={`${dismissAction}/${issue.id}`} data={{ new_status: "fixed" }} options={{ preserveScroll: true }} className="inline">
+              {() => <Button type="submit" size="sm" variant="outline">Mark Fixed</Button>}
+            </Form>
+            <Form method="patch" action={`${dismissAction}/${issue.id}`} data={{ new_status: "ignored" }} options={{ preserveScroll: true }} className="inline">
+              {() => <Button type="submit" size="sm" variant="ghost">Ignore</Button>}
+            </Form>
           </div>
         </div>
       )}

@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { router } from "@inertiajs/react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import IssueCard from "@/components/settings/IssueCard.jsx";
@@ -15,10 +14,6 @@ export default function PerformanceIssues({ issues = [], base = "/daylight" }) {
 
   function toggleIssue(id) {
     setExpandedIssue(expandedIssue === id ? null : id);
-  }
-
-  function dismissIssue(id, status) {
-    router.patch(`${base}/settings/performance_issues/${id}`, { new_status: status }, { preserveScroll: true });
   }
 
   if (issues.length === 0) return null;
@@ -38,7 +33,7 @@ export default function PerformanceIssues({ issues = [], base = "/daylight" }) {
             issue={issue}
             expanded={expandedIssue === issue.id}
             onToggle={toggleIssue}
-            onDismiss={dismissIssue}
+            dismissAction={`${base}/settings/performance_issues`}
             variant="performance"
             typeLabel={typeLabels[issue.issue_type] || issue.issue_type}
             typeClass={issue.issue_type}

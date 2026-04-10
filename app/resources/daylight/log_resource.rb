@@ -2,6 +2,6 @@
 
 module Daylight
   class LogResource < BaseResource
-    attributes :id, :level, :message, :controller_action, :request_path, :occurred_at
+    attributes :id, :level, :message, :controller_action, :request_path, :trace_id, :occurred_at
   end
 end

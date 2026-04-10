@@ -3,6 +3,7 @@
 module Daylight
   class ErrorsController < BaseController
     include Daylight::TimeSeries
+    include Daylight::ErrorRouting
 
     before_action :ensure_connected
 
@@ -22,13 +23,18 @@ module Daylight
 
     def update
       error = Database::ErrorRecord.find(params[:id])
-      error.update!(status: params[:status]) if %w[open resolved ignored].include?(params[:status])
-      redirect_to errors_path_for(params[:return_status])
+      error.status = params[:status]
+
+      if error.save
+        redirect_to errors_path_for(params[:return_status])
+      else
+        flash[:error] = error.errors.full_messages.to_sentence
+        redirect_to errors_path_for(params[:return_status])
+      end
     end
 
     def destroy
       error = Database::ErrorRecord.find(params[:id])
-      Database::OccurrenceRecord.where(error_id: error.id).delete_all
       error.destroy!
       redirect_to errors_path
     end
@@ -48,7 +54,7 @@ module Daylight
                            .group_by(&:error_id)
                            .transform_values { |occs| OccurrenceResource.serialize(occs.first(5)) }
 
-      occurrence_scope = Database::OccurrenceRecord.where("occurred_at > ?", period_start(current_period))
+      occurrence_scope = Database::OccurrenceRecord.where(occurred_at: period_start(current_period)..)
 
       render inertia: "daylight/errors/index", props: {
         errors: InertiaRails.scroll(pagy) {

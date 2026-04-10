@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { router, InfiniteScroll } from "@inertiajs/react";
+import { Link, InfiniteScroll, Form } from "@inertiajs/react";
 import AppLayout from "@/layouts/app-layout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -34,18 +34,6 @@ export default function SolutionsIndex({
 }) {
   const [generating, setGenerating] = useState(false);
 
-  function generateSolutions() {
-    setGenerating(true);
-    router.post(
-      `${base}/solutions/generate`,
-      {},
-      {
-        preserveState: true,
-        onFinish: () => setGenerating(false),
-      },
-    );
-  }
-
   return (
     <AppLayout>
       <div className="flex flex-col gap-6 p-6">
@@ -67,54 +55,50 @@ export default function SolutionsIndex({
                   {last_scan_error}
                 </span>
               )}
-              <Button
-                onClick={generateSolutions}
-                disabled={generating}
-                size="sm"
-              >
-                <svg
-                  width="13"
-                  height="13"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M12 2L2 7l10 5 10-5-10-5z" />
-                  <path d="M2 17l10 5 10-5" />
-                  <path d="M2 12l10 5 10-5" />
-                </svg>
-                {generating ? "Generating..." : "Generate Solutions"}
-              </Button>
+              <Form method="post" action={`${base}/solutions/generation`} options={{ preserveState: true, onBefore: () => setGenerating(true), onFinish: () => setGenerating(false) }} className="inline">
+                {() => (
+                  <Button
+                    type="submit"
+                    disabled={generating}
+                    size="sm"
+                  >
+                    <svg
+                      width="13"
+                      height="13"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                      <path d="M2 17l10 5 10-5" />
+                      <path d="M2 12l10 5 10-5" />
+                    </svg>
+                    {generating ? "Generating..." : "Generate Solutions"}
+                  </Button>
+                )}
+              </Form>
             </>
           }
         />
 
-        <Tabs
-          value={status}
-          onValueChange={(v) =>
-            v &&
-            router.get(
-              `${base}/solutions`,
-              { status: v },
-              { preserveState: true },
-            )
-          }
-        >
+        <Tabs value={status}>
           <TabsList>
             {tabs.map((tab) => (
-              <TabsTrigger key={tab.key} value={tab.key}>
-                {tab.label}
-                {tab.key !== "all" && counts[tab.key] > 0 && (
-                  <Badge
-                    variant="secondary"
-                    className="ml-1.5 text-sm h-4 px-1"
-                  >
-                    {counts[tab.key]}
-                  </Badge>
-                )}
+              <TabsTrigger key={tab.key} value={tab.key} asChild>
+                <Link href={`${base}/solutions`} data={{ status: tab.key }} preserveState>
+                  {tab.label}
+                  {tab.key !== "all" && counts[tab.key] > 0 && (
+                    <Badge
+                      variant="secondary"
+                      className="ml-1.5 text-sm h-4 px-1"
+                    >
+                      {counts[tab.key]}
+                    </Badge>
+                  )}
+                </Link>
               </TabsTrigger>
             ))}
           </TabsList>

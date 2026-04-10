@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { router } from "@inertiajs/react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import IssueCard from "@/components/settings/IssueCard.jsx";
@@ -28,10 +27,6 @@ export default function SecurityIssues({ issues = [], base = "/daylight" }) {
     setExpandedSecIssue(expandedSecIssue === id ? null : id);
   }
 
-  function dismissSecIssue(id, status) {
-    router.patch(`${base}/settings/security_issues/${id}`, { new_status: status }, { preserveScroll: true });
-  }
-
   if (issues.length === 0) return null;
 
   return (
@@ -56,7 +51,7 @@ export default function SecurityIssues({ issues = [], base = "/daylight" }) {
             issue={issue}
             expanded={expandedSecIssue === issue.id}
             onToggle={toggleSecIssue}
-            onDismiss={dismissSecIssue}
+            dismissAction={`${base}/settings/security_issues`}
             variant="security"
             typeLabel={secTypeLabels[issue.issue_type] || issue.warning_type}
             typeClass=""

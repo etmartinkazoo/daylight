@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { router, Link } from "@inertiajs/react";
+import { Form, Link } from "@inertiajs/react";
 import AppLayout from "@/layouts/app-layout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -38,9 +38,7 @@ export default function SolutionShow({
 
   const proposedFixHtml = markdownToHtml(solution.proposed_fix);
 
-  function updateStatus(newStatus) { router.patch(`${base}/solutions/${solution.id}`, { status: newStatus }); }
-  function regenerate() { router.post(`${base}/solutions/${solution.id}/regenerate`); }
-  function pushToGithub() { router.post(`${base}/solutions/${solution.id}/push`); }
+  const solutionUrl = `${base}/solutions/${solution.id}`;
 
   async function sendChat() {
     if (!chatInput.trim() || sending) return;
@@ -214,22 +212,36 @@ export default function SolutionShow({
         <div className="flex items-center gap-2 flex-wrap">
           {solution.status === "draft" && (
             <>
-              <Button onClick={() => updateStatus("approved")}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                Approve
-              </Button>
-              <Button variant="destructive" onClick={() => updateStatus("rejected")}>Reject</Button>
+              <Form method="patch" action={solutionUrl} data={{ status: "approved" }} className="inline">
+                {() => (
+                  <Button type="submit">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    Approve
+                  </Button>
+                )}
+              </Form>
+              <Form method="patch" action={solutionUrl} data={{ status: "rejected" }} className="inline">
+                {() => <Button type="submit" variant="destructive">Reject</Button>}
+              </Form>
             </>
           )}
-          <Button variant="outline" onClick={regenerate}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
-            Regenerate
-          </Button>
+          <Form method="patch" action={`${solutionUrl}/generation`} className="inline">
+            {() => (
+              <Button type="submit" variant="outline">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+                Regenerate
+              </Button>
+            )}
+          </Form>
           {solution.status === "approved" && github_configured && (
-            <Button onClick={pushToGithub}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
-              Push to GitHub
-            </Button>
+            <Form method="post" action={`${solutionUrl}/push`} className="inline">
+              {() => (
+                <Button type="submit">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+                  Push to GitHub
+                </Button>
+              )}
+            </Form>
           )}
           {solution.status === "pushed" && solution.pr_url && (
             <Button variant="outline" asChild>

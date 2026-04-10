@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Form, router } from "@inertiajs/react";
+import { Form } from "@inertiajs/react";
 import AppLayout from "@/layouts/app-layout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -47,53 +47,19 @@ export default function SettingsIndex({
     return Math.max(0, Math.round((expires - new Date()) / 60000));
   })();
 
-  function runCleanup() {
-    setCleanupRunning(true); setCleanupDone(false);
-    router.post(`${base}/settings/cleanup`, {}, {
-      preserveScroll: true,
-      onSuccess: () => { setCleanupRunning(false); setCleanupDone(true); },
-      onError: () => setCleanupRunning(false),
-    });
-  }
-
-  function sendTestNotification() {
-    setTestNotifRunning(true); setTestNotifDone(false);
-    router.post(`${base}/settings/test_notification`, {}, {
-      preserveScroll: true,
-      onSuccess: () => { setTestNotifRunning(false); setTestNotifDone(true); },
-      onError: () => setTestNotifRunning(false),
-    });
-  }
-
-  function runPerformanceScan() {
-    setScanRunning(true); setScanTriggered(false);
-    router.post(`${base}/settings/run_performance_scan`, {}, {
-      preserveScroll: true,
-      onSuccess: () => { setScanRunning(false); setScanTriggered(true); },
-      onError: () => setScanRunning(false),
-    });
-  }
-
-  function runSecurityScan() {
-    setSecScanRunning(true); setSecScanTriggered(false);
-    router.post(`${base}/settings/run_security_scan`, {}, {
-      preserveScroll: true,
-      onSuccess: () => { setSecScanRunning(false); setSecScanTriggered(true); },
-      onError: () => setSecScanRunning(false),
-    });
-  }
-
-  function startBulletDiagnostic() {
-    setBulletStarting(true);
-    router.post(`${base}/settings/toggle_bullet_diagnostic`, { duration: bulletDuration }, {
-      preserveScroll: true,
-      onFinish: () => setBulletStarting(false),
-    });
-  }
-
-  function stopBulletDiagnostic() {
-    router.post(`${base}/settings/stop_bullet_diagnostic`, {}, { preserveScroll: true });
-  }
+  // Action form callbacks
+  function onCleanupSubmit() { setCleanupRunning(true); setCleanupDone(false); }
+  function onCleanupSuccess() { setCleanupRunning(false); setCleanupDone(true); }
+  function onCleanupError() { setCleanupRunning(false); }
+  function onNotifSubmit() { setTestNotifRunning(true); setTestNotifDone(false); }
+  function onNotifSuccess() { setTestNotifRunning(false); setTestNotifDone(true); }
+  function onNotifError() { setTestNotifRunning(false); }
+  function onPerfScanSubmit() { setScanRunning(true); setScanTriggered(false); }
+  function onPerfScanSuccess() { setScanRunning(false); setScanTriggered(true); }
+  function onPerfScanError() { setScanRunning(false); }
+  function onSecScanSubmit() { setSecScanRunning(true); setSecScanTriggered(false); }
+  function onSecScanSuccess() { setSecScanRunning(false); setSecScanTriggered(true); }
+  function onSecScanError() { setSecScanRunning(false); }
 
   return (
     <AppLayout>
@@ -158,9 +124,13 @@ export default function SettingsIndex({
                 </FormField>
                 <FormField label="" hint="Send a test notification to verify your email and Slack settings.">
                   <div className="flex items-center gap-2">
-                    <Button type="button" variant="outline" size="sm" disabled={testNotifRunning} onClick={sendTestNotification}>
-                      {testNotifRunning ? "Sending..." : "Send Test Notification"}
-                    </Button>
+                    <Form method="post" action={`${base}/settings/notification_test`} options={{ preserveScroll: true, onBefore: onNotifSubmit, onSuccess: onNotifSuccess, onError: onNotifError }}>
+                      {() => (
+                        <Button type="submit" variant="outline" size="sm" disabled={testNotifRunning}>
+                          {testNotifRunning ? "Sending..." : "Send Test Notification"}
+                        </Button>
+                      )}
+                    </Form>
                     {testNotifDone && <Badge variant="secondary">Test notification sent</Badge>}
                   </div>
                 </FormField>
@@ -193,9 +163,13 @@ export default function SettingsIndex({
                 </FormField>
                 <FormField label="" hint="Immediately purge data older than the retention period.">
                   <div className="flex items-center gap-2">
-                    <Button type="button" variant="outline" size="sm" disabled={cleanupRunning} onClick={runCleanup}>
-                      {cleanupRunning ? "Running..." : "Run Cleanup Now"}
-                    </Button>
+                    <Form method="post" action={`${base}/settings/cleanup`} options={{ preserveScroll: true, onBefore: onCleanupSubmit, onSuccess: onCleanupSuccess, onError: onCleanupError }}>
+                      {() => (
+                        <Button type="submit" variant="outline" size="sm" disabled={cleanupRunning}>
+                          {cleanupRunning ? "Running..." : "Run Cleanup Now"}
+                        </Button>
+                      )}
+                    </Form>
                     {cleanupDone && <Badge variant="secondary">Cleanup complete</Badge>}
                   </div>
                 </FormField>
@@ -314,10 +288,14 @@ export default function SettingsIndex({
 
                 <FormField label="" hint="Run a performance scan immediately. Analyzes the last 24h of query data. AI solutions require a Gemini API key.">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <Button type="button" variant="outline" size="sm" disabled={scanRunning} onClick={runPerformanceScan}>
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                      {scanRunning ? "Starting..." : "Scan Now"}
-                    </Button>
+                    <Form method="post" action={`${base}/settings/performance_scan`} options={{ preserveScroll: true, onBefore: onPerfScanSubmit, onSuccess: onPerfScanSuccess, onError: onPerfScanError }} className="inline">
+                      {() => (
+                        <Button type="submit" variant="outline" size="sm" disabled={scanRunning}>
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                          {scanRunning ? "Starting..." : "Scan Now"}
+                        </Button>
+                      )}
+                    </Form>
                     {scanTriggered && <Badge variant="secondary">Scan queued</Badge>}
                     {settings.last_performance_scan_at && (
                       <span className="text-sm text-muted-foreground">
@@ -336,27 +314,33 @@ export default function SettingsIndex({
                         Live detection active — {bulletTimeRemaining}min remaining
                       </AlertDescription>
                       <AlertAction>
-                        <Button type="button" variant="outline" size="sm" onClick={stopBulletDiagnostic}>Stop</Button>
+                        <Form method="delete" action={`${base}/settings/bullet_diagnostic`} options={{ preserveScroll: true }}>
+                          {() => <Button type="submit" variant="outline" size="sm">Stop</Button>}
+                        </Form>
                       </AlertAction>
                     </Alert>
                   ) : (
-                    <div className="flex items-center gap-2">
-                      <Select value={bulletDuration} onValueChange={setBulletDuration}>
-                        <SelectTrigger className="w-[140px]">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="5">5 minutes</SelectItem>
-                          <SelectItem value="15">15 minutes</SelectItem>
-                          <SelectItem value="30">30 minutes</SelectItem>
-                          <SelectItem value="60">1 hour</SelectItem>
-                          <SelectItem value="120">2 hours</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Button type="button" variant="outline" size="sm" disabled={bulletStarting} onClick={startBulletDiagnostic}>
-                        {bulletStarting ? "Starting..." : "Start Diagnostic"}
-                      </Button>
-                    </div>
+                    <Form method="post" action={`${base}/settings/bullet_diagnostic`} data={{ duration: bulletDuration }} options={{ preserveScroll: true, onFinish: () => setBulletStarting(false) }}>
+                      {() => (
+                        <div className="flex items-center gap-2">
+                          <Select value={bulletDuration} onValueChange={setBulletDuration}>
+                            <SelectTrigger className="w-[140px]">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="5">5 minutes</SelectItem>
+                              <SelectItem value="15">15 minutes</SelectItem>
+                              <SelectItem value="30">30 minutes</SelectItem>
+                              <SelectItem value="60">1 hour</SelectItem>
+                              <SelectItem value="120">2 hours</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Button type="submit" variant="outline" size="sm" disabled={bulletStarting} onClick={() => setBulletStarting(true)}>
+                            {bulletStarting ? "Starting..." : "Start Diagnostic"}
+                          </Button>
+                        </div>
+                      )}
+                    </Form>
                   )}
                 </FormField>
               </SectionCard>
@@ -403,10 +387,14 @@ export default function SettingsIndex({
 
                 <FormField label="">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <Button type="button" variant="outline" size="sm" disabled={secScanRunning} onClick={runSecurityScan}>
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                      {secScanRunning ? "Starting..." : "Scan Now"}
-                    </Button>
+                    <Form method="post" action={`${base}/settings/security_scan`} options={{ preserveScroll: true, onBefore: onSecScanSubmit, onSuccess: onSecScanSuccess, onError: onSecScanError }} className="inline">
+                      {() => (
+                        <Button type="submit" variant="outline" size="sm" disabled={secScanRunning}>
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                          {secScanRunning ? "Starting..." : "Scan Now"}
+                        </Button>
+                      )}
+                    </Form>
                     {secScanTriggered && <Badge variant="secondary">Scan queued</Badge>}
                     {settings.last_security_scan_at && (
                       <span className="text-sm text-muted-foreground">

@@ -2,8 +2,8 @@
 
 module Daylight
   class JobResource < BaseResource
-    attributes :id, :job_class, :queue, :duration_ms, :error_class,
-               :error_message, :occurred_at
+    attributes :id, :job_class, :queue, :status, :duration_ms, :error_class,
+               :error_message, :enqueued_at, :completed_at, :trace_id, :occurred_at
 
     attribute :source do |_j|
       "daylight"

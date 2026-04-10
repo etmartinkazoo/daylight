@@ -1,4 +1,4 @@
-import { router, InfiniteScroll } from "@inertiajs/react";
+import { Link, InfiniteScroll } from "@inertiajs/react";
 import AppLayout from "@/layouts/app-layout";
 import PeriodSelect from "@/components/PeriodSelect";
 import IncidentCard from "@/components/incidents/IncidentCard";
@@ -42,13 +42,8 @@ export default function IncidentsIndex({
           actions={
             <PeriodSelect
               value={period}
-              onChange={(p) =>
-                router.get(
-                  `${base}/incidents`,
-                  { period: p, status },
-                  { preserveState: true },
-                )
-              }
+              href={`${base}/incidents`}
+              params={{ status }}
             />
           }
         />
@@ -89,29 +84,21 @@ export default function IncidentsIndex({
           />
         )}
 
-        <Tabs
-          value={status}
-          onValueChange={(v) =>
-            v &&
-            router.get(
-              `${base}/incidents`,
-              { period, status: v },
-              { preserveState: true },
-            )
-          }
-        >
+        <Tabs value={status}>
           <TabsList>
             {tabs.map((tab) => (
-              <TabsTrigger key={tab.key} value={tab.key}>
-                {tab.label}
-                {tab.key !== "all" && counts[tab.key] > 0 && (
-                  <Badge
-                    variant="secondary"
-                    className="ml-1.5 text-sm h-4 px-1"
-                  >
-                    {counts[tab.key]}
-                  </Badge>
-                )}
+              <TabsTrigger key={tab.key} value={tab.key} asChild>
+                <Link href={`${base}/incidents`} data={{ period, status: tab.key }} preserveState>
+                  {tab.label}
+                  {tab.key !== "all" && counts[tab.key] > 0 && (
+                    <Badge
+                      variant="secondary"
+                      className="ml-1.5 text-sm h-4 px-1"
+                    >
+                      {counts[tab.key]}
+                    </Badge>
+                  )}
+                </Link>
               </TabsTrigger>
             ))}
           </TabsList>
@@ -138,13 +125,9 @@ export default function IncidentsIndex({
             <div id="incidents-start" className="flex flex-col gap-3">
               <div id="incidents-list" className="flex flex-col gap-3">
                 {incidents.map((incident) => (
-                  <IncidentCard
-                    key={incident.id}
-                    incident={incident}
-                    onClick={() =>
-                      router.get(`${base}/incidents/${incident.id}`)
-                    }
-                  />
+                  <Link key={incident.id} href={`${base}/incidents/${incident.id}`}>
+                    <IncidentCard incident={incident} />
+                  </Link>
                 ))}
               </div>
             </div>

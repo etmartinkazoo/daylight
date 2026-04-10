@@ -4,12 +4,17 @@ module Daylight
   class ErrorRecord < Record
     self.table_name = "daylight_errors"
 
+    has_many :occurrences, class_name: "Daylight::OccurrenceRecord", foreign_key: :error_id, dependent: :destroy
+
+    validates :fingerprint, :error_class, :first_seen_at, :last_seen_at, presence: true
+    validates :status, inclusion: { in: %w[open resolved ignored] }
+
     scope :open,        -> { where(status: "open") }
     scope :resolved,    -> { where(status: "resolved") }
     scope :ignored,     -> { where(status: "ignored") }
     scope :unhandled,   -> { where(handled: false) }
     scope :performance, -> { where(severity: "performance") }
-    scope :recent,      ->(since = 24.hours.ago) { where("last_seen_at > ?", since) }
+    scope :recent,      ->(since = 24.hours.ago) { where(last_seen_at: since..) }
     scope :for_status,  ->(status) { status == "all" ? all : where(status: status) }
     scope :search,      ->(q) { where("error_class LIKE ? OR message LIKE ?", "%#{q}%", "%#{q}%") }
 

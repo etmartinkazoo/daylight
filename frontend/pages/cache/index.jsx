@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { router, InfiniteScroll } from "@inertiajs/react";
+import { InfiniteScroll } from "@inertiajs/react";
 import { cn } from "@/lib/utils";
 import AppLayout from "@/layouts/app-layout";
 import PeriodSelect from "@/components/PeriodSelect";
@@ -43,7 +43,7 @@ export default function CacheIndex({
     ? `Cache Key Pattern: ${sheetItem.key_pattern}\nReads: ${sheetItem.reads}\nHit Rate: ${sheetItem.hit_rate != null ? sheetItem.hit_rate.toFixed(1) + "%" : "N/A"}\nAvg Duration: ${fmt(sheetItem.avg_duration)}`
     : "";
 
-  function changePeriod(p) { router.get(`${base}/cache`, { period: p }, { preserveState: true }); }
+
   function openPattern(p) { setSheetItem(p); setSheetOpen(true); }
 
   return (
@@ -53,7 +53,7 @@ export default function CacheIndex({
         <PageHeader
           title="Cache"
           description={`Cache performance and key patterns in the last ${period}`}
-          actions={<PeriodSelect value={period} onChange={changePeriod} />}
+          actions={<PeriodSelect value={period} href={`${base}/cache`} />}
         />
 
         {/* Stat cards */}

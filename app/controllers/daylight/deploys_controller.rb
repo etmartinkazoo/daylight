@@ -16,21 +16,24 @@ module Daylight
     end
 
     def create
-      deploy = Database::DeployRecord.create!(
-        version: params[:version],
-        description: params[:description],
-        git_sha: params[:git_sha],
-        deployed_by: params[:deployed_by],
-        deployed_at: Time.current
-      )
+      deploy = Database::DeployRecord.new(deploy_params)
+      deploy.deployed_at = Time.current
 
-      render json: {
-        id: deploy.id,
-        version: deploy.version,
-        deployed_at: deploy.deployed_at
-      }, status: :created
+      if deploy.save
+        render json: {
+          id: deploy.id,
+          version: deploy.version,
+          deployed_at: deploy.deployed_at
+        }, status: :created
+      else
+        render json: { errors: deploy.errors.full_messages }, status: :unprocessable_entity
+      end
     end
 
     private
+
+    def deploy_params
+      params.permit(:version, :description, :git_sha, :deployed_by)
+    end
   end
 end

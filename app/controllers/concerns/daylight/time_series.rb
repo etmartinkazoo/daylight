@@ -4,6 +4,10 @@ module Daylight
   module TimeSeries
     extend ActiveSupport::Concern
 
+    included do
+      include Daylight::Periodable
+    end
+
     private
 
     BUCKET_CONFIG = {

@@ -1,4 +1,4 @@
-import { router, usePage } from "@inertiajs/react";
+import { Link, usePage } from "@inertiajs/react";
 import { cn } from "@/lib/utils";
 import { ExportButton } from "@/components/ui/export-button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -51,32 +51,27 @@ export default function ErrorsLayout({ children }) {
       </div>
 
       {/* Tab bar */}
-      <Tabs
-        value={status}
-        onValueChange={(key) => {
-          const tab = tabs.find((t) => t.key === key);
-          if (tab) router.visit(tab.href);
-        }}
-        className="shrink-0 gap-0"
-      >
+      <Tabs value={status} className="shrink-0 gap-0">
         <TabsList className="mx-4 my-3">
           {tabs.map((tab) => (
-            <TabsTrigger key={tab.key} value={tab.key}>
-              <span>{tab.label}</span>
-              {tab.count > 0 && (
-                <span
-                  className={cn(
-                    "text-xs font-semibold tabular-nums",
-                    status === tab.key
-                      ? "text-foreground"
-                      : tab.danger
-                        ? "text-destructive"
-                        : "text-muted-foreground",
-                  )}
-                >
-                  {tab.count}
-                </span>
-              )}
+            <TabsTrigger key={tab.key} value={tab.key} asChild>
+              <Link href={tab.href}>
+                <span>{tab.label}</span>
+                {tab.count > 0 && (
+                  <span
+                    className={cn(
+                      "text-xs font-semibold tabular-nums",
+                      status === tab.key
+                        ? "text-foreground"
+                        : tab.danger
+                          ? "text-destructive"
+                          : "text-muted-foreground",
+                    )}
+                  >
+                    {tab.count}
+                  </span>
+                )}
+              </Link>
             </TabsTrigger>
           ))}
         </TabsList>

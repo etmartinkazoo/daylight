@@ -8,7 +8,7 @@ module Daylight
     before_action :ensure_connected
 
     def show
-      scope = Database::ErrorRecord.where("last_seen_at > ?", period_start(current_period))
+      scope = Database::ErrorRecord.where(last_seen_at: period_start(current_period)..)
       scope = scope.for_status(params[:status]) if params[:status].present?
 
       render_export(

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { router, InfiniteScroll } from "@inertiajs/react";
+import { InfiniteScroll } from "@inertiajs/react";
 import { cn } from "@/lib/utils";
 import AppLayout from "@/layouts/app-layout";
 import PeriodSelect from "@/components/PeriodSelect";
@@ -45,7 +45,7 @@ export default function JobsIndex({
     t: d.t, total: d.v, failed: failure_series[i]?.v || 0,
   }));
 
-  function changePeriod(p) { router.get(`${base}/jobs`, { period: p }, { preserveState: true }); }
+
   function openClass(jc) { setSheetItem(jc); setSheetType("class"); setSheetOpen(true); }
   function openFailure(f) { setSheetItem(f); setSheetType("failure"); setSheetOpen(true); }
   function openSqStat(label, items) { setSheetItem({ label, items }); setSheetType("sq_stat"); setSheetOpen(true); }
@@ -70,7 +70,7 @@ export default function JobsIndex({
         <PageHeader
           title="Jobs"
           description="Background job monitoring and performance"
-          actions={<><ExportButton baseUrl={`${base}/jobs/export`} /><PeriodSelect value={period} onChange={changePeriod} /></>}
+          actions={<><ExportButton baseUrl={`${base}/jobs/export`} /><PeriodSelect value={period} href={`${base}/jobs`} /></>}
         />
 
         {/* Stats + donut */}

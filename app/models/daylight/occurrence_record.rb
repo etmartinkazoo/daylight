@@ -4,6 +4,8 @@ module Daylight
   class OccurrenceRecord < Record
     self.table_name = "daylight_occurrences"
 
+    validates :error_id, :occurred_at, presence: true
+
     after_create :probabilistic_cleanup
 
     private

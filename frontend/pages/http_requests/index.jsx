@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { router, InfiniteScroll } from "@inertiajs/react";
+import { router, Link, InfiniteScroll } from "@inertiajs/react";
 import { cn } from "@/lib/utils";
 import AppLayout from "@/layouts/app-layout";
 import PeriodSelect from "@/components/PeriodSelect";
@@ -33,9 +33,8 @@ export default function HttpRequestsIndex({
     ? `Outgoing HTTP Request:\nURL: ${sheetItem.url}\nStatus: ${sheetItem.status_code}\nDuration: ${fmt(sheetItem.duration_ms)}\nMethod: ${sheetItem.method || "GET"}\nTime: ${sheetItem.occurred_at || "N/A"}`
     : "";
 
-  function changePeriod(p) { router.get(`${base}/http_requests`, { period: p }, { preserveState: true }); }
-  function selectHost(host) { router.get(`${base}/http_requests`, { period, host: host.host }, { preserveState: true }); }
-  function goBack() { router.get(`${base}/http_requests`, { period }, { preserveState: true }); }
+  const indexHref = `${base}/http_requests`;
+  function selectHost(host) { router.get(indexHref, { period, host: host.host }, { preserveState: true }); }
   function openRequest(req) { setSheetItem(req); setSheetOpen(true); }
 
   function statusBadgeVariant(code) {
@@ -53,14 +52,16 @@ export default function HttpRequestsIndex({
         <PageHeader
           title="Outgoing HTTP"
           description={`${total_requests.toLocaleString()} requests in the last ${period}`}
-          actions={<PeriodSelect value={period} onChange={changePeriod} />}
+          actions={<PeriodSelect value={period} href={indexHref} />}
         />
 
         {selected_host && host_requests.length > 0 ? (
           <>
-            <Button variant="ghost" size="sm" onClick={goBack} className="self-start">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8l4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              All hosts
+            <Button variant="ghost" size="sm" className="self-start" asChild>
+              <Link href={indexHref} data={{ period }} preserveState>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8l4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                All hosts
+              </Link>
             </Button>
             <div className="flex items-center gap-3">
               <h2 className="font-medium">{selected_host}</h2>

@@ -19,7 +19,7 @@ module Daylight
       scope = scope.order(occurred_at: :desc)
       pagy, incidents = pagy(scope, limit: 20)
 
-      incident_scope = Database::IncidentRecord.where("occurred_at > ?", period_start(period))
+      incident_scope = Database::IncidentRecord.where(occurred_at: period_start(period)..)
 
       render inertia: {
         incidents: InertiaRails.scroll(pagy) { IncidentResource.serialize(incidents) },
@@ -33,30 +33,24 @@ module Daylight
     def show
       incident = Database::IncidentRecord.find(params[:id])
 
-      related_error = if incident.related_error_id
-        err = Database::ErrorRecord.find_by(id: incident.related_error_id)
-        err ? ErrorResource.serialize(err) : nil
-      end
-
-      related_deploy = if incident.related_deploy_id
-        dep = Database::DeployRecord.find_by(id: incident.related_deploy_id)
-        dep ? DeployResource.serialize(dep) : nil
-      end
-
       render inertia: {
         incident: IncidentResource.serialize(incident),
-        related_error: related_error,
-        related_deploy: related_deploy
+        related_error: incident.related_error ? ErrorResource.serialize(incident.related_error) : nil,
+        related_deploy: incident.related_deploy ? DeployResource.serialize(incident.related_deploy) : nil
       }
     end
 
     def update
       incident = Database::IncidentRecord.find(params[:id])
+
       case params[:status]
       when "resolved"    then incident.resolve!
       when "open"        then incident.reopen!
       when "false_alarm" then incident.mark_false_alarm!
+      else
+        flash[:error] = "Invalid status: #{params[:status]}"
       end
+
       redirect_to incidents_path(status: params[:filter_status] || "open")
     end
 

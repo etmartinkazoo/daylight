@@ -1,3 +1,4 @@
+import { Form, usePage } from "@inertiajs/react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -8,8 +9,11 @@ export default function ErrorRow({
   selected = false,
   onSelect,
   onOpen,
-  onStatusChange,
+  returnStatus = "open",
 }) {
+  const { props } = usePage();
+  const base = props?.base_path || "/daylight";
+
   return (
     <TableRow
       data-state={selected ? "selected" : undefined}
@@ -37,21 +41,13 @@ export default function ErrorRow({
 
       <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
         {error.status === "open" ? (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onStatusChange(error.id, "resolved")}
-          >
-            Resolve
-          </Button>
+          <Form method="patch" action={`${base}/errors/${error.id}`} data={{ status: "resolved", return_status: returnStatus }} className="inline">
+            {() => <Button type="submit" variant="outline" size="sm">Resolve</Button>}
+          </Form>
         ) : (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onStatusChange(error.id, "open")}
-          >
-            Reopen
-          </Button>
+          <Form method="patch" action={`${base}/errors/${error.id}`} data={{ status: "open", return_status: returnStatus }} className="inline">
+            {() => <Button type="submit" variant="outline" size="sm">Reopen</Button>}
+          </Form>
         )}
       </TableCell>
     </TableRow>

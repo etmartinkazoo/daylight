@@ -4,6 +4,12 @@ module Daylight
   class IncidentRecord < Record
     self.table_name = "daylight_incidents"
 
+    belongs_to :related_error, class_name: "Daylight::ErrorRecord", optional: true
+    belongs_to :related_deploy, class_name: "Daylight::DeployRecord", optional: true
+
+    validates :incident_type, :title, :started_at, :occurred_at, presence: true
+    validates :status, inclusion: { in: %w[open investigating resolved false_alarm] }
+
     extend Database::HasStatusCounts
     count_statuses :open, :investigating, :resolved, :false_alarm
 
@@ -36,7 +42,7 @@ module Daylight
         trigger.each { |k, v| lines << "  #{k}: #{v}" }
       end
 
-      if related_error_id && (err = ErrorRecord.find_by(id: related_error_id))
+      if (err = related_error)
         lines << "\nRelated Error: #{err.error_class}"
         lines << "Error Message: #{err.message}"
         lines << "Occurrences: #{err.occurrences_count}"

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { router, Link } from "@inertiajs/react";
+import { Form, Link } from "@inertiajs/react";
 import AppLayout from "@/layouts/app-layout";
 import EwSheet from "@/components/errors/EwSheet";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,7 @@ export default function IncidentShow({ incident = {}, related_error = null, rela
   const investigationHtml = markdownToHtml(incident.investigation);
   const triggerEntries = incident.trigger_data && typeof incident.trigger_data === "object" ? Object.entries(incident.trigger_data) : [];
 
-  function updateStatus(newStatus) { router.patch(`${base}/incidents/${incident.id}`, { status: newStatus }); }
+  const actionUrl = `${base}/incidents/${incident.id}`;
 
   return (
     <AppLayout>
@@ -44,14 +44,22 @@ export default function IncidentShow({ incident = {}, related_error = null, rela
         <div className="flex items-center gap-2 flex-wrap">
           {(incident.status === "open" || incident.status === "investigating") ? (
             <>
-              <Button size="sm" onClick={() => updateStatus("resolved")}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                Resolve
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => updateStatus("false_alarm")}>Mark False Alarm</Button>
+              <Form method="patch" action={actionUrl} data={{ status: "resolved" }} className="inline">
+                {() => (
+                  <Button type="submit" size="sm">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    Resolve
+                  </Button>
+                )}
+              </Form>
+              <Form method="patch" action={actionUrl} data={{ status: "false_alarm" }} className="inline">
+                {() => <Button type="submit" size="sm" variant="outline">Mark False Alarm</Button>}
+              </Form>
             </>
           ) : (
-            <Button size="sm" variant="outline" onClick={() => updateStatus("open")}>Reopen</Button>
+            <Form method="patch" action={actionUrl} data={{ status: "open" }} className="inline">
+              {() => <Button type="submit" size="sm" variant="outline">Reopen</Button>}
+            </Form>
           )}
           <Button size="sm" variant="ghost" onClick={() => setSheetOpen(true)}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>

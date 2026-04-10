@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { router, InfiniteScroll } from "@inertiajs/react";
+import { InfiniteScroll } from "@inertiajs/react";
 import { cn } from "@/lib/utils";
 import AppLayout from "@/layouts/app-layout";
 import PeriodSelect from "@/components/PeriodSelect";
@@ -39,7 +39,7 @@ export default function ScheduledTasksIndex({
     return `Failed Task: ${sheetItem.task_class}\nError: ${sheetItem.error_class}\nMessage: ${sheetItem.error_message}\nFailed at: ${sheetItem.occurred_at}`;
   })();
 
-  function changePeriod(p) { router.get(`${base}/scheduled_tasks`, { period: p }, { preserveState: true }); }
+
   function openClass(tc) { setSheetItem(tc); setSheetType("class"); setSheetOpen(true); }
   function openFailure(f) { setSheetItem(f); setSheetType("failure"); setSheetOpen(true); }
 
@@ -54,7 +54,7 @@ export default function ScheduledTasksIndex({
         <PageHeader
           title="Scheduled Tasks"
           description="Recurring task monitoring and performance"
-          actions={<><ExportButton baseUrl={`${base}/scheduled_tasks/export`} /><PeriodSelect value={period} onChange={changePeriod} /></>}
+          actions={<><ExportButton baseUrl={`${base}/scheduled_tasks/export`} /><PeriodSelect value={period} href={`${base}/scheduled_tasks`} /></>}
         />
 
         {/* Stat cards */}

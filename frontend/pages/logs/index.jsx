@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { router, InfiniteScroll } from "@inertiajs/react";
+import { Link, InfiniteScroll } from "@inertiajs/react";
 import { cn } from "@/lib/utils";
 import AppLayout from "@/layouts/app-layout";
 import PeriodSelect from "@/components/PeriodSelect";
@@ -62,12 +62,7 @@ export default function LogsIndex({
     { label: "Fatal", value: "fatal", count: fatalCount },
   ];
 
-  function changePeriod(p) {
-    router.get(`${base}/logs`, { period: p, level }, { preserveState: true });
-  }
-  function changeLevel(l) {
-    router.get(`${base}/logs`, { period, level: l }, { preserveState: true });
-  }
+  const logsHref = `${base}/logs`;
   function openLog(log) {
     setSheetItem(log);
     setSheetOpen(true);
@@ -83,23 +78,24 @@ export default function LogsIndex({
         <PageHeader
           title="Logs"
           description={`Application log entries in the last ${period}`}
-          actions={<PeriodSelect value={period} onChange={changePeriod} />}
+          actions={<PeriodSelect value={period} href={logsHref} params={{ level }} />}
         />
 
         {/* Level filter */}
         <Tabs
           value={level ?? "all"}
-          onValueChange={(v) => changeLevel(v === "all" ? null : v)}
         >
           <TabsList>
             {tabs.map((tab) => (
-              <TabsTrigger key={tab.label} value={tab.value ?? "all"}>
-                {tab.label}
-                {tab.count > 0 && (
-                  <Badge variant="secondary" className="ml-1.5 text-sm">
-                    {tab.count.toLocaleString()}
-                  </Badge>
-                )}
+              <TabsTrigger key={tab.label} value={tab.value ?? "all"} asChild>
+                <Link href={logsHref} data={{ period, level: tab.value }} preserveState>
+                  {tab.label}
+                  {tab.count > 0 && (
+                    <Badge variant="secondary" className="ml-1.5 text-sm">
+                      {tab.count.toLocaleString()}
+                    </Badge>
+                  )}
+                </Link>
               </TabsTrigger>
             ))}
           </TabsList>

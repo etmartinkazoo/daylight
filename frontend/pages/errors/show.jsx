@@ -1,4 +1,4 @@
-import { router, Link } from "@inertiajs/react";
+import { Form, Link } from "@inertiajs/react";
 import AppLayout from "@/layouts/app-layout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -54,15 +54,7 @@ function OccurrenceRow({ occ }) {
 }
 
 export default function ErrorShow({ error = {}, occurrences = [], base_path: base = "/daylight" }) {
-  function updateStatus(status) {
-    router.patch(`${base}/errors/${error.id}`, { status, filter_status: "open" });
-  }
-
-  function deleteError() {
-    if (confirm("Delete this error and all occurrences?")) {
-      router.delete(`${base}/errors/${error.id}`);
-    }
-  }
+  const actionUrl = `${base}/errors/${error.id}`;
 
   return (
     <AppLayout>
@@ -81,13 +73,21 @@ export default function ErrorShow({ error = {}, occurrences = [], base_path: bas
         <div className="flex gap-2 shrink-0">
           {error.status === "open" ? (
             <>
-              <Button size="sm" variant="outline" onClick={() => updateStatus("resolved")}>Resolve</Button>
-              <Button size="sm" variant="outline" onClick={() => updateStatus("ignored")}>Ignore</Button>
+              <Form method="patch" action={actionUrl} data={{ status: "resolved", filter_status: "open" }} className="inline">
+                {() => <Button type="submit" size="sm" variant="outline">Resolve</Button>}
+              </Form>
+              <Form method="patch" action={actionUrl} data={{ status: "ignored", filter_status: "open" }} className="inline">
+                {() => <Button type="submit" size="sm" variant="outline">Ignore</Button>}
+              </Form>
             </>
           ) : (
-            <Button size="sm" variant="outline" onClick={() => updateStatus("open")}>Reopen</Button>
+            <Form method="patch" action={actionUrl} data={{ status: "open", filter_status: "open" }} className="inline">
+              {() => <Button type="submit" size="sm" variant="outline">Reopen</Button>}
+            </Form>
           )}
-          <Button size="sm" variant="destructive" onClick={deleteError}>Delete</Button>
+          <Form method="delete" action={actionUrl} options={{ onBefore: () => confirm("Delete this error and all occurrences?") }} className="inline">
+            {() => <Button type="submit" size="sm" variant="destructive">Delete</Button>}
+          </Form>
         </div>
       </div>
 

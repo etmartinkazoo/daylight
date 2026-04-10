@@ -1,28 +1,25 @@
-import { router } from "@inertiajs/react";
+import { Link } from "@inertiajs/react";
 import { cn } from "@/lib/utils.js";
 
 export function SortableHeader({ column, label, sort_column, sort_direction, className }) {
   const isActive = sort_column === column;
+  const nextDir = isActive && sort_direction === "asc" ? "desc" : "asc";
 
-  function handleClick() {
-    const nextDir = isActive && sort_direction === "asc" ? "desc" : "asc";
-    const url = new URL(window.location.href);
-    url.searchParams.set("sort", column);
-    url.searchParams.set("direction", nextDir);
-    router.get(url.pathname, Object.fromEntries(url.searchParams), {
-      preserveScroll: true,
-      replace: true,
-    });
-  }
+  const url = new URL(window.location.href);
+  url.searchParams.set("sort", column);
+  url.searchParams.set("direction", nextDir);
 
   return (
-    <button
+    <Link
+      href={url.pathname}
+      data={Object.fromEntries(url.searchParams)}
+      preserveScroll
+      replace
       className={cn(
         "inline-flex items-center gap-1 bg-transparent border-none p-0 font-[inherit] text-sm font-medium cursor-pointer select-none whitespace-nowrap transition-colors",
         isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground",
         className,
       )}
-      onClick={handleClick}
     >
       {label}
       {isActive && (
@@ -34,6 +31,6 @@ export function SortableHeader({ column, label, sort_column, sort_direction, cla
           )}
         </svg>
       )}
-    </button>
+    </Link>
   );
 }

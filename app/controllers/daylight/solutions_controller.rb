@@ -26,9 +26,6 @@ module Daylight
 
     def show
       solution = Database::SolutionRecord.find(params[:id])
-      messages = SolutionMessageResource.serialize(
-        Database::SolutionMessageRecord.where(solution_id: solution.id).order(:created_at)
-      )
 
       source_issue = solution.source_issue
       serialized_source_issue = if source_issue
@@ -41,7 +38,7 @@ module Daylight
 
       render inertia: {
         solution: SolutionResource.serialize(solution),
-        messages: messages,
+        messages: SolutionMessageResource.serialize(solution.messages.order(:created_at)),
         source_issue: serialized_source_issue,
         github_configured: Database.github_configured?
       }
@@ -49,67 +46,15 @@ module Daylight
 
     def update
       solution = Database::SolutionRecord.find(params[:id])
-      new_status = params[:status]
 
-      if %w[approved rejected draft].include?(new_status)
-        case new_status
-        when "approved" then solution.approve!
-        else                 solution.update!(status: new_status)
-        end
+      case params[:status]
+      when "approved" then solution.approve!
+      when "rejected", "draft" then solution.update!(status: params[:status])
+      else
+        flash[:error] = "Invalid status: #{params[:status]}"
       end
 
       redirect_to solution_path(solution)
     end
-
-    def chat
-      solution = Database::SolutionRecord.find(params[:id])
-      message = params[:message]
-
-      return render(json: { error: "Message required" }, status: 422) if message.blank?
-
-      model = params[:model].presence
-      response = Daylight::SolutionGenerator.refine!(solution.id, message, model: model)
-      solution.reload
-
-      render json: {
-        message: { role: "assistant", content: response, created_at: Time.current },
-        updated_fix: solution.proposed_fix
-      }
-    rescue StandardError => e
-      render json: { error: e.message }, status: 500
-    end
-
-    def push
-      solution = Database::SolutionRecord.find(params[:id])
-      pr_url = Daylight::SolutionGenerator.push_to_github!(solution.id)
-
-      flash[:success] = "PR created: #{pr_url}"
-      redirect_to solution_path(solution)
-    rescue StandardError => e
-      flash[:error] = "Push failed: #{e.message}"
-      redirect_to solution_path(solution)
-    end
-
-    def generate
-      Daylight::SolutionGenerationJob.perform_later
-      flash[:success] = "Solution generation started"
-      redirect_to solutions_path
-    rescue StandardError => e
-      flash[:error] = "Failed: #{e.message}"
-      redirect_to solutions_path
-    end
-
-    def regenerate
-      solution = Database::SolutionRecord.find(params[:id])
-      Daylight::SolutionGenerator.regenerate!(solution.id)
-
-      flash[:success] = "Solution regenerated"
-      redirect_to solution_path(solution)
-    rescue StandardError => e
-      flash[:error] = "Regeneration failed: #{e.message}"
-      redirect_to solution_path(solution)
-    end
-
-    private
   end
 end

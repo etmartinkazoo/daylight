@@ -16,7 +16,7 @@ module Daylight
       sec_issues = SecurityIssueResource.serialize(
         Database::SecurityIssueRecord
           .where(status: "open")
-          .order(Arel.sql("CASE severity WHEN 'critical' THEN 0 WHEN 'warning' THEN 1 ELSE 2 END, detected_at DESC"))
+          .by_severity
           .limit(50)
       )
 
@@ -75,7 +75,6 @@ module Daylight
       settings_params = params.require(:settings).permit(*allowed_keys)
 
       settings_params.each do |key, value|
-        next unless allowed_keys.include?(key)
         if (ts_key = Database::SENSITIVE_KEYS[key])
           next if value.blank? || value.start_with?("••")
           Database.set_setting(key, value)
@@ -89,90 +88,6 @@ module Daylight
       redirect_to settings_path
     end
 
-    def cleanup
-      result = Daylight::Cleanup.perform
-      flash[:success] = "Cleanup complete: #{result.values.sum} records removed"
-      redirect_to settings_path
-    end
-
-    def test_notification
-      fake_error = Database::ErrorRecord.new(
-        fingerprint: "test_notification_#{Time.current.to_i}",
-        error_class: "Daylight::TestError",
-        message: "This is a test notification from Daylight",
-        backtrace_summary: "app/test.rb:1:in `test'",
-        occurrences_count: 1,
-        status: "open",
-        severity: "error",
-        first_seen_at: Time.current,
-        last_seen_at: Time.current
-      )
-
-      Daylight::Notifier.notify(fake_error)
-      flash[:success] = "Test notification sent"
-      redirect_to settings_path
-    rescue StandardError => e
-      flash[:error] = "Test notification failed: #{e.message}"
-      redirect_to settings_path
-    end
-
-    def run_performance_scan
-      Daylight::PerformanceScanJob.perform_later
-      flash[:success] = "Performance scan started"
-      redirect_to settings_path
-    rescue StandardError => e
-      flash[:error] = "Performance scan failed to start: #{e.message}"
-      redirect_to settings_path
-    end
-
-    def dismiss_performance_issue
-      issue = Database::PerformanceIssueRecord.find(params[:id])
-      issue.update!(status: params[:new_status] || "ignored")
-      redirect_to settings_path
-    rescue StandardError => e
-      flash[:error] = "Failed to update issue: #{e.message}"
-      redirect_to settings_path
-    end
-
-    def run_security_scan
-      Daylight::SecurityScanJob.perform_later
-      flash[:success] = "Security scan started"
-      redirect_to settings_path
-    rescue StandardError => e
-      flash[:error] = "Security scan failed to start: #{e.message}"
-      redirect_to settings_path
-    end
-
-    def dismiss_security_issue
-      issue = Database::SecurityIssueRecord.find(params[:id])
-      issue.update!(status: params[:new_status] || "ignored")
-      redirect_to settings_path
-    rescue StandardError => e
-      flash[:error] = "Failed to update issue: #{e.message}"
-      redirect_to settings_path
-    end
-
-    def toggle_bullet_diagnostic
-      duration = (params[:duration] || "30").to_i.clamp(5, 120)
-      expires_at = Time.current + duration.minutes
-      Database.set_setting("bullet_diagnostic_expires_at", expires_at.iso8601)
-      flash[:success] = "Live N+1 detection enabled for #{duration} minutes (sampling 5% of requests)"
-      redirect_to settings_path
-    rescue StandardError => e
-      flash[:error] = "Failed to start diagnostic: #{e.message}"
-      redirect_to settings_path
-    end
-
-    def stop_bullet_diagnostic
-      Database.set_setting("bullet_diagnostic_expires_at", nil)
-      flash[:success] = "Live N+1 detection stopped"
-      redirect_to settings_path
-    end
-
     private
-
-    def ensure_connected
-      Database.ensure_connected!
-    end
   end
 end

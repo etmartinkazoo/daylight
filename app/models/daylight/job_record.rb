@@ -3,5 +3,23 @@
 module Daylight
   class JobRecord < Record
     self.table_name = "daylight_jobs"
+
+    validates :job_class, :status, :occurred_at, presence: true
+
+    scope :completed, -> { where(status: "completed") }
+    scope :failed,    -> { where(status: "failed") }
+    scope :queued,    -> { where(status: "queued") }
+
+    scope :grouped_by_class, -> {
+      group(:job_class).select(
+        "job_class",
+        "COUNT(*) as total",
+        "SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_count",
+        "SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) as failed_count",
+        "SUM(CASE WHEN status = 'queued' THEN 1 ELSE 0 END) as queued_count",
+        "ROUND(AVG(CASE WHEN status = 'completed' THEN duration_ms END), 1) as avg_duration",
+        "ROUND(MAX(duration_ms), 1) as max_duration"
+      )
+    }
   end
 end

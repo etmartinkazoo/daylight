@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { router, InfiniteScroll } from "@inertiajs/react";
+import { router, Link, InfiniteScroll } from "@inertiajs/react";
 import { cn } from "@/lib/utils";
 import AppLayout from "@/layouts/app-layout";
 import PeriodSelect from "@/components/PeriodSelect";
@@ -51,9 +51,8 @@ const apdexColor = apdex == null ? "#64748b" : apdex >= 0.9 ? "#22c55e" : apdex 
       value: ep.avg_duration,
     }));
 
-  function changePeriod(p) { router.get(`${base}/requests`, { period: p }, { preserveState: true }); }
-  function selectEndpoint(ep) { router.get(`${base}/requests`, { period, route: ep.route }, { preserveState: true }); }
-  function goBack() { router.get(`${base}/requests`, { period }, { preserveState: true }); }
+  const indexHref = `${base}/requests`;
+  function selectEndpoint(ep) { router.get(indexHref, { period, route: ep.route }, { preserveState: true }); }
 
   function openRequest(req) {
     setSheetItem(req); setSheetType("request"); setSheetOpen(true);
@@ -105,14 +104,16 @@ const apdexColor = apdex == null ? "#64748b" : apdex >= 0.9 ? "#22c55e" : apdex 
         <PageHeader
           title="Requests"
           description={`${total_requests.toLocaleString()} requests in the last ${period}`}
-          actions={<><ExportButton baseUrl={`${base}/requests/export`} /><PeriodSelect value={period} onChange={changePeriod} /></>}
+          actions={<><ExportButton baseUrl={`${base}/requests/export`} /><PeriodSelect value={period} href={indexHref} /></>}
         />
 
         {selected_route && route_requests.length > 0 ? (
           <>
-            <Button variant="ghost" size="sm" onClick={goBack} className="self-start">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8l4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              All endpoints
+            <Button variant="ghost" size="sm" className="self-start" asChild>
+              <Link href={indexHref} data={{ period }} preserveState>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8l4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                All endpoints
+              </Link>
             </Button>
             <div className="flex items-center gap-3">
               <h2 className="font-medium">{selected_route}</h2>

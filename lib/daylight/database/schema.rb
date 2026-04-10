@@ -264,6 +264,35 @@ module Daylight
           t.index :solution_id
         end
 
+        create_table_once(conn, :daylight_chats) do |t|
+          t.string   :model_id
+          t.string   :provider
+          t.string   :context_type
+          t.integer  :context_id
+          t.string   :context_url
+          t.timestamps
+        end
+
+        create_table_once(conn, :daylight_chat_messages) do |t|
+          t.integer  :chat_id,       null: false
+          t.string   :role,          null: false
+          t.text     :content
+          t.string   :model_id
+          t.integer  :input_tokens
+          t.integer  :output_tokens
+          t.datetime :created_at,    null: false
+          t.index :chat_id
+        end
+
+        create_table_once(conn, :daylight_tool_calls) do |t|
+          t.integer  :chat_message_id, null: false
+          t.string   :tool_call_id,    null: false
+          t.string   :name,            null: false
+          t.text     :arguments
+          t.text     :result
+          t.index :chat_message_id
+        end
+
         # Column additions for existing databases (idempotent)
         add_column_once(conn, :daylight_requests,      :route_pattern,            :string,  index: true)
         add_column_once(conn, :daylight_requests,      :n_plus_one,               :boolean)

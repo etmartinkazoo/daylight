@@ -8,7 +8,7 @@ module Daylight
 
     def index
       period = current_period
-      scope = Database::CacheEventRecord.where("occurred_at > ?", period_start(period))
+      scope = Database::CacheEventRecord.where(occurred_at: period_start(period)..)
 
       total_events = scope.count
       total_reads = scope.where(event_type: "read").count
@@ -16,16 +16,9 @@ module Daylight
       hit_rate = total_reads > 0 ? (hits.to_f / total_reads * 100).round(1) : 0.0
 
       # Group by key pattern (first 100 chars of key)
-      group_expr = Arel.sql("SUBSTR(key, 1, 100)")
-      grouped = scope.group(group_expr).select(
-        "SUBSTR(key, 1, 100) as key_pattern",
-        "COUNT(*) as total",
-        "SUM(CASE WHEN event_type = 'read' AND hit = 1 THEN 1 ELSE 0 END) as hits",
-        "SUM(CASE WHEN event_type = 'read' THEN 1 ELSE 0 END) as reads",
-        "ROUND(AVG(duration_ms), 1) as avg_duration"
-      ).order(Arel.sql("total DESC"))
+      grouped = scope.grouped_by_key_pattern
 
-      count = scope.group(group_expr).count.length
+      count = scope.group(Database::CacheEventRecord.key_pattern_expr).count.length
       pagy, page_rows = pagy(:offset, grouped, count: count, limit: 20)
       key_groups = page_rows.map do |row|
         {

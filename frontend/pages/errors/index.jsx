@@ -24,7 +24,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { router, InfiniteScroll } from "@inertiajs/react";
+import { router, InfiniteScroll, Form } from "@inertiajs/react";
 import { toggleSelect, selectAllIds } from "@/lib/utils.js";
 import { useState, useEffect } from "react";
 
@@ -48,39 +48,23 @@ export default function ErrorsIndex({
     setSearchVal(query || "");
   }, [query]);
 
-  // After status actions, return to the same tab
-  function updateStatus(id, newStatus) {
-    router.patch(`${base}/errors/${id}`, {
-      status: newStatus,
-      return_status: status,
-    });
-  }
-
-  function batchAction(action) {
-    router.post(
-      `${base}/errors/batch`,
-      { ids: selectedIds, action_type: action, return_status: status },
-      { onSuccess: () => setSelectedIds([]) },
-    );
-  }
+  // Status update and batch action URLs for Form components
+  function statusAction(id) { return `${base}/errors/${id}`; }
+  const batchUrl = `${base}/errors/batch`;
 
   const allSelected = errors.length > 0 && selectedIds.length === errors.length;
 
   const bulkActions = [
     ...(status !== "resolved"
-      ? [{ label: "Resolve", onclick: () => batchAction("resolve") }]
+      ? [{ label: "Resolve", action_type: "resolve" }]
       : []),
     ...(status !== "ignored"
-      ? [{ label: "Ignore", onclick: () => batchAction("ignore") }]
+      ? [{ label: "Ignore", action_type: "ignore" }]
       : []),
     ...(status !== "open"
-      ? [{ label: "Reopen", onclick: () => batchAction("reopen") }]
+      ? [{ label: "Reopen", action_type: "reopen" }]
       : []),
-    {
-      label: "Delete",
-      variant: "danger",
-      onclick: () => batchAction("delete"),
-    },
+    { label: "Delete", action_type: "delete", variant: "danger" },
   ];
 
   function handleSearch(e) {
@@ -141,6 +125,9 @@ export default function ErrorsIndex({
           <BulkActions
             count={selectedIds.length}
             actions={bulkActions}
+            batchUrl={batchUrl}
+            selectedIds={selectedIds}
+            returnStatus={status}
             onCancel={() => setSelectedIds([])}
           />
 
@@ -209,7 +196,7 @@ export default function ErrorsIndex({
                         setSheetError(error);
                         setSheetOpen(true);
                       }}
-                      onStatusChange={updateStatus}
+                      returnStatus={status}
                     />
                   ))}
                 </TableBody>
@@ -222,7 +209,7 @@ export default function ErrorsIndex({
           open={sheetOpen}
           onClose={() => setSheetOpen(false)}
           error={sheetError}
-          onStatusChange={updateStatus}
+          returnStatus={status}
         />
       </ErrorsLayout>
     </AppLayout>

@@ -2,7 +2,8 @@
 
 module Daylight
   class OccurrenceResource < BaseResource
-    attributes :id, :backtrace, :request_url, :request_method
+    attributes :id, :error_id, :backtrace, :request_url, :request_method,
+               :request_id, :trace_id, :user_id
 
     attribute :context do |o|
       JSON.parse(o.context) rescue {}

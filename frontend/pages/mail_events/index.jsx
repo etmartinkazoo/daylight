@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { router, InfiniteScroll } from "@inertiajs/react";
+import { InfiniteScroll } from "@inertiajs/react";
 import { cn } from "@/lib/utils";
 import AppLayout from "@/layouts/app-layout";
 import PeriodSelect from "@/components/PeriodSelect";
@@ -39,7 +39,7 @@ export default function MailEventsIndex({
     return `Mailer: ${sheetItem.mailer_class}\nSubject: ${sheetItem.subject || "—"}\nRecipients: ${sheetItem.recipients || "—"}\nChannel: ${sheetItem.channel || "email"}\nStatus: ${sheetItem.status || "—"}\nTime: ${sheetItem.occurred_at}`;
   })();
 
-  function changePeriod(p) { router.get(`${base}/mail_events`, { period: p }, { preserveState: true }); }
+
   function openMailer(ml) { setSheetItem(ml); setSheetType("mailer"); setSheetOpen(true); }
   function openEvent(ev) { setSheetItem(ev); setSheetType("event"); setSheetOpen(true); }
 
@@ -60,7 +60,7 @@ export default function MailEventsIndex({
         <PageHeader
           title="Mail & Notifications"
           description="Email and notification delivery monitoring"
-          actions={<><ExportButton baseUrl={`${base}/mail_events/export`} /><PeriodSelect value={period} onChange={changePeriod} /></>}
+          actions={<><ExportButton baseUrl={`${base}/mail_events/export`} /><PeriodSelect value={period} href={`${base}/mail_events`} /></>}
         />
 
         {/* Stat cards */}

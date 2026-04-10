@@ -15,6 +15,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "rails", ">= 7.0"
   spec.add_dependency "sqlite3"
   spec.add_dependency "ruby_llm", ">= 1.12"
+  spec.add_dependency "async-job-adapter-active_job"
   spec.add_dependency "brakeman"
   spec.add_dependency "bullet"
   spec.add_dependency "alba"

@@ -1,3 +1,4 @@
+import { Link } from "@inertiajs/react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 const OPTIONS = [
@@ -7,7 +8,7 @@ const OPTIONS = [
   { value: "30d", label: "30d" },
 ];
 
-export default function PeriodSelect({ value = "24h", onChange }) {
+export default function PeriodSelect({ value = "24h", href, params = {} }) {
   return (
     <ToggleGroup
       type="single"
@@ -15,11 +16,12 @@ export default function PeriodSelect({ value = "24h", onChange }) {
       size="sm"
       spacing={0}
       value={value}
-      onValueChange={(v) => v && onChange(v)}
     >
       {OPTIONS.map((opt) => (
-        <ToggleGroupItem key={opt.value} value={opt.value}>
-          {opt.label}
+        <ToggleGroupItem key={opt.value} value={opt.value} asChild>
+          <Link href={href} data={{ ...params, period: opt.value }} preserveState replace>
+            {opt.label}
+          </Link>
         </ToggleGroupItem>
       ))}
     </ToggleGroup>
