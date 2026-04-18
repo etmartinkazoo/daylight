@@ -63,23 +63,23 @@
           <% @errors.each do |error| %>
             <tr>
               <td>
-                <input type="checkbox" value="<%= error[:id] %>"
+                <input type="checkbox" value="<%= error.id %>"
                        data-bulk-select-target="checkbox" data-action="bulk-select#toggle">
               </td>
               <td>
-                <%= link_to error_path(error[:id]), style: "text-decoration: none; color: inherit;" do %>
-                  <div style="font-weight: 500"><%= error[:error_class] %></div>
+                <%= link_to error_path(error.id), style: "text-decoration: none; color: inherit;" do %>
+                  <div style="font-weight: 500"><%= error.error_class %></div>
                   <div class="text-subtle text-xs" style="margin-block-start: 2px">
-                    <%= truncate(error[:message].to_s, length: 80) %>
+                    <%= truncate(error.message.to_s, length: 80) %>
                   </div>
                 <% end %>
               </td>
-              <td class="col-num"><%= error[:occurrences_count] %></td>
+              <td class="col-num"><%= error.occurrences_count %></td>
               <td>
-                <span class="badge badge--<%= error[:severity] %>"><%= error[:severity] %></span>
+                <span class="badge badge--<%= error.severity %>"><%= error.severity %></span>
               </td>
-              <td class="text-subtle text-xs"><%= error[:last_seen_ago] %></td>
-              <td><%= render "daylight/shared/status_badge", status: error[:status] %></td>
+              <td class="text-subtle text-xs"><%= time_ago_in_words(error.last_seen_at) + " ago" %></td>
+              <td><%= render "daylight/shared/status_badge", status: error.status %></td>
             </tr>
           <% end %>
         </tbody>

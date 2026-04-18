@@ -60,11 +60,11 @@
       <tbody>
         <% @host_requests.each do |r| %>
           <tr>
-            <td class="dl-mono"><%= r[:method] %> <%= truncate(r[:url].to_s, length: 60) %></td>
-            <td><%= render "daylight/shared/http_status_badge", status_code: r[:status_code] %></td>
-            <td><%= r[:duration_ms].to_i %>ms</td>
-            <td class="dl-mono"><%= r[:controller_action] %></td>
-            <td class="text-subtle"><%= r[:occurred_at] %></td>
+            <td class="dl-mono"><%= r.method %> <%= truncate(r.url.to_s, length: 60) %></td>
+            <td><%= render "daylight/shared/http_status_badge", status_code: r.status_code %></td>
+            <td><%= r.duration_ms.to_i %>ms</td>
+            <td class="dl-mono"><%= r.controller_action %></td>
+            <td class="text-subtle"><%= r.occurred_at %></td>
           </tr>
         <% end %>
       </tbody>

@@ -8,17 +8,13 @@ module Daylight
       settings = Database.all_settings
 
       # Performance scan results
-      perf_issues = PerformanceIssueResource.serialize(
-        Database::PerformanceIssueRecord.where(status: "open").order(detected_at: :desc).limit(25)
-      )
+      @performance_issues = Database::PerformanceIssueRecord.where(status: "open").order(detected_at: :desc).limit(25)
 
       # Security scan results
-      sec_issues = SecurityIssueResource.serialize(
-        Database::SecurityIssueRecord
-          .where(status: "open")
-          .by_severity
-          .limit(50)
-      )
+      @security_issues = Database::SecurityIssueRecord
+        .where(status: "open")
+        .by_severity
+        .limit(50)
 
       @settings = {
         github_repo_url: settings["github_repo_url"] || "",
@@ -53,8 +49,6 @@ module Daylight
         bullet_diagnostic_expires_at: settings["bullet_diagnostic_expires_at"],
         bullet_diagnostic_active: Database.bullet_diagnostic_active?
       }
-      @performance_issues = perf_issues
-      @security_issues = sec_issues
     end
 
     def update

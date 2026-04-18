@@ -13,7 +13,7 @@ module Daylight
 
       settings = Database.all_settings
 
-      @solutions = SolutionResource.serialize(solution_records)
+      @solutions = solution_records
       @counts = Database::SolutionRecord.status_counts
       @status = status_filter
       @last_scan_at = settings["last_solutions_scan_at"]
@@ -25,18 +25,9 @@ module Daylight
     def show
       solution = Database::SolutionRecord.find(params[:id])
 
-      source_issue = solution.source_issue
-      serialized_source_issue = if source_issue
-        if solution.source_type == "performance"
-          PerformanceIssueResource.serialize(source_issue)
-        else
-          SecurityIssueResource.serialize(source_issue)
-        end
-      end
-
-      @solution = SolutionResource.serialize(solution)
-      @messages = SolutionMessageResource.serialize(solution.messages.order(:created_at))
-      @source_issue = serialized_source_issue
+      @solution = solution
+      @messages = solution.messages.order(:created_at)
+      @source_issue = solution.source_issue
       @github_configured = Database.github_configured?
     end
 

@@ -25,9 +25,7 @@ module Daylight
       end
 
       host_requests = if params[:host].present?
-        HttpRequestResource.serialize(
-          scope.where(host: params[:host]).order(occurred_at: :desc).limit(50)
-        )
+        scope.where(host: params[:host]).order(occurred_at: :desc).limit(50)
       else
         []
       end

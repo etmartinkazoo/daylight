@@ -10,13 +10,8 @@ module Daylight
     def index = render_errors_list("open")
 
     def show
-      error = Database::ErrorRecord.find(params[:id])
-      occurrences = OccurrenceResource.serialize(
-        Database::OccurrenceRecord.where(error_id: error.id).order(occurred_at: :desc).limit(50)
-      )
-
-      @error = ErrorResource.serialize(error, params: { recent_occurrences: { error.id => occurrences } })
-      @occurrences = occurrences
+      @error = Database::ErrorRecord.find(params[:id])
+      @occurrences = Database::OccurrenceRecord.where(error_id: @error.id).order(occurred_at: :desc).limit(50)
     end
 
     def update
@@ -44,17 +39,9 @@ module Daylight
       scope = scope.search(params[:q]) if params[:q].present?
       scope = apply_sort(scope, default: "last_seen_at",
                                 allowed: %w[error_class occurrences_count last_seen_at first_seen_at], direction: "desc")
-      @pagy, errors = pagy(scope, limit: 20)
-
-      recent_by_error_id = Database::OccurrenceRecord
-                           .where(error_id: errors.map(&:id))
-                           .order(occurred_at: :desc)
-                           .group_by(&:error_id)
-                           .transform_values { |occs| OccurrenceResource.serialize(occs.first(5)) }
+      @pagy, @errors = pagy(scope, limit: 20)
 
       occurrence_scope = Database::OccurrenceRecord.where(occurred_at: period_start(current_period)..)
-
-      @errors = ErrorResource.serialize(errors, params: { recent_occurrences: recent_by_error_id })
       @counts = Database::ErrorRecord.status_counts
       @status = status
       @query = params[:q] || ""

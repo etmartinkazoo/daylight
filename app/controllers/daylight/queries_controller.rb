@@ -34,16 +34,14 @@ module Daylight
         }
       end
 
-      n_plus_one_requests = RequestResource.serialize(
-        Database::RequestRecord
-          .where(occurred_at: period_start(period)..)
-          .n_plus_one
-          .order(occurred_at: :desc)
-          .limit(20)
-      )
+      n_plus_one_requests = Database::RequestRecord
+        .where(occurred_at: period_start(period)..)
+        .n_plus_one
+        .order(occurred_at: :desc)
+        .limit(20)
 
       @queries = queries
-      @slowest = QueryRecordResource.serialize(scope.order(duration_ms: :desc).limit(25))
+      @slowest = scope.order(duration_ms: :desc).limit(25)
       @period = period
       @total_queries = scope.count
       @volume_series = time_series_buckets(scope, period)

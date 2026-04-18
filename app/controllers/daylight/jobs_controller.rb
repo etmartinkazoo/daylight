@@ -36,7 +36,7 @@ module Daylight
         }
       end
 
-      daylight_failures = JobResource.serialize(scope.failed.order(occurred_at: :desc).limit(50))
+      daylight_failures = scope.failed.order(occurred_at: :desc).limit(50)
       sq = SolidQueueStats.new(daylight_failures: daylight_failures)
 
       @job_classes = job_classes

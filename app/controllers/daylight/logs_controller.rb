@@ -13,7 +13,7 @@ module Daylight
 
       @pagy, log_records = pagy(scope.order(occurred_at: :desc), limit: 20)
 
-      @logs = LogResource.serialize(log_records)
+      @logs = log_records
       @counts = period_scope.group(:level).count
       @period = period
       @level = params[:level]

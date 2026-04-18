@@ -65,9 +65,7 @@ module Daylight
     def route_requests(scope)
       return [] unless params[:route].present?
 
-      RequestResource.serialize(
-        scope.for_route(params[:route]).order(occurred_at: :desc).limit(50)
-      )
+      scope.for_route(params[:route]).order(occurred_at: :desc).limit(50)
     end
 
     def selected_request
@@ -76,15 +74,9 @@ module Daylight
       req = Database::RequestRecord.find_by(id: params[:request_id])
       return unless req
 
-      queries = QueryRecordResource.serialize(
-        Database::QueryRecord.where(request_id: req.id).order(:occurred_at)
-      )
-
-      RequestResource.serialize(req).merge(
-        queries: queries,
-        waterfall: TraceWaterfall.new(req).events,
-        trace_id: req.try(:trace_id)
-      )
+      @selected_request_queries = Database::QueryRecord.where(request_id: req.id).order(:occurred_at)
+      @selected_request_waterfall = TraceWaterfall.new(req).events
+      req
     end
   end
 end

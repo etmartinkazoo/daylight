@@ -37,19 +37,19 @@
           <tr>
             <td>
               <%
-                level_class = case log[:level].to_s
+                level_class = case log.level.to_s
                   when "info" then "badge--blue"
                   when "warn" then "badge--yellow"
                   when "error", "fatal" then "badge--red"
                   else "badge--default"
                 end
               %>
-              <span class="badge <%= level_class %>"><%= log[:level] %></span>
+              <span class="badge <%= level_class %>"><%= log.level %></span>
             </td>
-            <td><%= truncate(log[:message], length: 60) %></td>
-            <td class="dl-mono"><%= log[:controller_action] %></td>
-            <td class="dl-mono"><%= log[:request_path] %></td>
-            <td class="text-subtle"><%= log[:occurred_at] %></td>
+            <td><%= truncate(log.message, length: 60) %></td>
+            <td class="dl-mono"><%= log.controller_action %></td>
+            <td class="dl-mono"><%= log.request_path %></td>
+            <td class="text-subtle"><%= log.occurred_at %></td>
           </tr>
         <% end %>
       </tbody>

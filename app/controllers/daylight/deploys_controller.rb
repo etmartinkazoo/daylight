@@ -6,11 +6,7 @@ module Daylight
     skip_before_action :verify_authenticity_token, only: [:create]
 
     def index
-      deploys = DeployResource.serialize(
-        Database::DeployRecord.order(deployed_at: :desc).limit(50)
-      )
-
-      @deploys = deploys
+      @deploys = Database::DeployRecord.order(deployed_at: :desc).limit(50)
     end
 
     def create

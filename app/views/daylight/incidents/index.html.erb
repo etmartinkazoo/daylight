@@ -18,27 +18,27 @@
 <% if @incidents.any? %>
   <div style="display: grid; gap: var(--size-4);">
     <% @incidents.each do |incident| %>
-      <%= link_to incident_path(incident[:id]), style: "text-decoration: none; color: inherit;" do %>
+      <%= link_to incident_path(incident.id), style: "text-decoration: none; color: inherit;" do %>
         <div class="card" style="transition: border-color 150ms; cursor: pointer;"
              onmouseenter="this.style.borderColor='var(--color-primary)'"
              onmouseleave="this.style.borderColor=''">
           <div class="flex items-center gap-half" style="margin-block-end: var(--size-2);">
             <h3 style="font-size: 0.9375rem; font-weight: 600; flex: 1; min-width: 0;">
-              <%= incident[:title] %>
+              <%= incident.title %>
             </h3>
-            <span class="badge badge--<%= incident[:severity] %>"><%= incident[:severity] %></span>
-            <%= render "daylight/shared/status_badge", status: incident[:status] %>
+            <span class="badge badge--<%= incident.severity %>"><%= incident.severity %></span>
+            <%= render "daylight/shared/status_badge", status: incident.status %>
           </div>
 
-          <% if incident[:summary].present? %>
+          <% if incident.summary.present? %>
             <p class="text-subtle text-sm" style="margin-block-end: var(--size-3); line-height: 1.5;">
-              <%= truncate(incident[:summary].to_s, length: 200) %>
+              <%= truncate(incident.summary.to_s, length: 200) %>
             </p>
           <% end %>
 
           <div class="flex items-center gap-half text-xs text-subtle">
-            <span class="badge badge--default"><%= incident[:incident_type] %></span>
-            <span><%= incident[:started_at_ago] %></span>
+            <span class="badge badge--default"><%= incident.incident_type %></span>
+            <span><%= time_ago_in_words(incident.started_at) + " ago" %></span>
           </div>
         </div>
       <% end %>

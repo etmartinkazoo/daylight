@@ -21,7 +21,7 @@ module Daylight
 
       incident_scope = Database::IncidentRecord.where(occurred_at: period_start(period)..)
 
-      @incidents = IncidentResource.serialize(incidents)
+      @incidents = incidents
       @counts = Database::IncidentRecord.status_counts
       @status = status
       @period = period
@@ -31,9 +31,9 @@ module Daylight
     def show
       incident = Database::IncidentRecord.find(params[:id])
 
-      @incident = IncidentResource.serialize(incident)
-      @related_error = incident.related_error ? ErrorResource.serialize(incident.related_error) : nil
-      @related_deploy = incident.related_deploy ? DeployResource.serialize(incident.related_deploy) : nil
+      @incident = incident
+      @related_error = incident.related_error
+      @related_deploy = incident.related_deploy
     end
 
     def update

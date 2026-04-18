@@ -155,13 +155,13 @@
       <tbody>
         <% @performance_issues.each do |issue| %>
           <tr>
-            <td><%= issue[:title] %></td>
-            <td><%= render "daylight/shared/status_badge", status: issue[:severity] %></td>
-            <td class="dl-mono"><%= issue[:source_location] %></td>
-            <td><%= render "daylight/shared/status_badge", status: issue[:status] %></td>
+            <td><%= issue.title %></td>
+            <td><%= render "daylight/shared/status_badge", status: issue.severity %></td>
+            <td class="dl-mono"><%= issue.source_location %></td>
+            <td><%= render "daylight/shared/status_badge", status: issue.status %></td>
             <td>
-              <% unless issue[:status] == "dismissed" %>
-                <%= button_to "Dismiss", settings_performance_issue_path(issue[:id]), method: :patch, params: { status: "dismissed" }, class: "btn btn--sm btn--ghost" %>
+              <% unless issue.status == "dismissed" %>
+                <%= button_to "Dismiss", settings_performance_issue_path(issue.id), method: :patch, params: { status: "dismissed" }, class: "btn btn--sm btn--ghost" %>
               <% end %>
             </td>
           </tr>
@@ -189,14 +189,14 @@
       <tbody>
         <% @security_issues.each do |issue| %>
           <tr>
-            <td><%= issue[:title] %></td>
-            <td><%= render "daylight/shared/status_badge", status: issue[:severity] %></td>
-            <td><%= issue[:confidence] %></td>
-            <td class="dl-mono"><%= issue[:file_path] %></td>
-            <td><%= render "daylight/shared/status_badge", status: issue[:status] %></td>
+            <td><%= issue.title %></td>
+            <td><%= render "daylight/shared/status_badge", status: issue.severity %></td>
+            <td><%= issue.confidence %></td>
+            <td class="dl-mono"><%= issue.file_path %></td>
+            <td><%= render "daylight/shared/status_badge", status: issue.status %></td>
             <td>
-              <% unless issue[:status] == "dismissed" %>
-                <%= button_to "Dismiss", settings_security_issue_path(issue[:id]), method: :patch, params: { status: "dismissed" }, class: "btn btn--sm btn--ghost" %>
+              <% unless issue.status == "dismissed" %>
+                <%= button_to "Dismiss", settings_security_issue_path(issue.id), method: :patch, params: { status: "dismissed" }, class: "btn btn--sm btn--ghost" %>
               <% end %>
             </td>
           </tr>

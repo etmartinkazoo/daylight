@@ -15,11 +15,11 @@
       <tbody>
         <% @deploys.each do |deploy| %>
           <tr>
-            <td class="font-medium"><%= deploy[:version] %></td>
-            <td><%= deploy[:description] %></td>
-            <td class="dl-mono"><%= truncate(deploy[:git_sha].to_s, length: 8, omission: "") %></td>
-            <td><%= deploy[:deployed_by] %></td>
-            <td class="text-subtle"><%= deploy[:deployed_at] %></td>
+            <td class="font-medium"><%= deploy.version %></td>
+            <td><%= deploy.description %></td>
+            <td class="dl-mono"><%= truncate(deploy.git_sha.to_s, length: 8, omission: "") %></td>
+            <td><%= deploy.deployed_by %></td>
+            <td class="text-subtle"><%= deploy.deployed_at %></td>
           </tr>
         <% end %>
       </tbody>

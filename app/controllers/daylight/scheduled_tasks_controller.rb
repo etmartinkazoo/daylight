@@ -36,7 +36,7 @@ module Daylight
       end
 
       @task_classes = task_classes
-      @failures = ScheduledTaskResource.serialize(scope.failed.order(occurred_at: :desc).limit(25))
+      @failures = scope.failed.order(occurred_at: :desc).limit(25)
       @period = period
       @totals = {
         total: scope.count,

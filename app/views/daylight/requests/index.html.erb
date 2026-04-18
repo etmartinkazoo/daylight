@@ -88,17 +88,17 @@
           </thead>
           <tbody>
             <% @route_requests.each do |req| %>
-              <tr class="<%= 'table__row--active' if @selected_request && @selected_request[:id] == req[:id] %>">
-                <td><span class="badge badge--default"><%= req[:method] %></span></td>
-                <td class="dl-mono"><%= truncate(req[:path], length: 60) %></td>
-                <td><%= render "daylight/shared/http_status_badge", status_code: req[:status_code] %></td>
-                <td class="text-end"><%= req[:duration_ms].to_i %>ms</td>
-                <td class="text-end"><%= req[:db_duration_ms].to_i %>ms</td>
-                <td class="text-end"><%= req[:view_duration_ms].to_i %>ms</td>
-                <td class="text-end"><%= req[:query_count] %></td>
-                <td><%= req[:format] %></td>
-                <td><%= req[:n_plus_one] ? "Yes" : "" %></td>
-                <td class="text-subtle"><%= time_ago_in_words(req[:occurred_at]) %> ago</td>
+              <tr class="<%= 'table__row--active' if @selected_request && @selected_request.id == req.id %>">
+                <td><span class="badge badge--default"><%= req.method %></span></td>
+                <td class="dl-mono"><%= truncate(req.path, length: 60) %></td>
+                <td><%= render "daylight/shared/http_status_badge", status_code: req.status_code %></td>
+                <td class="text-end"><%= req.duration_ms.to_i %>ms</td>
+                <td class="text-end"><%= req.db_duration_ms.to_i %>ms</td>
+                <td class="text-end"><%= req.view_duration_ms.to_i %>ms</td>
+                <td class="text-end"><%= req.query_count %></td>
+                <td><%= req.format %></td>
+                <td><%= req.n_plus_one ? "Yes" : "" %></td>
+                <td class="text-subtle"><%= time_ago_in_words(req.occurred_at) %> ago</td>
               </tr>
             <% end %>
           </tbody>
@@ -115,21 +115,21 @@
 
       <dl class="dl-grid">
         <dt>Trace ID</dt>
-        <dd class="dl-mono"><%= @selected_request[:trace_id] %></dd>
+        <dd class="dl-mono"><%= @selected_request.trace_id %></dd>
         <dt>Controller Action</dt>
-        <dd class="dl-mono"><%= @selected_request[:controller_action] %></dd>
+        <dd class="dl-mono"><%= @selected_request.controller_action %></dd>
         <dt>Status</dt>
-        <dd><%= render "daylight/shared/http_status_badge", status_code: @selected_request[:status_code] %></dd>
+        <dd><%= render "daylight/shared/http_status_badge", status_code: @selected_request.status_code %></dd>
         <dt>Duration</dt>
-        <dd><%= @selected_request[:duration_ms].to_i %>ms</dd>
+        <dd><%= @selected_request.duration_ms.to_i %>ms</dd>
         <dt>IP</dt>
-        <dd class="dl-mono"><%= @selected_request[:ip] %></dd>
+        <dd class="dl-mono"><%= @selected_request.ip %></dd>
         <dt>Occurred</dt>
-        <dd><%= @selected_request[:occurred_at] %></dd>
+        <dd><%= @selected_request.occurred_at %></dd>
       </dl>
 
-      <% if @selected_request[:queries].present? %>
-        <h3 style="margin-block-start: var(--size-4)">Queries (<%= @selected_request[:queries].size %>)</h3>
+      <% if @selected_request_queries.present? %>
+        <h3 style="margin-block-start: var(--size-4)">Queries (<%= @selected_request_queries.size %>)</h3>
         <div class="table-scroll" style="margin-block-start: var(--size-2)">
           <table class="table">
             <thead>
@@ -140,11 +140,11 @@
               </tr>
             </thead>
             <tbody>
-              <% @selected_request[:queries].each do |q| %>
+              <% @selected_request_queries.each do |q| %>
                 <tr>
-                  <td class="dl-mono"><%= truncate(q[:sql], length: 100) %></td>
-                  <td class="text-end"><%= q[:duration_ms].to_i %>ms</td>
-                  <td class="text-subtle"><%= q[:source_location] %></td>
+                  <td class="dl-mono"><%= truncate(q.sql, length: 100) %></td>
+                  <td class="text-end"><%= q.duration_ms.to_i %>ms</td>
+                  <td class="text-subtle"><%= q.source_location %></td>
                 </tr>
               <% end %>
             </tbody>

@@ -2,37 +2,38 @@
   <%= link_to "&larr; Solutions".html_safe, solutions_path, class: "text-sm text-subtle" %>
 </p>
 
-<%= render "daylight/shared/page_header", title: @solution[:title], actions: capture {
+<%= render "daylight/shared/page_header", title: @solution.title, actions: capture {
   safe_join([
-    button_to("Approve", solution_path(@solution[:id]), method: :patch, params: { status: "approved" }, class: "btn btn--sm btn--primary"),
-    button_to("Reject", solution_path(@solution[:id]), method: :patch, params: { status: "rejected" }, class: "btn btn--sm btn--outline"),
-    (@github_configured ? button_to("Push to GitHub", solution_push_path(@solution[:id]), method: :post, class: "btn btn--sm btn--outline") : nil)
+    button_to("Approve", solution_path(@solution.id), method: :patch, params: { status: "approved" }, class: "btn btn--sm btn--primary"),
+    button_to("Reject", solution_path(@solution.id), method: :patch, params: { status: "rejected" }, class: "btn btn--sm btn--outline"),
+    (@github_configured ? button_to("Push to GitHub", solution_push_path(@solution.id), method: :post, class: "btn btn--sm btn--outline") : nil)
   ].compact, " ")
 } %>
 
 <div class="flex gap-half" style="margin-block-end: var(--size-2)">
-  <%= render "daylight/shared/status_badge", status: @solution[:severity] %>
-  <%= render "daylight/shared/status_badge", status: @solution[:status] %>
-  <% if @solution[:pr_url].present? %>
-    <a href="<%= @solution[:pr_url] %>" target="_blank" class="badge badge--blue">PR</a>
+  <%= render "daylight/shared/status_badge", status: @solution.severity %>
+  <%= render "daylight/shared/status_badge", status: @solution.status %>
+  <% if @solution.pr_url.present? %>
+    <a href="<%= @solution.pr_url %>" target="_blank" class="badge badge--blue">PR</a>
   <% end %>
 </div>
 
 <div class="card">
   <h3 class="card__title">Problem Description</h3>
-  <p class="text-sm"><%= simple_format(@solution[:problem_description]) %></p>
+  <p class="text-sm"><%= simple_format(@solution.problem_description) %></p>
 </div>
 
 <div class="card">
   <h3 class="card__title">Proposed Fix</h3>
-  <pre class="dl-mono" style="font-size: 0.8125rem; white-space: pre-wrap; overflow-x: auto;"><%= @solution[:proposed_fix] %></pre>
+  <pre class="dl-mono" style="font-size: 0.8125rem; white-space: pre-wrap; overflow-x: auto;"><%= @solution.proposed_fix %></pre>
 </div>
 
-<% if @solution[:file_paths].present? %>
+<% paths = (JSON.parse(@solution.file_paths) rescue []) if @solution.file_paths.present? %>
+<% if paths.present? %>
   <div class="card">
     <h3 class="card__title">File Paths</h3>
     <ul class="flex flex-col gap-half">
-      <% Array(@solution[:file_paths]).each do |path| %>
+      <% paths.each do |path| %>
         <li class="dl-mono text-sm"><%= path %></li>
       <% end %>
     </ul>
@@ -45,15 +46,15 @@
     <dl class="flex flex-col gap-half" style="font-size: 0.8125rem;">
       <div class="flex justify-between">
         <dt class="text-subtle">Type</dt>
-        <dd class="font-medium"><%= @source_issue[:issue_type] %></dd>
+        <dd class="font-medium"><%= @source_issue.issue_type %></dd>
       </div>
       <div class="flex justify-between">
         <dt class="text-subtle">Title</dt>
-        <dd class="font-medium"><%= @source_issue[:title] %></dd>
+        <dd class="font-medium"><%= @source_issue.title %></dd>
       </div>
       <div class="flex justify-between">
         <dt class="text-subtle">Severity</dt>
-        <dd class="font-medium"><%= render "daylight/shared/status_badge", status: @source_issue[:severity] %></dd>
+        <dd class="font-medium"><%= render "daylight/shared/status_badge", status: @source_issue.severity %></dd>
       </div>
     </dl>
   </div>
@@ -64,17 +65,17 @@
 
   <div class="flex flex-col gap-1" data-chat-target="messages" style="margin-block-end: var(--size-2)">
     <% @messages.each do |message| %>
-      <div class="flex flex-col gap-half" style="padding: var(--size-2); background: <%= message[:role] == 'user' ? 'var(--surface-2)' : 'var(--surface-1)' %>; border-radius: var(--radius-sm);">
+      <div class="flex flex-col gap-half" style="padding: var(--size-2); background: <%= message.role == 'user' ? 'var(--surface-2)' : 'var(--surface-1)' %>; border-radius: var(--radius-sm);">
         <div class="flex justify-between items-center">
-          <span class="text-xs font-medium"><%= message[:role].capitalize %></span>
-          <span class="text-xs text-subtle"><%= message[:created_at] %></span>
+          <span class="text-xs font-medium"><%= message.role.capitalize %></span>
+          <span class="text-xs text-subtle"><%= message.created_at %></span>
         </div>
-        <div class="text-sm"><%= simple_format(message[:content]) %></div>
+        <div class="text-sm"><%= simple_format(message.content) %></div>
       </div>
     <% end %>
   </div>
 
-  <%= form_with url: solution_chat_path(@solution[:id]), method: :post, class: "flex gap-half", data: { chat_target: "form" } do %>
+  <%= form_with url: solution_chat_path(@solution.id), method: :post, class: "flex gap-half", data: { chat_target: "form" } do %>
     <input type="text" name="message" class="input" style="flex: 1;" placeholder="Ask about this solution..." required>
     <button type="submit" class="btn btn--sm btn--primary">Send</button>
   <% end %>

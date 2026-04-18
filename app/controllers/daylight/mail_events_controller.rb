@@ -34,9 +34,7 @@ module Daylight
       end
 
       events = if params[:mailer].present?
-        MailEventResource.serialize(
-          scope.where(mailer_class: params[:mailer]).order(occurred_at: :desc).limit(50)
-        )
+        scope.where(mailer_class: params[:mailer]).order(occurred_at: :desc).limit(50)
       else
         []
       end
