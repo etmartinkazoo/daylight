@@ -1,0 +1,33 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--size-1);
+  padding: 0.125rem var(--size-2);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.25rem;
+  border-radius: var(--rounded-full);
+  white-space: nowrap;
+}
+
+.badge--default { background-color: var(--color-border-light); color: var(--color-text-subtle); }
+.badge--green { background-color: light-dark(#dcfce7, #052e16); color: var(--color-positive); }
+.badge--red { background-color: light-dark(#fef2f2, #2a0a0a); color: var(--color-negative); }
+.badge--yellow { background-color: light-dark(#fef9c3, #2a2000); color: var(--color-warning); }
+.badge--blue { background-color: light-dark(#dbeafe, #0a1a2a); color: var(--color-info); }
+
+/* Status-specific */
+.badge--open { background-color: light-dark(#fef2f2, #2a0a0a); color: var(--color-negative); }
+.badge--resolved { background-color: light-dark(#dcfce7, #052e16); color: var(--color-positive); }
+.badge--ignored { background-color: var(--color-border-light); color: var(--color-text-subtle); }
+
+/* HTTP status */
+.badge--2xx { background-color: light-dark(#dcfce7, #052e16); color: var(--color-2xx); }
+.badge--4xx { background-color: light-dark(#fef9c3, #2a2000); color: var(--color-4xx); }
+.badge--5xx { background-color: light-dark(#fef2f2, #2a0a0a); color: var(--color-5xx); }
+
+/* Severity */
+.badge--critical { background-color: light-dark(#fef2f2, #2a0a0a); color: var(--color-negative); }
+.badge--high { background-color: light-dark(#fff7ed, #2a1500); color: light-dark(#ea580c, #fb923c); }
+.badge--medium { background-color: light-dark(#fef9c3, #2a2000); color: var(--color-warning); }
+.badge--low { background-color: light-dark(#dbeafe, #0a1a2a); color: var(--color-info); }

@@ -6,7 +6,6 @@ Rails engine for application monitoring — errors, requests, queries, jobs, log
 
 - Ruby 3.2+
 - Rails 7.1+
-- Inertia.js v3 with `inertia_rails` ~> 3.19
 - SolidQueue (for background jobs and scheduled scans)
 - Falcon (recommended) or Puma + Redis (for async AI chat processing)
 
@@ -16,16 +15,6 @@ Add to your Gemfile:
 
 ```ruby
 gem "daylight", path: "path/to/daylight"
-```
-
-Ensure your Inertia initializer is configured for v3:
-
-```ruby
-# config/initializers/inertia.rb
-InertiaRails.configure do |config|
-  config.use_script_element_for_initial_page = true
-  config.use_data_inertia_head_attribute = true
-end
 ```
 
 Mount the engine in `config/routes.rb`:

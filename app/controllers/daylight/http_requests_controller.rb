@@ -13,7 +13,7 @@ module Daylight
       grouped = scope.grouped_by_host
 
       count = scope.group(:host).count.length
-      pagy, page_rows = pagy(:offset, grouped, count: count, limit: 20)
+      @pagy, page_rows = pagy(:offset, grouped, count: count, limit: 20)
       hosts = page_rows.map do |row|
         {
           host: row.host,
@@ -32,14 +32,12 @@ module Daylight
         []
       end
 
-      render inertia: {
-        hosts: InertiaRails.scroll(pagy) { hosts },
-        host_requests: host_requests,
-        selected_host: params[:host],
-        period: period,
-        total_requests: scope.count,
-        volume_series: time_series_buckets(scope, period)
-      }
+      @hosts = hosts
+      @host_requests = host_requests
+      @selected_host = params[:host]
+      @period = period
+      @total_requests = scope.count
+      @volume_series = time_series_buckets(scope, period)
     end
 
     private

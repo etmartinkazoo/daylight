@@ -25,18 +25,14 @@ module Daylight
       Daylight::Database.reset_connection!
     end
 
-    # Serve pre-built frontend assets from the gem at /daylight/assets/
-    initializer "daylight.static_assets" do |app|
-      builds_path = root.join("app", "assets", "builds")
-      if builds_path.exist? && Dir.glob(builds_path.join("daylight-*")).any?
-        app.routes.prepend do
-          mount(
-            Rack::Files.new(builds_path.to_s),
-            at: "/daylight/assets",
-            as: :daylight_assets
-          )
-        end
-      end
+    initializer "daylight.assets" do |app|
+      app.config.assets.paths << root.join("app", "assets", "stylesheets")
+      app.config.assets.paths << root.join("app", "javascript")
+    end
+
+    initializer "daylight.importmap", before: "importmap" do |app|
+      app.config.importmap.paths << root.join("config", "importmap.rb")
+      app.config.importmap.cache_sweepers << root.join("app", "javascript")
     end
 
     initializer "daylight.middleware" do |app|

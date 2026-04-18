@@ -1,0 +1,45 @@
+<%= render "daylight/shared/page_header", title: "Cache" %>
+
+<%= render "daylight/shared/period_select", period: @period %>
+
+<div class="grid grid--stats">
+  <%= render "daylight/shared/stat_card", label: "Total Events", value: number_with_delimiter(@total_events) %>
+  <%= render "daylight/shared/stat_card", label: "Hit Rate", value: number_to_percentage(@hit_rate, precision: 1) %>
+  <%= render "daylight/shared/stat_card", label: "Total Reads", value: number_with_delimiter(@total_reads) %>
+  <%= render "daylight/shared/stat_card", label: "Total Hits", value: number_with_delimiter(@total_hits) %>
+</div>
+
+<%= render "daylight/shared/bar_chart", data: @volume_series %>
+
+<% if @key_groups.any? %>
+  <div class="card">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Key Pattern</th>
+          <th>Total</th>
+          <th>Hits</th>
+          <th>Reads</th>
+          <th>Hit Rate</th>
+          <th>Avg Duration</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @key_groups.each do |kg| %>
+          <tr>
+            <td class="dl-mono"><%= truncate(kg[:key_pattern].to_s, length: 60) %></td>
+            <td><%= number_with_delimiter(kg[:total]) %></td>
+            <td><%= number_with_delimiter(kg[:hits]) %></td>
+            <td><%= number_with_delimiter(kg[:reads]) %></td>
+            <td><%= number_to_percentage(kg[:hit_rate], precision: 1) %></td>
+            <td><%= kg[:avg_duration].to_i %>ms</td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <%= render "daylight/shared/pagination", pagy: @pagy %>
+<% else %>
+  <%= render "daylight/shared/empty_state", message: "No cache events found for the selected period." %>
+<% end %>

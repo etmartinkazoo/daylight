@@ -1,0 +1,10 @@
+<%
+  badge_class = case status_code.to_i
+                when 200..299 then "badge--success"
+                when 300..399 then "badge--info"
+                when 400..499 then "badge--warning"
+                when 500..599 then "badge--danger"
+                else "badge--default"
+                end
+%>
+<span class="badge <%= badge_class %>"><%= status_code %></span>

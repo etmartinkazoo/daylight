@@ -1,0 +1,77 @@
+<%= render "daylight/shared/page_header", title: "HTTP Requests", actions: capture {
+  link_to "Export", http_requests_export_path(request.query_parameters), class: "btn btn--sm btn--outline"
+} %>
+
+<%= render "daylight/shared/period_select", period: @period %>
+
+<div class="grid grid--stats">
+  <%= render "daylight/shared/stat_card", label: "Total", value: number_with_delimiter(@total_requests) %>
+  <% avg_duration = @hosts.any? ? (@hosts.sum { |h| h[:avg_duration].to_f } / @hosts.size).to_i : 0 %>
+  <%= render "daylight/shared/stat_card", label: "Avg Duration", value: "#{avg_duration}ms" %>
+</div>
+
+<%= render "daylight/shared/bar_chart", data: @volume_series %>
+
+<% if @hosts.any? %>
+  <div class="card">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Host</th>
+          <th>Total</th>
+          <th>Avg (ms)</th>
+          <th>Max (ms)</th>
+          <th>Errors</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @hosts.each do |h| %>
+          <tr>
+            <td>
+              <%= link_to h[:host], http_requests_path(host: h[:host], period: @period) %>
+            </td>
+            <td><%= number_with_delimiter(h[:total]) %></td>
+            <td><%= h[:avg_duration].to_i %>ms</td>
+            <td><%= h[:max_duration].to_i %>ms</td>
+            <td><%= number_with_delimiter(h[:error_count]) %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <%= render "daylight/shared/empty_state", message: "No HTTP requests found for the selected period." %>
+<% end %>
+
+<% if @selected_host && @host_requests.any? %>
+  <h2 class="dl-section-title" style="margin-block-start: var(--size-6)"><%= @selected_host %></h2>
+
+  <div class="card">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Request</th>
+          <th>Status</th>
+          <th>Duration</th>
+          <th>Controller / Action</th>
+          <th>Time</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @host_requests.each do |r| %>
+          <tr>
+            <td class="dl-mono"><%= r[:method] %> <%= truncate(r[:url].to_s, length: 60) %></td>
+            <td><%= render "daylight/shared/http_status_badge", status_code: r[:status_code] %></td>
+            <td><%= r[:duration_ms].to_i %>ms</td>
+            <td class="dl-mono"><%= r[:controller_action] %></td>
+            <td class="text-subtle"><%= r[:occurred_at] %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <%= render "daylight/shared/pagination", pagy: @pagy %>
+<% elsif @selected_host %>
+  <%= render "daylight/shared/empty_state", message: "No requests found for #{@selected_host}." %>
+<% end %>

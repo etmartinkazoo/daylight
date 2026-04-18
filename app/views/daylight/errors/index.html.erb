@@ -1,0 +1,112 @@
+<% content_for(:title) { "Errors - Daylight" } %>
+
+<%= render "daylight/shared/page_header", title: "Errors", actions: capture {
+  link_to "Export", errors_export_path(format: :csv), class: "btn btn--sm btn--outline"
+} %>
+
+<%= render "daylight/shared/tabs", current: @status, tabs: [
+  { label: "Open",     value: "open",     path: errors_path,          count: @counts["open"] },
+  { label: "Resolved", value: "resolved", path: errors_resolved_path, count: @counts["resolved"] },
+  { label: "Ignored",  value: "ignored",  path: errors_ignored_path,  count: @counts["ignored"] },
+  { label: "All",      value: "all",      path: errors_all_path,      count: @counts.values.sum }
+] %>
+
+<div class="dl-filters">
+  <%= render "daylight/shared/period_select", period: params[:period] %>
+
+  <%= form_with url: url_for, method: :get, data: { controller: "filter-form", turbo_action: "replace" } do |f| %>
+    <% params.each do |key, val| %>
+      <% next if %w[q controller action].include?(key) %>
+      <%= f.hidden_field key, value: val %>
+    <% end %>
+    <%= f.search_field :q, value: @query, placeholder: "Search errors...", class: "input input--sm",
+        style: "width: 16rem", data: { action: "input->filter-form#submit" } %>
+  <% end %>
+</div>
+
+<div class="dl-section">
+  <%= render "daylight/shared/bar_chart", data: @error_series %>
+</div>
+
+<div class="dl-stat-grid">
+  <%= render "daylight/shared/stat_card", label: "Total Errors", value: @errors.size %>
+  <%= render "daylight/shared/stat_card", label: "Unhandled", value: @unhandled_count %>
+  <%= render "daylight/shared/stat_card", label: "Performance", value: @performance_count %>
+</div>
+
+<% if @errors.any? %>
+  <div data-controller="bulk-select">
+    <div class="card card--flush">
+      <table class="table">
+        <thead>
+          <tr>
+            <th style="width: 2rem">
+              <input type="checkbox" data-bulk-select-target="selectAll" data-action="bulk-select#toggleAll">
+            </th>
+            <th>
+              <%= render "daylight/shared/sortable_header", label: "Error", column: "error_class",
+                    sort_column: @sort_column, sort_direction: @sort_direction %>
+            </th>
+            <th class="col-num">
+              <%= render "daylight/shared/sortable_header", label: "Count", column: "occurrences_count",
+                    sort_column: @sort_column, sort_direction: @sort_direction %>
+            </th>
+            <th>Severity</th>
+            <th>
+              <%= render "daylight/shared/sortable_header", label: "Last Seen", column: "last_seen_at",
+                    sort_column: @sort_column, sort_direction: @sort_direction %>
+            </th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @errors.each do |error| %>
+            <tr>
+              <td>
+                <input type="checkbox" value="<%= error[:id] %>"
+                       data-bulk-select-target="checkbox" data-action="bulk-select#toggle">
+              </td>
+              <td>
+                <%= link_to error_path(error[:id]), style: "text-decoration: none; color: inherit;" do %>
+                  <div style="font-weight: 500"><%= error[:error_class] %></div>
+                  <div class="text-subtle text-xs" style="margin-block-start: 2px">
+                    <%= truncate(error[:message].to_s, length: 80) %>
+                  </div>
+                <% end %>
+              </td>
+              <td class="col-num"><%= error[:occurrences_count] %></td>
+              <td>
+                <span class="badge badge--<%= error[:severity] %>"><%= error[:severity] %></span>
+              </td>
+              <td class="text-subtle text-xs"><%= error[:last_seen_ago] %></td>
+              <td><%= render "daylight/shared/status_badge", status: error[:status] %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <%# Bulk actions bar %>
+    <div data-bulk-select-target="bar" hidden
+         class="flex items-center gap-half"
+         style="position: sticky; bottom: var(--size-4); margin-block-start: var(--size-4);
+                background: var(--color-surface); border: 1px solid var(--color-border);
+                border-radius: var(--rounded-xl); padding: var(--size-3) var(--size-5); box-shadow: 0 4px 12px rgba(0,0,0,.1);">
+      <span class="text-sm"><span data-bulk-select-target="count">0</span> selected</span>
+      <div class="flex gap-half" style="margin-inline-start: auto;">
+        <%= form_with url: error_batch_path, method: :post, data: { turbo_action: "replace" } do |f| %>
+          <input type="hidden" name="ids" value="" data-bulk-select-target="ids">
+          <input type="hidden" name="return_status" value="<%= @status %>">
+          <button type="submit" name="action_type" value="resolve" class="btn btn--sm btn--outline">Resolve</button>
+          <button type="submit" name="action_type" value="ignore" class="btn btn--sm btn--outline">Ignore</button>
+          <button type="submit" name="action_type" value="delete" class="btn btn--sm btn--negative"
+                  data-turbo-confirm="Delete selected errors?">Delete</button>
+        <% end %>
+      </div>
+    </div>
+
+    <%= render "daylight/shared/pagination", pagy: @pagy %>
+  </div>
+<% else %>
+  <%= render "daylight/shared/empty_state", message: "No errors found." %>
+<% end %>

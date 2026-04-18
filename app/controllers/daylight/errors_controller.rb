@@ -15,10 +15,8 @@ module Daylight
         Database::OccurrenceRecord.where(error_id: error.id).order(occurred_at: :desc).limit(50)
       )
 
-      render inertia: {
-        error: ErrorResource.serialize(error, params: { recent_occurrences: { error.id => occurrences } }),
-        occurrences: occurrences
-      }
+      @error = ErrorResource.serialize(error, params: { recent_occurrences: { error.id => occurrences } })
+      @occurrences = occurrences
     end
 
     def update
@@ -46,7 +44,7 @@ module Daylight
       scope = scope.search(params[:q]) if params[:q].present?
       scope = apply_sort(scope, default: "last_seen_at",
                                 allowed: %w[error_class occurrences_count last_seen_at first_seen_at], direction: "desc")
-      pagy, errors = pagy(scope, limit: 20)
+      @pagy, errors = pagy(scope, limit: 20)
 
       recent_by_error_id = Database::OccurrenceRecord
                            .where(error_id: errors.map(&:id))
@@ -56,19 +54,15 @@ module Daylight
 
       occurrence_scope = Database::OccurrenceRecord.where(occurred_at: period_start(current_period)..)
 
-      render inertia: "daylight/errors/index", props: {
-        errors: InertiaRails.scroll(pagy) {
-          ErrorResource.serialize(errors, params: { recent_occurrences: recent_by_error_id })
-        },
-        counts: Database::ErrorRecord.status_counts,
-        status: status,
-        query: params[:q] || "",
-        unhandled_count: Database::ErrorRecord.unhandled.count,
-        performance_count: Database::ErrorRecord.open.performance.count,
-        error_series: time_series_buckets(occurrence_scope, current_period),
-        deploys: deploys_in_period(current_period),
-        **sort_props
-      }
+      @errors = ErrorResource.serialize(errors, params: { recent_occurrences: recent_by_error_id })
+      @counts = Database::ErrorRecord.status_counts
+      @status = status
+      @query = params[:q] || ""
+      @unhandled_count = Database::ErrorRecord.unhandled.count
+      @performance_count = Database::ErrorRecord.open.performance.count
+      @error_series = time_series_buckets(occurrence_scope, current_period)
+      @deploys = deploys_in_period(current_period)
+      sort_props.each { |k, v| instance_variable_set(:"@#{k}", v) }
     end
   end
 end

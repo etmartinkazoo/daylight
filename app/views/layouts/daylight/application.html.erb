@@ -1,32 +1,40 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title data-inertia>Daylight</title>
-  <%= csrf_meta_tags %>
-  <%= csp_meta_tag %>
-  <%= action_cable_meta_tag if respond_to?(:action_cable_meta_tag) %>
-  <%= inertia_head if respond_to?(:inertia_head) %>
+<html data-controller="color-scheme">
+  <head>
+    <title><%= content_for(:title) || "Daylight" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= action_cable_meta_tag if respond_to?(:action_cable_meta_tag) %>
 
-  <script>
-    // Prevent FOUC — apply theme before paint
-    (function() {
-      var saved = localStorage.getItem("daylight-theme");
-      var dark = saved === "dark" || (!saved && window.matchMedia("(prefers-color-scheme: dark)").matches);
-      document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
-    })();
-  </script>
+    <script>
+      (function() {
+        var saved = localStorage.getItem("daylight-theme");
+        if (saved && saved !== "system") {
+          document.documentElement.setAttribute("data-color-scheme", saved);
+        }
+      })();
+    </script>
 
-  <% bundle_path = Daylight::Engine.root.join("app", "assets", "builds") %>
-  <% if (css = Dir.glob(bundle_path.join("daylight-*.css")).first) %>
-    <link rel="stylesheet" href="<%= "/daylight/assets/#{File.basename(css)}" %>">
-  <% end %>
-  <% if (js = Dir.glob(bundle_path.join("daylight-*.js")).first) %>
-    <script type="module" src="<%= "/daylight/assets/#{File.basename(js)}" %>"></script>
-  <% end %>
-</head>
-<body>
-  <%= yield %>
-</body>
+    <%= stylesheet_link_tag "css-zero/reset", "data-turbo-track": "reload" %>
+    <%= stylesheet_link_tag "css-zero/variables", "data-turbo-track": "reload" %>
+    <%= stylesheet_link_tag "daylight/application", "data-turbo-track": "reload" %>
+    <%= stylesheet_link_tag "css-zero/utilities", "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags "daylight/application" %>
+  </head>
+
+  <body>
+    <div class="sidebar-layout" data-controller="toggle-class" data-toggle-class-toggle-class="closed">
+      <aside id="sidebar">
+        <%= render "daylight/shared/sidebar" %>
+      </aside>
+
+      <main id="main">
+        <%= render "daylight/shared/flash" %>
+        <%= yield %>
+      </main>
+    </div>
+  </body>
 </html>

@@ -1,0 +1,207 @@
+<%= render "daylight/shared/page_header", title: "Settings" %>
+
+<%= form_with url: settings_path, method: :patch, class: "flex flex-col gap-1" do |f| %>
+  <%# General %>
+  <div class="card">
+    <h3 class="card__title">General</h3>
+    <div class="flex flex-col gap-1">
+      <div class="flex flex-col gap-half">
+        <label for="settings_github_repo_url" class="text-sm font-medium">GitHub Repo URL</label>
+        <input type="text" name="settings[github_repo_url]" id="settings_github_repo_url" value="<%= @settings[:github_repo_url] %>" class="input">
+        <p class="text-xs text-subtle">Full URL to your GitHub repository</p>
+      </div>
+      <div class="flex flex-col gap-half">
+        <label for="settings_github_default_branch" class="text-sm font-medium">Default Branch</label>
+        <input type="text" name="settings[github_default_branch]" id="settings_github_default_branch" value="<%= @settings[:github_default_branch] %>" class="input">
+        <p class="text-xs text-subtle">Default branch name (e.g. main)</p>
+      </div>
+    </div>
+  </div>
+
+  <%# Notifications %>
+  <div class="card">
+    <h3 class="card__title">Notifications</h3>
+    <div class="flex flex-col gap-1">
+      <div class="flex flex-col gap-half">
+        <label for="settings_notification_emails" class="text-sm font-medium">Notification Emails</label>
+        <input type="text" name="settings[notification_emails]" id="settings_notification_emails" value="<%= @settings[:notification_emails] %>" class="input">
+        <p class="text-xs text-subtle">Comma-separated list of email addresses</p>
+      </div>
+      <div class="flex flex-col gap-half">
+        <label for="settings_slack_webhook_url" class="text-sm font-medium">Slack Webhook URL</label>
+        <input type="text" name="settings[slack_webhook_url]" id="settings_slack_webhook_url" value="<%= @settings[:slack_webhook_url] %>" class="input">
+        <p class="text-xs text-subtle">Slack incoming webhook URL for notifications</p>
+      </div>
+    </div>
+    <%= button_to "Send Test Notification", settings_notification_test_path, method: :post, class: "btn btn--sm btn--outline", style: "margin-block-start: var(--size-2)" %>
+  </div>
+
+  <%# Performance Thresholds %>
+  <div class="card">
+    <h3 class="card__title">Performance Thresholds</h3>
+    <div class="flex flex-col gap-1">
+      <div class="flex flex-col gap-half">
+        <label for="settings_slow_request_threshold_ms" class="text-sm font-medium">Slow Request Threshold (ms)</label>
+        <input type="number" name="settings[slow_request_threshold_ms]" id="settings_slow_request_threshold_ms" value="<%= @settings[:slow_request_threshold_ms] %>" class="input">
+        <p class="text-xs text-subtle">Requests slower than this will be flagged</p>
+      </div>
+      <div class="flex flex-col gap-half">
+        <label for="settings_slow_query_threshold_ms" class="text-sm font-medium">Slow Query Threshold (ms)</label>
+        <input type="number" name="settings[slow_query_threshold_ms]" id="settings_slow_query_threshold_ms" value="<%= @settings[:slow_query_threshold_ms] %>" class="input">
+        <p class="text-xs text-subtle">SQL queries slower than this will be flagged</p>
+      </div>
+    </div>
+  </div>
+
+  <%# Data Retention %>
+  <div class="card">
+    <h3 class="card__title">Data Retention</h3>
+    <div class="flex flex-col gap-1">
+      <div class="flex flex-col gap-half">
+        <label for="settings_retention_days" class="text-sm font-medium">Retention Days</label>
+        <input type="number" name="settings[retention_days]" id="settings_retention_days" value="<%= @settings[:retention_days] %>" class="input">
+        <p class="text-xs text-subtle">Number of days to keep data before cleanup</p>
+      </div>
+      <div class="flex flex-col gap-half">
+        <label for="settings_sample_rate" class="text-sm font-medium">Sample Rate</label>
+        <input type="number" name="settings[sample_rate]" id="settings_sample_rate" value="<%= @settings[:sample_rate] %>" class="input" step="0.01" min="0" max="1">
+        <p class="text-xs text-subtle">Fraction of requests to record (0.0 to 1.0)</p>
+      </div>
+    </div>
+    <%= button_to "Run Cleanup Now", settings_cleanup_path, method: :post, class: "btn btn--sm btn--outline", style: "margin-block-start: var(--size-2)" %>
+  </div>
+
+  <%# AI Configuration %>
+  <div class="card">
+    <h3 class="card__title">AI Configuration</h3>
+    <div class="flex flex-col gap-1">
+      <div class="flex flex-col gap-half">
+        <label for="settings_default_ai_model" class="text-sm font-medium">Default AI Model</label>
+        <select name="settings[default_ai_model]" id="settings_default_ai_model" class="input">
+          <% %w[gemini anthropic].each do |model| %>
+            <option value="<%= model %>" <%= "selected" if @settings[:default_ai_model] == model %>><%= model.capitalize %></option>
+          <% end %>
+        </select>
+      </div>
+      <div class="flex flex-col gap-half">
+        <label for="settings_gemini_api_key" class="text-sm font-medium">Gemini API Key</label>
+        <input type="password" name="settings[gemini_api_key]" id="settings_gemini_api_key" value="<%= @settings[:gemini_api_key] %>" class="input">
+      </div>
+      <div class="flex flex-col gap-half">
+        <label for="settings_anthropic_api_key" class="text-sm font-medium">Anthropic API Key</label>
+        <input type="password" name="settings[anthropic_api_key]" id="settings_anthropic_api_key" value="<%= @settings[:anthropic_api_key] %>" class="input">
+      </div>
+      <div class="flex flex-col gap-half">
+        <label for="settings_ai_context_notes" class="text-sm font-medium">AI Context Notes</label>
+        <textarea name="settings[ai_context_notes]" id="settings_ai_context_notes" class="input" rows="4"><%= @settings[:ai_context_notes] %></textarea>
+        <p class="text-xs text-subtle">Additional context provided to AI when generating solutions</p>
+      </div>
+    </div>
+  </div>
+
+  <%# GitHub Integration %>
+  <div class="card">
+    <h3 class="card__title">GitHub Integration</h3>
+    <div class="flex flex-col gap-1">
+      <div class="flex flex-col gap-half">
+        <label for="settings_github_api_token" class="text-sm font-medium">GitHub API Token</label>
+        <input type="password" name="settings[github_api_token]" id="settings_github_api_token" value="<%= @settings[:github_api_token] %>" class="input">
+        <p class="text-xs text-subtle">Personal access token for GitHub API</p>
+      </div>
+    </div>
+  </div>
+
+  <%# Automated Scans %>
+  <div class="card">
+    <h3 class="card__title">Automated Scans</h3>
+    <div class="flex flex-col gap-1">
+      <div class="flex items-center gap-half">
+        <input type="hidden" name="settings[performance_scan_enabled]" value="0">
+        <input type="checkbox" name="settings[performance_scan_enabled]" id="settings_performance_scan_enabled" value="1" <%= "checked" if ActiveModel::Type::Boolean.new.cast(@settings[:performance_scan_enabled]) %>>
+        <label for="settings_performance_scan_enabled" class="text-sm font-medium">Performance Scan</label>
+      </div>
+      <div class="flex items-center gap-half">
+        <input type="hidden" name="settings[security_scan_enabled]" value="0">
+        <input type="checkbox" name="settings[security_scan_enabled]" id="settings_security_scan_enabled" value="1" <%= "checked" if ActiveModel::Type::Boolean.new.cast(@settings[:security_scan_enabled]) %>>
+        <label for="settings_security_scan_enabled" class="text-sm font-medium">Security Scan</label>
+      </div>
+      <div class="flex items-center gap-half">
+        <input type="hidden" name="settings[solutions_scan_enabled]" value="0">
+        <input type="checkbox" name="settings[solutions_scan_enabled]" id="settings_solutions_scan_enabled" value="1" <%= "checked" if ActiveModel::Type::Boolean.new.cast(@settings[:solutions_scan_enabled]) %>>
+        <label for="settings_solutions_scan_enabled" class="text-sm font-medium">Solutions Scan</label>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <button type="submit" class="btn btn--primary">Save Settings</button>
+  </div>
+<% end %>
+
+<%# Performance Issues %>
+<% if @performance_issues.any? %>
+  <div class="card" style="margin-block-start: var(--size-4)">
+    <h3 class="card__title">Performance Issues</h3>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Severity</th>
+          <th>Source</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @performance_issues.each do |issue| %>
+          <tr>
+            <td><%= issue[:title] %></td>
+            <td><%= render "daylight/shared/status_badge", status: issue[:severity] %></td>
+            <td class="dl-mono"><%= issue[:source_location] %></td>
+            <td><%= render "daylight/shared/status_badge", status: issue[:status] %></td>
+            <td>
+              <% unless issue[:status] == "dismissed" %>
+                <%= button_to "Dismiss", settings_performance_issue_path(issue[:id]), method: :patch, params: { status: "dismissed" }, class: "btn btn--sm btn--ghost" %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% end %>
+
+<%# Security Issues %>
+<% if @security_issues.any? %>
+  <div class="card" style="margin-block-start: var(--size-4)">
+    <h3 class="card__title">Security Issues</h3>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Severity</th>
+          <th>Confidence</th>
+          <th>File</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @security_issues.each do |issue| %>
+          <tr>
+            <td><%= issue[:title] %></td>
+            <td><%= render "daylight/shared/status_badge", status: issue[:severity] %></td>
+            <td><%= issue[:confidence] %></td>
+            <td class="dl-mono"><%= issue[:file_path] %></td>
+            <td><%= render "daylight/shared/status_badge", status: issue[:status] %></td>
+            <td>
+              <% unless issue[:status] == "dismissed" %>
+                <%= button_to "Dismiss", settings_security_issue_path(issue[:id]), method: :patch, params: { status: "dismissed" }, class: "btn btn--sm btn--ghost" %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% end %>

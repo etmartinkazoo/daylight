@@ -1,0 +1,156 @@
+<%= render "daylight/shared/page_header", title: "Requests", actions: capture {
+  link_to "Export CSV", requests_export_path(period: @period), class: "btn btn--sm btn--outline"
+} %>
+
+<%= render "daylight/shared/period_select", period: @period %>
+
+<div class="grid grid--4" style="margin-block-start: var(--size-4)">
+  <%= render "daylight/shared/stat_card", label: "Total Requests", value: number_with_delimiter(@total_requests) %>
+  <%= render "daylight/shared/stat_card", label: "Throughput", value: "#{@throughput_rpm.round(1)} rpm" %>
+  <%= render "daylight/shared/stat_card", label: "APDEX", value: @apdex ? @apdex.round(2) : "N/A" %>
+  <% avg_latency = @endpoints.any? ? (@endpoints.sum { |e| e[:avg_duration].to_f } / @endpoints.size).round(0) : 0 %>
+  <%= render "daylight/shared/stat_card", label: "Avg Latency", value: "#{avg_latency}ms" %>
+</div>
+
+<div style="margin-block-start: var(--size-4)">
+  <%= render "daylight/shared/bar_chart", data: @throughput_series, height: "10rem" %>
+</div>
+
+<div class="card" style="margin-block-start: var(--size-4)">
+  <% if @endpoints.any? %>
+    <div class="table-scroll">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Route</th>
+            <th class="text-end"><%= render "daylight/shared/sortable_header", label: "Total", column: "total", sort_column: @sort_column, sort_direction: @sort_direction %></th>
+            <th class="text-end"><%= render "daylight/shared/sortable_header", label: "Avg", column: "avg_duration", sort_column: @sort_column, sort_direction: @sort_direction %></th>
+            <th class="text-end">P95</th>
+            <th class="text-end"><%= render "daylight/shared/sortable_header", label: "Max", column: "max_duration", sort_column: @sort_column, sort_direction: @sort_direction %></th>
+            <th class="text-end">2xx</th>
+            <th class="text-end">4xx</th>
+            <th class="text-end">5xx</th>
+            <th class="text-end">DB Time</th>
+            <th class="text-end">Queries</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @endpoints.each do |endpoint| %>
+            <tr class="<%= 'table__row--active' if @selected_route == endpoint[:route] %>">
+              <td>
+                <%= link_to requests_path(route: endpoint[:route], period: @period),
+                      data: { turbo_action: "replace" } do %>
+                  <span class="badge badge--default"><%= endpoint[:method] %></span>
+                  <span class="dl-mono"><%= endpoint[:route] %></span>
+                <% end %>
+              </td>
+              <td class="text-end"><%= number_with_delimiter(endpoint[:total]) %></td>
+              <td class="text-end"><%= endpoint[:avg_duration].to_i %>ms</td>
+              <td class="text-end"><%= endpoint[:p95_duration].to_i %>ms</td>
+              <td class="text-end"><%= endpoint[:max_duration].to_i %>ms</td>
+              <td class="text-end"><%= number_with_delimiter(endpoint[:ok_count]) %></td>
+              <td class="text-end"><%= number_with_delimiter(endpoint[:client_error_count]) %></td>
+              <td class="text-end"><%= number_with_delimiter(endpoint[:server_error_count]) %></td>
+              <td class="text-end"><%= endpoint[:avg_db_duration].to_i %>ms</td>
+              <td class="text-end"><%= endpoint[:avg_query_count].to_i %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <%= render "daylight/shared/empty_state", message: "No requests recorded for this period." %>
+  <% end %>
+</div>
+
+<%= render "daylight/shared/pagination", pagy: @pagy if defined?(@pagy) %>
+
+<% if @selected_route.present? %>
+  <div class="card" style="margin-block-start: var(--size-6)">
+    <h2 class="card__title">Requests for <span class="dl-mono"><%= @selected_route %></span></h2>
+
+    <% if @route_requests.any? %>
+      <div class="table-scroll">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Method</th>
+              <th>Path</th>
+              <th>Status</th>
+              <th class="text-end">Duration</th>
+              <th class="text-end">DB</th>
+              <th class="text-end">View</th>
+              <th class="text-end">Queries</th>
+              <th>Format</th>
+              <th>N+1</th>
+              <th>When</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @route_requests.each do |req| %>
+              <tr class="<%= 'table__row--active' if @selected_request && @selected_request[:id] == req[:id] %>">
+                <td><span class="badge badge--default"><%= req[:method] %></span></td>
+                <td class="dl-mono"><%= truncate(req[:path], length: 60) %></td>
+                <td><%= render "daylight/shared/http_status_badge", status_code: req[:status_code] %></td>
+                <td class="text-end"><%= req[:duration_ms].to_i %>ms</td>
+                <td class="text-end"><%= req[:db_duration_ms].to_i %>ms</td>
+                <td class="text-end"><%= req[:view_duration_ms].to_i %>ms</td>
+                <td class="text-end"><%= req[:query_count] %></td>
+                <td><%= req[:format] %></td>
+                <td><%= req[:n_plus_one] ? "Yes" : "" %></td>
+                <td class="text-subtle"><%= time_ago_in_words(req[:occurred_at]) %> ago</td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <%= render "daylight/shared/empty_state", message: "No individual requests found." %>
+    <% end %>
+  </div>
+
+  <% if @selected_request.present? %>
+    <div class="card" style="margin-block-start: var(--size-4)">
+      <h2 class="card__title">Request Detail</h2>
+
+      <dl class="dl-grid">
+        <dt>Trace ID</dt>
+        <dd class="dl-mono"><%= @selected_request[:trace_id] %></dd>
+        <dt>Controller Action</dt>
+        <dd class="dl-mono"><%= @selected_request[:controller_action] %></dd>
+        <dt>Status</dt>
+        <dd><%= render "daylight/shared/http_status_badge", status_code: @selected_request[:status_code] %></dd>
+        <dt>Duration</dt>
+        <dd><%= @selected_request[:duration_ms].to_i %>ms</dd>
+        <dt>IP</dt>
+        <dd class="dl-mono"><%= @selected_request[:ip] %></dd>
+        <dt>Occurred</dt>
+        <dd><%= @selected_request[:occurred_at] %></dd>
+      </dl>
+
+      <% if @selected_request[:queries].present? %>
+        <h3 style="margin-block-start: var(--size-4)">Queries (<%= @selected_request[:queries].size %>)</h3>
+        <div class="table-scroll" style="margin-block-start: var(--size-2)">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>SQL</th>
+                <th class="text-end">Duration</th>
+                <th>Source</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @selected_request[:queries].each do |q| %>
+                <tr>
+                  <td class="dl-mono"><%= truncate(q[:sql], length: 100) %></td>
+                  <td class="text-end"><%= q[:duration_ms].to_i %>ms</td>
+                  <td class="text-subtle"><%= q[:source_location] %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+<% end %>

@@ -25,7 +25,7 @@ module Daylight
       ))
 
       count = scope.group(Database::RequestRecord::ROUTE_GROUP_EXPR).count.length
-      pagy, page_rows = pagy(:offset, grouped, count: count, limit: 20)
+      @pagy, page_rows = pagy(:offset, grouped, count: count, limit: 20)
       routes_on_page = page_rows.map(&:route)
 
       p95s = Database::RequestRecord.p95_by_route(scope, routes_on_page)
@@ -46,20 +46,18 @@ module Daylight
         }
       end
 
-      render inertia: {
-        endpoints: InertiaRails.scroll(pagy) { endpoints },
-        route_requests: route_requests(scope),
-        selected_request: selected_request,
-        selected_route: params[:route],
-        period: period,
-        total_requests: scope.count,
-        throughput_rpm: Database::RequestRecord.throughput_rpm(scope, since: start),
-        apdex: Database::RequestRecord.apdex(scope),
-        latency_series: time_series_avg(scope, period, value_column: :duration_ms),
-        throughput_series: time_series_buckets(scope, period),
-        deploys: deploys_in_period(period),
-        **sort_props
-      }
+      @endpoints = endpoints
+      @route_requests = route_requests(scope)
+      @selected_request = selected_request
+      @selected_route = params[:route]
+      @period = period
+      @total_requests = scope.count
+      @throughput_rpm = Database::RequestRecord.throughput_rpm(scope, since: start)
+      @apdex = Database::RequestRecord.apdex(scope)
+      @latency_series = time_series_avg(scope, period, value_column: :duration_ms)
+      @throughput_series = time_series_buckets(scope, period)
+      @deploys = deploys_in_period(period)
+      sort_props.each { |k, v| instance_variable_set(:"@#{k}", v) }
     end
 
     private

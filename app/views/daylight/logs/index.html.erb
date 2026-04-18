@@ -1,0 +1,62 @@
+<%= render "daylight/shared/page_header", title: "Logs", actions: capture {
+  link_to "Export", logs_export_path(request.query_parameters), class: "btn btn--sm btn--outline"
+} %>
+
+<%= render "daylight/shared/period_select", period: @period %>
+
+<%
+  level_tabs = [
+    { label: "All", value: nil, path: logs_path(period: @period), count: @total_logs }
+  ]
+  %w[info warn error debug fatal].each do |lvl|
+    level_tabs << { label: lvl.capitalize, value: lvl, path: logs_path(level: lvl, period: @period), count: @counts[lvl] || 0 }
+  end
+%>
+<%= render "daylight/shared/tabs", tabs: level_tabs, current: @level %>
+
+<div class="grid grid--stats">
+  <%= render "daylight/shared/stat_card", label: "Total Logs", value: number_with_delimiter(@total_logs) %>
+</div>
+
+<%= render "daylight/shared/bar_chart", data: @volume_series %>
+
+<% if @logs.any? %>
+  <div class="card">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Level</th>
+          <th>Message</th>
+          <th>Controller / Action</th>
+          <th>Path</th>
+          <th>Time</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @logs.each do |log| %>
+          <tr>
+            <td>
+              <%
+                level_class = case log[:level].to_s
+                  when "info" then "badge--blue"
+                  when "warn" then "badge--yellow"
+                  when "error", "fatal" then "badge--red"
+                  else "badge--default"
+                end
+              %>
+              <span class="badge <%= level_class %>"><%= log[:level] %></span>
+            </td>
+            <td><%= truncate(log[:message], length: 60) %></td>
+            <td class="dl-mono"><%= log[:controller_action] %></td>
+            <td class="dl-mono"><%= log[:request_path] %></td>
+            <td class="text-subtle"><%= log[:occurred_at] %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <%= render "daylight/shared/pagination", pagy: @pagy %>
+<% else %>
+  <%= render "daylight/shared/empty_state", message: "No logs found for the selected period." %>
+<% end %>

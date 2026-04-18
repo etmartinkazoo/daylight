@@ -10,9 +10,7 @@ module Daylight
         Database::DeployRecord.order(deployed_at: :desc).limit(50)
       )
 
-      render inertia: {
-        deploys: deploys
-      }
+      @deploys = deploys
     end
 
     def create

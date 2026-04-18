@@ -9,7 +9,7 @@
 #   order_sql = sort_order_sql(default: "total DESC", allowed: { "total" => "total", "avg_duration" => "avg_duration" })
 #
 # Reads params[:sort] and params[:direction] from the request.
-# Passes sort_column and sort_direction to Inertia props via sort_props.
+# Passes sort_column and sort_direction as instance variables via sort_props.
 module Daylight
   module Sortable
     extend ActiveSupport::Concern

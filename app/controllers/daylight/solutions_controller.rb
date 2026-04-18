@@ -9,19 +9,17 @@ module Daylight
       scope = Database::SolutionRecord.order(generated_at: :desc)
       scope = scope.where(status: status_filter) unless status_filter == "all"
 
-      pagy, solution_records = pagy(scope, limit: 20)
+      @pagy, solution_records = pagy(scope, limit: 20)
 
       settings = Database.all_settings
 
-      render inertia: {
-        solutions: InertiaRails.scroll(pagy) { SolutionResource.serialize(solution_records) },
-        counts: Database::SolutionRecord.status_counts,
-        status: status_filter,
-        last_scan_at: settings["last_solutions_scan_at"],
-        last_scan_count: settings["last_solutions_scan_count"],
-        last_scan_error: settings["last_solutions_scan_error"],
-        github_configured: Database.github_configured?
-      }
+      @solutions = SolutionResource.serialize(solution_records)
+      @counts = Database::SolutionRecord.status_counts
+      @status = status_filter
+      @last_scan_at = settings["last_solutions_scan_at"]
+      @last_scan_count = settings["last_solutions_scan_count"]
+      @last_scan_error = settings["last_solutions_scan_error"]
+      @github_configured = Database.github_configured?
     end
 
     def show
@@ -36,12 +34,10 @@ module Daylight
         end
       end
 
-      render inertia: {
-        solution: SolutionResource.serialize(solution),
-        messages: SolutionMessageResource.serialize(solution.messages.order(:created_at)),
-        source_issue: serialized_source_issue,
-        github_configured: Database.github_configured?
-      }
+      @solution = SolutionResource.serialize(solution)
+      @messages = SolutionMessageResource.serialize(solution.messages.order(:created_at))
+      @source_issue = serialized_source_issue
+      @github_configured = Database.github_configured?
     end
 
     def update

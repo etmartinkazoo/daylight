@@ -1,0 +1,10 @@
+<%
+  active = (column == sort_column)
+  next_dir = active && sort_direction == "desc" ? "asc" : "desc"
+  arrow = active ? (sort_direction == "asc" ? "↑" : "↓") : ""
+%>
+<%= link_to url_for(request.query_parameters.merge(sort: column, direction: next_dir)),
+      class: "table__sort-link #{active ? 'table__sort-link--active' : ''}",
+      data: { turbo_action: "replace" } do %>
+  <%= label %> <%= arrow %>
+<% end %>

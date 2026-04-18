@@ -1,0 +1,51 @@
+.sheet {
+  border: none;
+  margin: 0;
+  margin-inline-start: auto;
+  block-size: 100dvh;
+  max-block-size: 100dvh;
+  inline-size: min(40rem, 90vw);
+  padding: var(--size-6);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  border-inline-start: 1px solid var(--color-border);
+  overflow-y: auto;
+}
+
+.sheet::backdrop {
+  background-color: rgb(0 0 0 / 0.3);
+}
+
+.sheet__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-block-end: var(--size-6);
+}
+
+.sheet__title { font-size: 1.125rem; font-weight: 600; }
+
+.sheet__section {
+  margin-block-end: var(--size-6);
+}
+
+.sheet__section-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-subtle);
+  margin-block-end: var(--size-3);
+}
+
+.sheet__detail {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--size-2) 0;
+  border-block-end: 1px solid var(--color-border-light);
+  font-size: 0.8125rem;
+}
+.sheet__detail:last-child { border: none; }
+
+.sheet__detail-label { color: var(--color-text-subtle); }
+.sheet__detail-value { font-weight: 500; text-align: end; }

@@ -3,4 +3,4 @@ gemspec
 
 gem "pagy", "~> 43.4"
 
-gem "alba", "~> 3.10"
+gem "css-zero", github: "lazaronixon/css-zero"

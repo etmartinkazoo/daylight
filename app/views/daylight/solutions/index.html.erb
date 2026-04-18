@@ -1,0 +1,47 @@
+<%= render "daylight/shared/page_header", title: "Solutions", actions: capture {
+  button_to "Generate Solutions", solutions_generation_path, method: :post, class: "btn btn--sm btn--primary"
+} %>
+
+<%
+  status_tabs = [
+    { label: "All", value: nil, path: solutions_path, count: @counts.values.sum }
+  ]
+  %w[draft approved rejected].each do |s|
+    status_tabs << { label: s.capitalize, value: s, path: solutions_path(status: s), count: @counts[s] || 0 }
+  end
+%>
+<%= render "daylight/shared/tabs", tabs: status_tabs, current: @status %>
+
+<% if @last_scan_at %>
+  <p class="text-sm text-subtle" style="margin-block-end: var(--size-2)">
+    Last scan: <%= time_ago_in_words(@last_scan_at) %> ago
+    <% if @last_scan_count %>&middot; <%= @last_scan_count %> solutions generated<% end %>
+    <% if @last_scan_error %><br><span class="text-danger"><%= @last_scan_error %></span><% end %>
+  </p>
+<% end %>
+
+<% if @solutions.any? %>
+  <div class="flex flex-col gap-1">
+    <% @solutions.each do |solution| %>
+      <%= link_to solution_path(solution[:id]), class: "card card--hover", style: "text-decoration: none; color: inherit;" do %>
+        <div class="flex justify-between items-center" style="margin-block-end: var(--size-1)">
+          <h3 class="card__title" style="margin: 0;"><%= solution[:title] %></h3>
+          <div class="flex gap-half">
+            <%= render "daylight/shared/status_badge", status: solution[:severity] %>
+            <%= render "daylight/shared/status_badge", status: solution[:status] %>
+          </div>
+        </div>
+        <p class="text-sm text-subtle"><%= truncate(solution[:problem_description], length: 200) %></p>
+        <% if solution[:file_paths].present? %>
+          <div class="flex flex-wrap gap-half" style="margin-block-start: var(--size-1)">
+            <% Array(solution[:file_paths]).each do |path| %>
+              <span class="dl-mono text-xs" style="background: var(--surface-2); padding: 0.125rem 0.375rem; border-radius: var(--radius-sm);"><%= path %></span>
+            <% end %>
+          </div>
+        <% end %>
+      <% end %>
+    <% end %>
+  </div>
+<% else %>
+  <%= render "daylight/shared/empty_state", message: "No solutions found. Run a scan to generate solutions." %>
+<% end %>

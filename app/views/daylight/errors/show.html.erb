@@ -1,0 +1,83 @@
+<% content_for(:title) { "#{@error[:error_class]} - Daylight" } %>
+
+<%= link_to "← Back to Errors", errors_path, class: "dl-back-link" %>
+
+<%= render "daylight/shared/page_header", title: @error[:error_class], actions: capture {
+  safe_join([
+    render("daylight/shared/status_badge", status: @error[:status]),
+    if @error[:status] == "resolved"
+      button_to("Reopen", error_path(@error[:id]), method: :patch, params: { status: "open", return_status: @error[:status] }, class: "btn btn--sm btn--outline")
+    else
+      button_to("Resolve", error_path(@error[:id]), method: :patch, params: { status: "resolved", return_status: @error[:status] }, class: "btn btn--sm btn--outline")
+    end,
+    (button_to("Ignore", error_path(@error[:id]), method: :patch, params: { status: "ignored", return_status: @error[:status] }, class: "btn btn--sm btn--outline") unless @error[:status] == "ignored"),
+    button_to("Delete", error_path(@error[:id]), method: :delete, class: "btn btn--sm btn--negative", data: { turbo_confirm: "Delete this error?" })
+  ].compact, " ")
+} %>
+
+<div class="dl-stat-grid">
+  <%= render "daylight/shared/stat_card", label: "Occurrences", value: @error[:occurrences_count] %>
+  <%= render "daylight/shared/stat_card", label: "First Seen", value: @error[:first_seen_at]&.then { |t| l(Time.parse(t.to_s), format: :short) rescue t } %>
+  <%= render "daylight/shared/stat_card", label: "Last Seen", value: @error[:last_seen_ago] %>
+  <%= render "daylight/shared/stat_card", label: "Severity",
+        value: capture { tag.span(@error[:severity], class: "badge badge--#{@error[:severity]}") } %>
+</div>
+
+<div class="dl-section">
+  <div class="card">
+    <div class="card__header">
+      <h2 class="card__title">Error Message</h2>
+    </div>
+    <p style="font-size: 0.875rem; word-break: break-word;"><%= @error[:message] %></p>
+  </div>
+</div>
+
+<% if @error[:backtrace_summary].present? %>
+  <div class="dl-section">
+    <div class="card">
+      <div class="card__header">
+        <h2 class="card__title">Backtrace</h2>
+      </div>
+      <pre style="font-size: 0.75rem; line-height: 1.6; overflow-x: auto; white-space: pre-wrap; word-break: break-all; margin: 0;"><%= @error[:backtrace_summary] %></pre>
+    </div>
+  </div>
+<% end %>
+
+<% if @occurrences.any? %>
+  <div class="dl-section">
+    <div class="card card--flush">
+      <div class="card__header" style="padding: var(--size-5); padding-block-end: 0;">
+        <h2 class="card__title">Recent Occurrences</h2>
+      </div>
+      <table class="table" style="margin-block-start: var(--size-4);">
+        <thead>
+          <tr>
+            <th>Occurred At</th>
+            <th>Request</th>
+            <th>User</th>
+            <th>Trace ID</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @occurrences.each do |occ| %>
+            <tr>
+              <td class="text-xs">
+                <%= occ[:occurred_at]&.then { |t| l(Time.parse(t.to_s), format: :short) rescue t } %>
+              </td>
+              <td class="text-xs">
+                <% if occ[:request_method].present? || occ[:request_url].present? %>
+                  <span style="font-weight: 500"><%= occ[:request_method] %></span>
+                  <span class="text-subtle"><%= truncate(occ[:request_url].to_s, length: 60) %></span>
+                <% end %>
+              </td>
+              <td class="text-xs text-subtle"><%= occ[:user_id] %></td>
+              <td class="text-xs text-subtle" style="font-family: monospace;">
+                <%= truncate(occ[:trace_id].to_s, length: 16) %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<% end %>

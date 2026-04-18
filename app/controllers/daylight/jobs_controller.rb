@@ -23,7 +23,7 @@ module Daylight
       ))
 
       count = scope.group(:job_class).count.length
-      pagy, page_rows = pagy(:offset, grouped, count: count, limit: 20)
+      @pagy, page_rows = pagy(:offset, grouped, count: count, limit: 20)
       job_classes = page_rows.map do |row|
         {
           job_class: row.job_class,
@@ -39,20 +39,18 @@ module Daylight
       daylight_failures = JobResource.serialize(scope.failed.order(occurred_at: :desc).limit(50))
       sq = SolidQueueStats.new(daylight_failures: daylight_failures)
 
-      render inertia: {
-        job_classes: InertiaRails.scroll(pagy) { job_classes },
-        failures: sq.merged_failures,
-        period: period,
-        totals: {
-          total: scope.count,
-          completed: scope.completed.count,
-          failed: scope.failed.count
-        },
-        solid_queue: sq.stats,
-        volume_series: time_series_buckets(scope, period),
-        failure_series: time_series_buckets(scope.failed, period),
-        **sort_props
+      @job_classes = job_classes
+      @failures = sq.merged_failures
+      @period = period
+      @totals = {
+        total: scope.count,
+        completed: scope.completed.count,
+        failed: scope.failed.count
       }
+      @solid_queue = sq.stats
+      @volume_series = time_series_buckets(scope, period)
+      @failure_series = time_series_buckets(scope.failed, period)
+      sort_props.each { |k, v| instance_variable_set(:"@#{k}", v) }
     end
   end
 end

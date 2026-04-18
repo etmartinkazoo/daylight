@@ -9,7 +9,7 @@ Gem::Specification.new do |spec|
   spec.license       = "MIT"
   spec.required_ruby_version = ">= 3.1"
 
-  spec.files = Dir["lib/**/*", "app/**/*", "config/**/*", "db/**/*", "frontend/**/*", "LICENSE", "README.md"]
+  spec.files = Dir["lib/**/*", "app/**/*", "config/**/*", "db/**/*", "LICENSE", "README.md"]
   spec.require_paths = ["lib"]
 
   spec.add_dependency "rails", ">= 7.0"
@@ -19,5 +19,8 @@ Gem::Specification.new do |spec|
   spec.add_dependency "bullet"
   spec.add_dependency "alba"
   spec.add_dependency "pagy"
-  spec.add_dependency "inertia_rails"
+  spec.add_dependency "turbo-rails"
+  spec.add_dependency "stimulus-rails"
+  spec.add_dependency "importmap-rails"
+  spec.add_dependency "propshaft"
 end

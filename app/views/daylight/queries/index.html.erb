@@ -1,0 +1,116 @@
+<%= render "daylight/shared/page_header", title: "Queries", actions: capture {
+  link_to "Export CSV", queries_export_path(period: @period), class: "btn btn--sm btn--outline"
+} %>
+
+<%= render "daylight/shared/period_select", period: @period %>
+
+<div class="grid grid--4" style="margin-block-start: var(--size-4)">
+  <%= render "daylight/shared/stat_card", label: "Total Queries", value: number_with_delimiter(@total_queries) %>
+  <% avg_dur = @queries.any? ? (@queries.sum { |q| q[:avg_duration].to_f } / @queries.size).round(0) : 0 %>
+  <%= render "daylight/shared/stat_card", label: "Avg Duration", value: "#{avg_dur}ms" %>
+</div>
+
+<div style="margin-block-start: var(--size-4)">
+  <%= render "daylight/shared/bar_chart", data: @volume_series, height: "10rem" %>
+</div>
+
+<div class="card" style="margin-block-start: var(--size-4)">
+  <h2 class="card__title">Grouped Queries</h2>
+
+  <% if @queries.any? %>
+    <div class="table-scroll">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>SQL</th>
+            <th class="text-end"><%= render "daylight/shared/sortable_header", label: "Total", column: "total", sort_column: @sort_column, sort_direction: @sort_direction %></th>
+            <th class="text-end"><%= render "daylight/shared/sortable_header", label: "Avg", column: "avg_duration", sort_column: @sort_column, sort_direction: @sort_direction %></th>
+            <th class="text-end"><%= render "daylight/shared/sortable_header", label: "Max", column: "max_duration", sort_column: @sort_column, sort_direction: @sort_direction %></th>
+            <th>Source</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @queries.each do |query| %>
+            <tr>
+              <td class="dl-mono"><%= truncate(query[:normalized_sql], length: 80) %></td>
+              <td class="text-end"><%= number_with_delimiter(query[:total]) %></td>
+              <td class="text-end"><%= query[:avg_duration].to_i %>ms</td>
+              <td class="text-end"><%= query[:max_duration].to_i %>ms</td>
+              <td class="text-subtle"><%= truncate(query[:source_location].to_s, length: 50) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <%= render "daylight/shared/empty_state", message: "No queries recorded for this period." %>
+  <% end %>
+</div>
+
+<%= render "daylight/shared/pagination", pagy: @pagy if defined?(@pagy) %>
+
+<div class="card" style="margin-block-start: var(--size-6)">
+  <h2 class="card__title">Slowest Queries</h2>
+
+  <% if @slowest.any? %>
+    <div class="table-scroll">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>SQL</th>
+            <th class="text-end">Duration</th>
+            <th>Source</th>
+            <th>Controller</th>
+            <th>Path</th>
+            <th>When</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @slowest.each do |query| %>
+            <tr>
+              <td class="dl-mono"><%= truncate(query[:sql], length: 80) %></td>
+              <td class="text-end"><%= query[:duration_ms].to_i %>ms</td>
+              <td class="text-subtle"><%= truncate(query[:source_location].to_s, length: 50) %></td>
+              <td class="dl-mono"><%= query[:controller_action] %></td>
+              <td class="dl-mono"><%= truncate(query[:request_path].to_s, length: 40) %></td>
+              <td class="text-subtle"><%= time_ago_in_words(query[:occurred_at]) %> ago</td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <%= render "daylight/shared/empty_state", message: "No slow queries recorded for this period." %>
+  <% end %>
+</div>
+
+<% if @n_plus_one_requests.present? && @n_plus_one_requests.any? %>
+  <div class="card" style="margin-block-start: var(--size-6)">
+    <h2 class="card__title">N+1 Queries</h2>
+
+    <div class="table-scroll">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Path</th>
+            <th>Controller</th>
+            <th class="text-end">Query Count</th>
+            <th class="text-end">Duration</th>
+            <th>When</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @n_plus_one_requests.each do |req| %>
+            <tr>
+              <td class="dl-mono"><%= truncate(req[:path], length: 60) %></td>
+              <td class="dl-mono"><%= req[:controller_action] %></td>
+              <td class="text-end"><%= req[:query_count] %></td>
+              <td class="text-end"><%= req[:duration_ms].to_i %>ms</td>
+              <td class="text-subtle"><%= time_ago_in_words(req[:occurred_at]) %> ago</td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<% end %>

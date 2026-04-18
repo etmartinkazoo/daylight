@@ -1,0 +1,6 @@
+pin "daylight/application", to: "daylight/application.js"
+pin "daylight/controllers/application", to: "daylight/controllers/application.js"
+pin "daylight/controllers/index", to: "daylight/controllers/index.js"
+pin "@hotwired/turbo-rails", to: "turbo.min.js"
+pin "@hotwired/stimulus", to: "stimulus.min.js"
+pin "@hotwired/stimulus-loading", to: "stimulus-loading.js"

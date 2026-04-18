@@ -22,7 +22,7 @@ module Daylight
       ))
 
       count = scope.group(:mailer_class).count.length
-      pagy, page_rows = pagy(:offset, grouped, count: count, limit: 20)
+      @pagy, page_rows = pagy(:offset, grouped, count: count, limit: 20)
       mailers = page_rows.map do |row|
         {
           mailer_class: row.mailer_class,
@@ -45,20 +45,18 @@ module Daylight
       delivered = scope.delivered.count
       failed = scope.failed.count
 
-      render inertia: {
-        mailers: InertiaRails.scroll(pagy) { mailers },
-        events: events,
-        selected_mailer: params[:mailer],
-        period: period,
-        totals: {
-          total: total,
-          delivered: delivered,
-          failed: failed,
-          delivery_rate: total > 0 ? (delivered.to_f / total * 100).round(1) : 0
-        },
-        volume_series: time_series_buckets(scope, period),
-        **sort_props
+      @mailers = mailers
+      @events = events
+      @selected_mailer = params[:mailer]
+      @period = period
+      @totals = {
+        total: total,
+        delivered: delivered,
+        failed: failed,
+        delivery_rate: total > 0 ? (delivered.to_f / total * 100).round(1) : 0
       }
+      @volume_series = time_series_buckets(scope, period)
+      sort_props.each { |k, v| instance_variable_set(:"@#{k}", v) }
     end
   end
 end

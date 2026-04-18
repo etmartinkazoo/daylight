@@ -1,0 +1,19 @@
+@keyframes appear-then-fade {
+  0%, 100% { opacity: 0; transform: translateY(-0.5rem); }
+  5%, 60% { opacity: 1; transform: translateY(0); }
+}
+
+.flash {
+  padding: var(--size-3) var(--size-4);
+  border-radius: var(--rounded-lg);
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-block-end: var(--size-4);
+  animation: appear-then-fade 4s 300ms both;
+  background-color: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+}
+.flash:hover { animation-play-state: paused; }
+
+.flash--notice, .flash--success { border-color: var(--color-positive); color: var(--color-positive); }
+.flash--alert, .flash--error { border-color: var(--color-negative); color: var(--color-negative); }

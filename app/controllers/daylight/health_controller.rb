@@ -5,15 +5,13 @@ module Daylight
     include Daylight::TimeSeries
 
     def index
-      render inertia: {
-        system: system_info,
-        database: database_info,
-        jobs: jobs_info,
-        errors: errors_info,
-        apdex: compute_apdex,
-        error_sparkline: error_sparkline,
-        request_sparkline: request_sparkline
-      }
+      @system = system_info
+      @database = database_info
+      @jobs = jobs_info
+      @errors = errors_info
+      @apdex = compute_apdex
+      @error_sparkline = error_sparkline
+      @request_sparkline = request_sparkline
     end
 
     private

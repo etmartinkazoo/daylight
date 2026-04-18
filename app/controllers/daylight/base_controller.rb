@@ -2,7 +2,6 @@
 
 module Daylight
   class BaseController < ActionController::Base
-    include InertiaRails::Controller
     include Daylight::Periodable
     include Daylight::Sortable
     include Pagy::Backend
@@ -11,44 +10,35 @@ module Daylight
 
     layout "daylight/application"
 
-    # Inertia v3 config scoped to Daylight controllers only — does not affect the host app.
-    inertia_config(
-      use_script_element_for_initial_page: true,
-      use_data_inertia_head_attribute: true,
-      always_include_errors_hash: true,
-    )
-
     rescue_from StandardError, with: :render_daylight_error
 
     before_action :authenticate_daylight!
 
-    inertia_share do
-      settings = shared_settings
-      {
-        base_path: Daylight::Engine.routes.url_helpers.root_path.chomp("/"),
-        ew_settings: {
-          github_repo_url: settings["github_repo_url"],
-          github_default_branch: settings["github_default_branch"] || "main",
-          ai_context_notes: settings["ai_context_notes"]
-        },
-        aiModels: shared_ai_models,
-        defaultAiModel: settings["default_ai_model"].presence || "gemini-2.5-flash"
-      }
-    end
+    helper_method :base_path, :daylight_settings, :ai_models, :default_ai_model
 
     private
 
-    def shared_settings
-      Database.ensure_connected!
-      Database.all_settings
-    rescue StandardError
-      {}
+    def base_path
+      Daylight::Engine.routes.url_helpers.root_path.chomp("/")
     end
 
-    def shared_ai_models
-      Daylight::AI.available_models.map { |m| { value: m[:id], label: m[:label] } }
+    def daylight_settings
+      @daylight_settings ||= begin
+        Database.ensure_connected!
+        Database.all_settings
+      rescue StandardError
+        {}
+      end
+    end
+
+    def ai_models
+      @ai_models ||= Daylight::AI.available_models.map { |m| { value: m[:id], label: m[:label] } }
     rescue StandardError
       []
+    end
+
+    def default_ai_model
+      daylight_settings["default_ai_model"].presence || "gemini-2.5-flash"
     end
 
     def authenticate_daylight!

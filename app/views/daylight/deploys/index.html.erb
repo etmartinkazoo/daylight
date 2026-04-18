@@ -1,0 +1,30 @@
+<%= render "daylight/shared/page_header", title: "Deploys" %>
+
+<% if @deploys.any? %>
+  <div class="card">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Version</th>
+          <th>Description</th>
+          <th>Git SHA</th>
+          <th>Deployed By</th>
+          <th>Deployed At</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @deploys.each do |deploy| %>
+          <tr>
+            <td class="font-medium"><%= deploy[:version] %></td>
+            <td><%= deploy[:description] %></td>
+            <td class="dl-mono"><%= truncate(deploy[:git_sha].to_s, length: 8, omission: "") %></td>
+            <td><%= deploy[:deployed_by] %></td>
+            <td class="text-subtle"><%= deploy[:deployed_at] %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <%= render "daylight/shared/empty_state", message: "No deploys recorded yet." %>
+<% end %>

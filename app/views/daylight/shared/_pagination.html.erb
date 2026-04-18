@@ -1,0 +1,17 @@
+<% if local_assigns[:pagy] && pagy.pages > 1 %>
+  <nav class="flex items-center justify-between" style="margin-block-start: var(--size-4); font-size: 0.8125rem;">
+    <span class="text-subtle">
+      Page <%= pagy.page %> of <%= pagy.pages %> (<%= pagy.count %> total)
+    </span>
+    <div class="flex gap-half">
+      <% if pagy.prev %>
+        <%= link_to "← Previous", url_for(request.query_parameters.merge(page: pagy.prev)),
+              class: "btn btn--sm btn--outline", data: { turbo_action: "replace" } %>
+      <% end %>
+      <% if pagy.next %>
+        <%= link_to "Next →", url_for(request.query_parameters.merge(page: pagy.next)),
+              class: "btn btn--sm btn--outline", data: { turbo_action: "replace" } %>
+      <% end %>
+    </div>
+  </nav>
+<% end %>

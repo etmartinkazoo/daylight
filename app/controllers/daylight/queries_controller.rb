@@ -21,7 +21,7 @@ module Daylight
       ))
 
       count = scope.group(:normalized_sql).count.length
-      pagy, page_rows = pagy(:offset, grouped, count: count, limit: 20)
+      @pagy, page_rows = pagy(:offset, grouped, count: count, limit: 20)
       queries = page_rows.map do |row|
         {
           normalized_sql: row.normalized_sql,
@@ -42,15 +42,13 @@ module Daylight
           .limit(20)
       )
 
-      render inertia: {
-        queries: InertiaRails.scroll(pagy) { queries },
-        slowest: QueryRecordResource.serialize(scope.order(duration_ms: :desc).limit(25)),
-        period: period,
-        total_queries: scope.count,
-        volume_series: time_series_buckets(scope, period),
-        n_plus_one_requests: n_plus_one_requests,
-        **sort_props
-      }
+      @queries = queries
+      @slowest = QueryRecordResource.serialize(scope.order(duration_ms: :desc).limit(25))
+      @period = period
+      @total_queries = scope.count
+      @volume_series = time_series_buckets(scope, period)
+      @n_plus_one_requests = n_plus_one_requests
+      sort_props.each { |k, v| instance_variable_set(:"@#{k}", v) }
     end
   end
 end

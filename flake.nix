@@ -16,8 +16,8 @@
           packages = with pkgs; [
             ruby
             bundler
-            nodejs_22
-            pnpm
+            libyaml
+            pkg-config
           ];
         };
       });

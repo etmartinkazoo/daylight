@@ -23,7 +23,7 @@ module Daylight
       ))
 
       count = scope.group(:task_class).count.length
-      pagy, page_rows = pagy(:offset, grouped, count: count, limit: 20)
+      @pagy, page_rows = pagy(:offset, grouped, count: count, limit: 20)
       task_classes = page_rows.map do |row|
         {
           task_class: row.task_class,
@@ -35,19 +35,17 @@ module Daylight
         }
       end
 
-      render inertia: {
-        task_classes: InertiaRails.scroll(pagy) { task_classes },
-        failures: ScheduledTaskResource.serialize(scope.failed.order(occurred_at: :desc).limit(25)),
-        period: period,
-        totals: {
-          total: scope.count,
-          completed: scope.completed.count,
-          failed: scope.failed.count
-        },
-        volume_series: time_series_buckets(scope, period),
-        failure_series: time_series_buckets(scope.failed, period),
-        **sort_props
+      @task_classes = task_classes
+      @failures = ScheduledTaskResource.serialize(scope.failed.order(occurred_at: :desc).limit(25))
+      @period = period
+      @totals = {
+        total: scope.count,
+        completed: scope.completed.count,
+        failed: scope.failed.count
       }
+      @volume_series = time_series_buckets(scope, period)
+      @failure_series = time_series_buckets(scope.failed, period)
+      sort_props.each { |k, v| instance_variable_set(:"@#{k}", v) }
     end
   end
 end

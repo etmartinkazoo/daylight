@@ -1,0 +1,111 @@
+<%= render "daylight/shared/page_header", title: "Health" %>
+
+<div class="grid grid--stats">
+  <%= render "daylight/shared/stat_card", label: "APDEX", value: @apdex ? number_with_precision(@apdex, precision: 2) : "N/A" %>
+  <%= render "daylight/shared/stat_card", label: "Open Errors", value: number_with_delimiter(@errors[:open]) %>
+  <%= render "daylight/shared/stat_card", label: "Errors (24h)", value: number_with_delimiter(@errors[:last_24h]) %>
+  <%= render "daylight/shared/stat_card", label: "Errors (7d)", value: number_with_delimiter(@errors[:last_7d]) %>
+</div>
+
+<div class="grid grid--2">
+  <div class="card">
+    <h3 class="card__title">Error Rate</h3>
+    <%= render "daylight/shared/bar_chart", data: @error_sparkline, height: "6rem" %>
+  </div>
+  <div class="card">
+    <h3 class="card__title">Request Rate</h3>
+    <%= render "daylight/shared/bar_chart", data: @request_sparkline, height: "6rem" %>
+  </div>
+</div>
+
+<div class="card">
+  <h3 class="card__title">System Info</h3>
+  <dl class="flex flex-col gap-half" style="font-size: 0.8125rem;">
+    <div class="flex justify-between">
+      <dt class="text-subtle">Ruby Version</dt>
+      <dd class="font-medium"><%= @system[:ruby_version] %></dd>
+    </div>
+    <div class="flex justify-between">
+      <dt class="text-subtle">Rails Version</dt>
+      <dd class="font-medium"><%= @system[:rails_version] %></dd>
+    </div>
+    <div class="flex justify-between">
+      <dt class="text-subtle">Environment</dt>
+      <dd class="font-medium"><%= @system[:environment] %></dd>
+    </div>
+    <div class="flex justify-between">
+      <dt class="text-subtle">PID</dt>
+      <dd class="font-medium"><%= @system[:pid] %></dd>
+    </div>
+    <div class="flex justify-between">
+      <dt class="text-subtle">Uptime</dt>
+      <dd class="font-medium"><%= @system[:uptime] %></dd>
+    </div>
+    <div class="flex justify-between">
+      <dt class="text-subtle">Memory</dt>
+      <dd class="font-medium"><%= @system[:memory_mb] %> MB</dd>
+    </div>
+  </dl>
+</div>
+
+<div class="card">
+  <h3 class="card__title">Database</h3>
+  <dl class="flex flex-col gap-half" style="font-size: 0.8125rem;">
+    <div class="flex justify-between">
+      <dt class="text-subtle">Adapter</dt>
+      <dd class="font-medium"><%= @database[:adapter] %></dd>
+    </div>
+    <div class="flex justify-between">
+      <dt class="text-subtle">App DB Size</dt>
+      <dd class="font-medium"><%= @database[:size_mb] %> MB</dd>
+    </div>
+    <div class="flex justify-between">
+      <dt class="text-subtle">Daylight DB Size</dt>
+      <dd class="font-medium"><%= @database[:daylight_size_mb] %> MB</dd>
+    </div>
+    <div class="flex justify-between">
+      <dt class="text-subtle">Tables</dt>
+      <dd class="font-medium"><%= @database[:tables] %></dd>
+    </div>
+    <div class="flex justify-between">
+      <dt class="text-subtle">Connection</dt>
+      <dd class="font-medium">
+        <% if @database[:connected] %>
+          <span class="badge badge--green">Connected</span>
+        <% else %>
+          <span class="badge badge--red">Disconnected</span>
+        <% end %>
+      </dd>
+    </div>
+    <% if @database[:error] %>
+      <div class="flex justify-between">
+        <dt class="text-subtle">Error</dt>
+        <dd class="font-medium text-danger"><%= @database[:error] %></dd>
+      </div>
+    <% end %>
+  </dl>
+</div>
+
+<% if @jobs[:available] %>
+  <div class="card">
+    <h3 class="card__title">Jobs</h3>
+    <dl class="flex flex-col gap-half" style="font-size: 0.8125rem;">
+      <div class="flex justify-between">
+        <dt class="text-subtle">Ready</dt>
+        <dd class="font-medium"><%= number_with_delimiter(@jobs[:ready_count]) %></dd>
+      </div>
+      <div class="flex justify-between">
+        <dt class="text-subtle">Scheduled</dt>
+        <dd class="font-medium"><%= number_with_delimiter(@jobs[:scheduled_count]) %></dd>
+      </div>
+      <div class="flex justify-between">
+        <dt class="text-subtle">In Progress</dt>
+        <dd class="font-medium"><%= number_with_delimiter(@jobs[:in_progress_count]) %></dd>
+      </div>
+      <div class="flex justify-between">
+        <dt class="text-subtle">Failed</dt>
+        <dd class="font-medium"><%= number_with_delimiter(@jobs[:failed_count]) %></dd>
+      </div>
+    </dl>
+  </div>
+<% end %>

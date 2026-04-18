@@ -1,0 +1,30 @@
+.input {
+  display: block;
+  width: 100%;
+  padding: var(--size-2) var(--size-3);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--color-text);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--rounded-lg);
+  transition: border-color 150ms;
+}
+.input:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 1px var(--color-primary); }
+.input::placeholder { color: var(--color-text-muted); }
+
+select.input {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right var(--size-2) center;
+  background-repeat: no-repeat;
+  background-size: 1.25rem;
+  padding-inline-end: var(--size-8);
+}
+
+textarea.input { field-sizing: content; min-block-size: 5rem; }
+
+.input--sm {
+  padding: var(--size-1) var(--size-2);
+  font-size: 0.75rem;
+}

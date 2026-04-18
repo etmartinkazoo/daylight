@@ -1,0 +1,32 @@
+.dialog {
+  border: none;
+  border-radius: var(--rounded-xl);
+  padding: var(--size-6);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  max-inline-size: 32rem;
+  inline-size: 90vw;
+  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+}
+
+.dialog::backdrop {
+  background-color: rgb(0 0 0 / 0.5);
+}
+
+.dialog__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-block-end: var(--size-4);
+}
+
+.dialog__title { font-size: 1.125rem; font-weight: 600; }
+
+.dialog__body { font-size: 0.875rem; line-height: 1.6; }
+
+.dialog__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--size-2);
+  margin-block-start: var(--size-6);
+}

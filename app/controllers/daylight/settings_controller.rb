@@ -20,43 +20,41 @@ module Daylight
           .limit(50)
       )
 
-      render inertia: {
-        settings: {
-          github_repo_url: settings["github_repo_url"] || "",
-          github_default_branch: settings["github_default_branch"] || "main",
-          notification_emails: settings["notification_emails"] || "",
-          slack_webhook_url: settings["slack_webhook_url"] || "",
-          slow_request_threshold_ms: settings["slow_request_threshold_ms"] || "500",
-          slow_query_threshold_ms: settings["slow_query_threshold_ms"] || "50",
-          retention_days: settings["retention_days"] || "30",
-          sample_rate: settings["sample_rate"] || "1.0",
-          ai_context_notes: settings["ai_context_notes"] || "",
-          gemini_api_key: settings["gemini_api_key"].present? ? "••••••••" : "",
-          gemini_api_key_saved_at: settings["gemini_api_key_saved_at"],
-          anthropic_api_key: settings["anthropic_api_key"].present? ? "••••••••" : "",
-          anthropic_api_key_saved_at: settings["anthropic_api_key_saved_at"],
-          default_ai_model: settings["default_ai_model"] || "gemini-2.5-flash",
-          github_api_token: settings["github_api_token"].present? ? "••••••••" : "",
-          github_api_token_saved_at: settings["github_api_token_saved_at"],
-          solutions_scan_enabled: settings["solutions_scan_enabled"] || "false",
-          performance_scan_enabled: settings["performance_scan_enabled"] || "false",
-          performance_scan_interval: settings["performance_scan_interval"] || "daily",
-          last_performance_scan_at: settings["last_performance_scan_at"],
-          last_performance_scan_count: settings["last_performance_scan_count"],
-          last_performance_scan_error: settings["last_performance_scan_error"],
-          security_scan_enabled: settings["security_scan_enabled"] || "false",
-          security_scan_interval: settings["security_scan_interval"] || "daily",
-          security_scan_min_confidence: settings["security_scan_min_confidence"] || "1",
-          last_security_scan_at: settings["last_security_scan_at"],
-          last_security_scan_count: settings["last_security_scan_count"],
-          last_security_scan_total_warnings: settings["last_security_scan_total_warnings"],
-          last_security_scan_error: settings["last_security_scan_error"],
-          bullet_diagnostic_expires_at: settings["bullet_diagnostic_expires_at"],
-          bullet_diagnostic_active: Database.bullet_diagnostic_active?
-        },
-        performance_issues: perf_issues,
-        security_issues: sec_issues
+      @settings = {
+        github_repo_url: settings["github_repo_url"] || "",
+        github_default_branch: settings["github_default_branch"] || "main",
+        notification_emails: settings["notification_emails"] || "",
+        slack_webhook_url: settings["slack_webhook_url"] || "",
+        slow_request_threshold_ms: settings["slow_request_threshold_ms"] || "500",
+        slow_query_threshold_ms: settings["slow_query_threshold_ms"] || "50",
+        retention_days: settings["retention_days"] || "30",
+        sample_rate: settings["sample_rate"] || "1.0",
+        ai_context_notes: settings["ai_context_notes"] || "",
+        gemini_api_key: settings["gemini_api_key"].present? ? "••••••••" : "",
+        gemini_api_key_saved_at: settings["gemini_api_key_saved_at"],
+        anthropic_api_key: settings["anthropic_api_key"].present? ? "••••••••" : "",
+        anthropic_api_key_saved_at: settings["anthropic_api_key_saved_at"],
+        default_ai_model: settings["default_ai_model"] || "gemini-2.5-flash",
+        github_api_token: settings["github_api_token"].present? ? "••••••••" : "",
+        github_api_token_saved_at: settings["github_api_token_saved_at"],
+        solutions_scan_enabled: settings["solutions_scan_enabled"] || "false",
+        performance_scan_enabled: settings["performance_scan_enabled"] || "false",
+        performance_scan_interval: settings["performance_scan_interval"] || "daily",
+        last_performance_scan_at: settings["last_performance_scan_at"],
+        last_performance_scan_count: settings["last_performance_scan_count"],
+        last_performance_scan_error: settings["last_performance_scan_error"],
+        security_scan_enabled: settings["security_scan_enabled"] || "false",
+        security_scan_interval: settings["security_scan_interval"] || "daily",
+        security_scan_min_confidence: settings["security_scan_min_confidence"] || "1",
+        last_security_scan_at: settings["last_security_scan_at"],
+        last_security_scan_count: settings["last_security_scan_count"],
+        last_security_scan_total_warnings: settings["last_security_scan_total_warnings"],
+        last_security_scan_error: settings["last_security_scan_error"],
+        bullet_diagnostic_expires_at: settings["bullet_diagnostic_expires_at"],
+        bullet_diagnostic_active: Database.bullet_diagnostic_active?
       }
+      @performance_issues = perf_issues
+      @security_issues = sec_issues
     end
 
     def update

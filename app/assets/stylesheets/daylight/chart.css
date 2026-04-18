@@ -1,0 +1,41 @@
+.chart-container {
+  position: relative;
+  block-size: 10rem;
+  border-radius: var(--rounded-lg);
+  overflow: hidden;
+}
+
+/* Simple bar chart rendered with inline styles */
+.bar-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 1px;
+  block-size: 100%;
+  padding-block-start: var(--size-1);
+}
+
+.bar-chart__bar {
+  flex: 1;
+  background-color: var(--color-primary);
+  border-radius: 1px 1px 0 0;
+  min-block-size: 1px;
+  opacity: 0.8;
+  transition: opacity 150ms;
+}
+.bar-chart__bar:hover { opacity: 1; }
+
+/* Sparkline - tiny inline chart */
+.sparkline {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 1px;
+  block-size: 1.5rem;
+  vertical-align: middle;
+}
+
+.sparkline__bar {
+  inline-size: 3px;
+  background-color: var(--color-primary);
+  border-radius: 1px 1px 0 0;
+  min-block-size: 1px;
+}

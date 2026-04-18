@@ -1,0 +1,80 @@
+<%= render "daylight/shared/page_header", title: "Mail Events", actions: capture {
+  link_to "Export", mail_events_export_path(request.query_parameters), class: "btn btn--sm btn--outline"
+} %>
+
+<%= render "daylight/shared/period_select", period: @period %>
+
+<div class="grid grid--stats">
+  <%= render "daylight/shared/stat_card", label: "Total", value: number_with_delimiter(@totals[:total]) %>
+  <%= render "daylight/shared/stat_card", label: "Delivered", value: number_with_delimiter(@totals[:delivered]) %>
+  <%= render "daylight/shared/stat_card", label: "Failed", value: number_with_delimiter(@totals[:failed]) %>
+  <%= render "daylight/shared/stat_card", label: "Delivery Rate", value: number_to_percentage(@totals[:delivery_rate], precision: 1) %>
+</div>
+
+<%= render "daylight/shared/bar_chart", data: @volume_series %>
+
+<% if @mailers.any? %>
+  <div class="card">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Mailer Class</th>
+          <th><%= render "daylight/shared/sortable_header", label: "Total", column: "total", sort_column: @sort_column, sort_direction: @sort_direction %></th>
+          <th>Delivered</th>
+          <th>Failed</th>
+          <th><%= render "daylight/shared/sortable_header", label: "Avg Duration", column: "avg_duration", sort_column: @sort_column, sort_direction: @sort_direction %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @mailers.each do |m| %>
+          <tr>
+            <td>
+              <%= link_to m[:mailer_class], mail_events_path(mailer: m[:mailer_class], period: @period), class: "dl-mono" %>
+            </td>
+            <td><%= number_with_delimiter(m[:total]) %></td>
+            <td><%= number_with_delimiter(m[:delivered_count]) %></td>
+            <td><%= number_with_delimiter(m[:failed_count]) %></td>
+            <td><%= m[:avg_duration].to_i %>ms</td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <%= render "daylight/shared/empty_state", message: "No mail events found for the selected period." %>
+<% end %>
+
+<% if @selected_mailer && @events.any? %>
+  <h2 class="dl-section-title" style="margin-block-start: var(--size-6)"><%= @selected_mailer %></h2>
+
+  <div class="card">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Action</th>
+          <th>Subject</th>
+          <th>Recipients</th>
+          <th>Status</th>
+          <th>Duration</th>
+          <th>Time</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @events.each do |e| %>
+          <tr>
+            <td class="dl-mono"><%= e[:action_name] %></td>
+            <td><%= truncate(e[:subject].to_s, length: 60) %></td>
+            <td><%= truncate(e[:recipients].to_s, length: 60) %></td>
+            <td><%= render "daylight/shared/status_badge", status: e[:status] %></td>
+            <td><%= e[:duration_ms].to_i %>ms</td>
+            <td class="text-subtle"><%= e[:occurred_at] %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <%= render "daylight/shared/pagination", pagy: @pagy %>
+<% elsif @selected_mailer %>
+  <%= render "daylight/shared/empty_state", message: "No events found for #{@selected_mailer}." %>
+<% end %>

@@ -17,27 +17,23 @@ module Daylight
       scope = scope.where(incident_type: params[:incident_type]) if params[:incident_type].present?
 
       scope = scope.order(occurred_at: :desc)
-      pagy, incidents = pagy(scope, limit: 20)
+      @pagy, incidents = pagy(scope, limit: 20)
 
       incident_scope = Database::IncidentRecord.where(occurred_at: period_start(period)..)
 
-      render inertia: {
-        incidents: InertiaRails.scroll(pagy) { IncidentResource.serialize(incidents) },
-        counts: Database::IncidentRecord.status_counts,
-        status: status,
-        period: period,
-        incident_series: time_series_buckets(incident_scope, period)
-      }
+      @incidents = IncidentResource.serialize(incidents)
+      @counts = Database::IncidentRecord.status_counts
+      @status = status
+      @period = period
+      @incident_series = time_series_buckets(incident_scope, period)
     end
 
     def show
       incident = Database::IncidentRecord.find(params[:id])
 
-      render inertia: {
-        incident: IncidentResource.serialize(incident),
-        related_error: incident.related_error ? ErrorResource.serialize(incident.related_error) : nil,
-        related_deploy: incident.related_deploy ? DeployResource.serialize(incident.related_deploy) : nil
-      }
+      @incident = IncidentResource.serialize(incident)
+      @related_error = incident.related_error ? ErrorResource.serialize(incident.related_error) : nil
+      @related_deploy = incident.related_deploy ? DeployResource.serialize(incident.related_deploy) : nil
     end
 
     def update

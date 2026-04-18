@@ -1,0 +1,94 @@
+<% content_for(:title) { "#{@incident[:title]} - Daylight" } %>
+
+<%= link_to "← Back to Incidents", incidents_path, class: "dl-back-link" %>
+
+<%= render "daylight/shared/page_header", title: @incident[:title], actions: capture {
+  safe_join([
+    render("daylight/shared/status_badge", status: @incident[:status]),
+    tag.span(@incident[:severity], class: "badge badge--#{@incident[:severity]}"),
+    if @incident[:status] == "resolved" || @incident[:status] == "false_alarm"
+      button_to("Reopen", incident_path(@incident[:id]), method: :patch,
+        params: { status: "open", filter_status: @incident[:status] }, class: "btn btn--sm btn--outline")
+    else
+      safe_join([
+        button_to("Resolve", incident_path(@incident[:id]), method: :patch,
+          params: { status: "resolved", filter_status: @incident[:status] }, class: "btn btn--sm btn--outline"),
+        button_to("False Alarm", incident_path(@incident[:id]), method: :patch,
+          params: { status: "false_alarm", filter_status: @incident[:status] }, class: "btn btn--sm btn--ghost")
+      ], " ")
+    end
+  ].compact, " ")
+} %>
+
+<div class="dl-section">
+  <div class="card">
+    <div class="card__header">
+      <h2 class="card__title">Summary</h2>
+    </div>
+    <p style="font-size: 0.875rem; line-height: 1.6;"><%= @incident[:summary] %></p>
+  </div>
+</div>
+
+<% if @incident[:investigation].present? %>
+  <div class="dl-section">
+    <div class="card">
+      <div class="card__header">
+        <h2 class="card__title">Investigation</h2>
+      </div>
+      <div style="font-size: 0.875rem; line-height: 1.6; white-space: pre-wrap;"><%= @incident[:investigation] %></div>
+    </div>
+  </div>
+<% end %>
+
+<% if @related_error %>
+  <div class="dl-section">
+    <div class="card">
+      <div class="card__header">
+        <h2 class="card__title">Related Error</h2>
+      </div>
+      <%= link_to error_path(@related_error[:id]), style: "text-decoration: none; color: inherit;" do %>
+        <div style="font-weight: 500; font-size: 0.875rem;"><%= @related_error[:error_class] %></div>
+        <div class="text-subtle text-xs" style="margin-block-start: var(--size-1);">
+          <%= truncate(@related_error[:message].to_s, length: 120) %>
+        </div>
+        <div class="flex items-center gap-half" style="margin-block-start: var(--size-2);">
+          <%= render "daylight/shared/status_badge", status: @related_error[:status] %>
+          <span class="text-xs text-subtle"><%= @related_error[:occurrences_count] %> occurrences</span>
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% end %>
+
+<% if @related_deploy %>
+  <div class="dl-section">
+    <div class="card">
+      <div class="card__header">
+        <h2 class="card__title">Related Deploy</h2>
+      </div>
+      <div style="font-size: 0.875rem;">
+        <div style="font-weight: 500;"><%= @related_deploy[:revision].to_s.first(8) %></div>
+        <% if @related_deploy[:description].present? %>
+          <div class="text-subtle" style="margin-block-start: var(--size-1);"><%= @related_deploy[:description] %></div>
+        <% end %>
+        <div class="text-xs text-subtle" style="margin-block-start: var(--size-2);">
+          <%= @related_deploy[:deployed_at]&.then { |t| l(Time.parse(t.to_s), format: :short) rescue t } %>
+          <% if @related_deploy[:deployer].present? %>
+            by <%= @related_deploy[:deployer] %>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+<% end %>
+
+<% if @incident[:trigger].present? %>
+  <div class="dl-section">
+    <div class="card">
+      <div class="card__header">
+        <h2 class="card__title">Trigger Data</h2>
+      </div>
+      <pre style="font-size: 0.75rem; line-height: 1.6; overflow-x: auto; white-space: pre-wrap; margin: 0;"><%= JSON.pretty_generate(@incident[:trigger]) rescue @incident[:trigger] %></pre>
+    </div>
+  </div>
+<% end %>

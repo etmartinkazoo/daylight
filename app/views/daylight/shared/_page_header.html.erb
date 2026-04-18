@@ -1,0 +1,11 @@
+<div class="dl-page-header">
+  <div>
+    <h1 class="dl-page-title"><%= title %></h1>
+    <% if local_assigns[:subtitle] %>
+      <p class="text-subtle text-sm" style="margin-block-start: var(--size-1)"><%= subtitle %></p>
+    <% end %>
+  </div>
+  <% if local_assigns[:actions] %>
+    <div class="flex gap-half items-center"><%= actions %></div>
+  <% end %>
+</div>

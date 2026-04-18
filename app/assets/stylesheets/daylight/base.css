@@ -1,0 +1,59 @@
+:root {
+  color-scheme: light dark;
+
+  /* Primary = amber */
+  --color-primary: light-dark(#f59e0b, #f59e0b);
+  --color-primary-hover: light-dark(#d97706, #fbbf24);
+
+  /* Backgrounds */
+  --color-bg: light-dark(#f4f5f7, #09090b);
+  --color-surface: light-dark(white, #18181b);
+  --color-surface-raised: light-dark(white, #1f1f23);
+
+  /* Text */
+  --color-text: light-dark(#0f172a, #fafafa);
+  --color-text-subtle: light-dark(#64748b, #a1a1aa);
+  --color-text-muted: light-dark(#94a3b8, #71717a);
+
+  /* Borders */
+  --color-border: light-dark(#e2e8f0, #27272a);
+  --color-border-light: light-dark(#f1f5f9, #1f1f23);
+
+  /* Status colors */
+  --color-positive: light-dark(#16a34a, #22c55e);
+  --color-negative: light-dark(#dc2626, #ef4444);
+  --color-warning: light-dark(#d97706, #f59e0b);
+  --color-info: light-dark(#2563eb, #3b82f6);
+
+  /* HTTP status colors */
+  --color-2xx: light-dark(#16a34a, #22c55e);
+  --color-4xx: light-dark(#d97706, #f59e0b);
+  --color-5xx: light-dark(#dc2626, #ef4444);
+}
+
+[data-color-scheme="light"] { color-scheme: light; }
+[data-color-scheme="dark"] { color-scheme: dark; }
+
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Monospace utility */
+.dl-mono { font-family: ui-monospace, "SF Mono", "Cascadia Code", monospace; font-size: 0.8125rem; }
+
+/* Text utilities */
+.text-positive { color: var(--color-positive); }
+.text-negative { color: var(--color-negative); }
+.text-warning { color: var(--color-warning); }
+.text-info { color: var(--color-info); }
+.text-subtle { color: var(--color-text-subtle); }
+.text-muted { color: var(--color-text-muted); }
+
+/* Truncate */
+.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Screen reader only */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
