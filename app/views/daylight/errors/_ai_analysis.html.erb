@@ -1,9 +1,16 @@
-<div id="<%= dom_id(error, :ai_analysis) %>">
+<div id="<%= dom_id(error, :ai_analysis) %>"
+  <% if error.ai_solution == "" %>
+    data-controller="poll"
+    data-poll-url-value="<%= ai_status_error_path(error.id) %>"
+    data-poll-interval-value="3000"
+    data-poll-pending
+  <% end %>>
   <% if error.ai_solution == "" %>
     <div class="dl-section">
       <div class="card">
         <div class="card__header">
           <h2 class="card__title">AI Analysis</h2>
+          <span class="badge badge--ai-pending">Investigating</span>
         </div>
         <div class="flex items-center gap-half" style="padding: var(--size-2) 0;">
           <span class="text-sm text-subtle">AI is investigating this error...</span>

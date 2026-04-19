@@ -9,6 +9,7 @@ pin "daylight/controllers/color_scheme_controller", to: "daylight/controllers/co
 pin "daylight/controllers/copy_controller", to: "daylight/controllers/copy_controller.js"
 pin "daylight/controllers/dialog_controller", to: "daylight/controllers/dialog_controller.js"
 pin "daylight/controllers/filter_form_controller", to: "daylight/controllers/filter_form_controller.js"
+pin "daylight/controllers/poll_controller", to: "daylight/controllers/poll_controller.js"
 pin "daylight/controllers/sheet_controller", to: "daylight/controllers/sheet_controller.js"
 pin "daylight/controllers/tabs_controller", to: "daylight/controllers/tabs_controller.js"
 pin "daylight/controllers/toggle_class_controller", to: "daylight/controllers/toggle_class_controller.js"

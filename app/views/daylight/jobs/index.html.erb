@@ -34,7 +34,7 @@
         <tbody>
           <% @job_classes.each do |job| %>
             <tr>
-              <td class="dl-mono"><%= job[:job_class] %></td>
+              <td class="dl-mono"><%= link_to job[:job_class], jobs_path(job_class: job[:job_class]), style: "color: inherit;" %></td>
               <td class="text-end"><%= number_with_delimiter(job[:total]) %></td>
               <td class="text-end"><%= number_with_delimiter(job[:completed_count]) %></td>
               <td class="text-end"><%= number_with_delimiter(job[:failed_count]) %></td>
@@ -71,8 +71,9 @@
         </thead>
         <tbody>
           <% @failures.each do |job| %>
-            <tr>
-              <td class="dl-mono"><%= job[:job_class] %></td>
+            <% linkable = job[:id].is_a?(Integer) %>
+            <tr style="<%= 'cursor: pointer;' if linkable %>" <%= "onclick=window.location='#{job_path(job[:id])}'".html_safe if linkable %>>
+              <td class="dl-mono"><%= linkable ? link_to(job[:job_class], job_path(job[:id]), style: "color: inherit;") : job[:job_class] %></td>
               <td><%= job[:queue] %></td>
               <td class="dl-mono"><%= job[:error_class] %></td>
               <td><%= truncate(job[:error_message].to_s, length: 80) %></td>

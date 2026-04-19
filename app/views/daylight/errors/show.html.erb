@@ -32,7 +32,6 @@
   </div>
 </div>
 
-<%= turbo_stream_from "daylight_error_#{@error.id}" %>
 <%= render "daylight/errors/ai_analysis", error: @error %>
 
 <% if @error.backtrace_summary.present? %>

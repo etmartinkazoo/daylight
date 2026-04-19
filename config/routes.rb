@@ -9,12 +9,13 @@ Daylight::Engine.routes.draw do
 
   resources :errors, only: [:index, :show, :update, :destroy], constraints: { id: /\d+/ } do
     post :investigate, on: :member
+    get :ai_status, on: :member
   end
   post "errors/batch", to: "error_batches#create", as: :error_batch
 
   resources :requests, only: [:index]
   resources :queries, only: [:index]
-  resources :jobs, only: [:index]
+  resources :jobs, only: [:index, :show]
   resources :scheduled_tasks, only: [:index]
   resources :mail_events, only: [:index]
   resources :logs, only: [:index]
@@ -23,6 +24,7 @@ Daylight::Engine.routes.draw do
   resources :cache, only: [:index]
   resources :incidents, only: [:index, :show, :update] do
     post :investigate, on: :member
+    get :ai_status, on: :member
   end
 
   resources :solutions, only: [:index, :show, :update]
@@ -67,6 +69,7 @@ Daylight::Engine.routes.draw do
 
   # Settings sub-resources
   namespace :settings do
+    resource  :investigate_all,    only: [:create]
     resource  :cleanup,            only: [:create]
     resource  :notification_test,  only: [:create]
     resource  :performance_scan,   only: [:create]

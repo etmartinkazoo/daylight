@@ -1,0 +1,58 @@
+<% content_for(:title) { "#{@job_class_filter} - Jobs - Daylight" } %>
+
+<%= link_to "← Back to Jobs", jobs_path, class: "dl-back-link" %>
+
+<%= render "daylight/shared/page_header", title: @job_class_filter %>
+
+<%= render "daylight/shared/period_select", period: @period %>
+
+<div class="dl-stat-grid">
+  <%= render "daylight/shared/stat_card", label: "Total", value: number_with_delimiter(@totals[:total]) %>
+  <%= render "daylight/shared/stat_card", label: "Completed", value: number_with_delimiter(@totals[:completed]) %>
+  <%= render "daylight/shared/stat_card", label: "Failed", value: number_with_delimiter(@totals[:failed]) %>
+</div>
+
+<div style="margin-block-start: var(--size-4)">
+  <%= render "daylight/shared/bar_chart", data: @volume_series, height: "10rem" %>
+</div>
+
+<% if @executions.any? %>
+  <div class="card card--flush" style="margin-block-start: var(--size-4);">
+    <div class="card__header" style="padding: var(--size-5); padding-block-end: 0;">
+      <h2 class="card__title">Executions</h2>
+    </div>
+    <table class="table" style="margin-block-start: var(--size-4);">
+      <thead>
+        <tr>
+          <th>Status</th>
+          <th>Queue</th>
+          <th class="text-end">Duration</th>
+          <th>Error</th>
+          <th>Occurred At</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @executions.each do |job| %>
+          <tr style="cursor: pointer;" onclick="window.location='<%= job_path(job.id) %>'">
+            <td>
+              <span class="badge badge--<%= job.status == 'completed' ? 'green' : job.status == 'failed' ? 'red' : 'yellow' %>"><%= job.status %></span>
+            </td>
+            <td class="text-sm"><%= job.queue || "default" %></td>
+            <td class="text-end text-sm"><%= job.duration_ms ? "#{job.duration_ms.round(1)}ms" : "—" %></td>
+            <td class="text-sm">
+              <% if job.error_class.present? %>
+                <span class="dl-mono"><%= job.error_class %></span>
+                <span class="text-subtle text-xs"><%= truncate(job.error_message.to_s, length: 60) %></span>
+              <% end %>
+            </td>
+            <td class="text-subtle text-xs"><%= time_ago_in_words(job.occurred_at) %> ago</td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <%= render "daylight/shared/pagination", pagination: @pagination %>
+<% else %>
+  <%= render "daylight/shared/empty_state", message: "No executions found for this period." %>
+<% end %>

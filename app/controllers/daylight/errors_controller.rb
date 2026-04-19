@@ -39,6 +39,11 @@ module Daylight
       redirect_to error_path(error)
     end
 
+    def ai_status
+      error = Database::ErrorRecord.find(params[:id])
+      render partial: "daylight/errors/ai_analysis", locals: { error: error }
+    end
+
     private
 
     def render_errors_list(status)

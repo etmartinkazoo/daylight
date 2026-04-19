@@ -44,6 +44,11 @@ module Daylight
       redirect_to incident_path(incident)
     end
 
+    def ai_status
+      incident = Database::IncidentRecord.find(params[:id])
+      render partial: "daylight/incidents/investigation", locals: { incident: incident }
+    end
+
     def update
       incident = Database::IncidentRecord.find(params[:id])
 

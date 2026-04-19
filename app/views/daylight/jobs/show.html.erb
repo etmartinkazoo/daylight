@@ -1,0 +1,191 @@
+<% content_for(:title) { "#{@job.job_class} - Daylight" } %>
+
+<%= link_to "← Back to Jobs", jobs_path, class: "dl-back-link" %>
+
+<%= render "daylight/shared/page_header", title: @job.job_class, actions: capture {
+  safe_join([
+    tag.span(@job.status, class: "badge badge--#{@job.status == 'completed' ? 'green' : @job.status == 'failed' ? 'red' : 'yellow'}")
+  ])
+} %>
+
+<div class="dl-stat-grid">
+  <%= render "daylight/shared/stat_card", label: "Status", value: @job.status.capitalize %>
+  <%= render "daylight/shared/stat_card", label: "Duration", value: @job.duration_ms ? "#{@job.duration_ms.round(1)}ms" : "—" %>
+  <%= render "daylight/shared/stat_card", label: "Queue", value: @job.queue || "default" %>
+  <%= render "daylight/shared/stat_card", label: "Occurred", value: @job.occurred_at&.then { |t| time_ago_in_words(t) + " ago" } %>
+</div>
+
+<div class="dl-section">
+  <div class="card">
+    <div class="card__header">
+      <h2 class="card__title">Details</h2>
+    </div>
+    <div class="table-scroll">
+      <table class="table">
+        <tbody>
+          <tr>
+            <td class="text-sm font-medium" style="width: 12rem;">Job Class</td>
+            <td class="dl-mono text-sm"><%= @job.job_class %></td>
+          </tr>
+          <tr>
+            <td class="text-sm font-medium">Queue</td>
+            <td class="text-sm"><%= @job.queue || "default" %></td>
+          </tr>
+          <tr>
+            <td class="text-sm font-medium">Status</td>
+            <td><span class="badge badge--<%= @job.status == 'completed' ? 'green' : @job.status == 'failed' ? 'red' : 'yellow' %>"><%= @job.status %></span></td>
+          </tr>
+          <tr>
+            <td class="text-sm font-medium">Duration</td>
+            <td class="text-sm"><%= @job.duration_ms ? "#{@job.duration_ms.round(1)}ms" : "—" %></td>
+          </tr>
+          <% if @job.enqueued_at.present? %>
+            <tr>
+              <td class="text-sm font-medium">Enqueued At</td>
+              <td class="text-sm"><%= @job.enqueued_at %></td>
+            </tr>
+          <% end %>
+          <% if @job.completed_at.present? %>
+            <tr>
+              <td class="text-sm font-medium">Completed At</td>
+              <td class="text-sm"><%= @job.completed_at %></td>
+            </tr>
+          <% end %>
+          <% if @job.enqueued_at.present? && @job.completed_at.present? %>
+            <tr>
+              <td class="text-sm font-medium">Wait Time</td>
+              <td class="text-sm"><%= ((Time.parse(@job.completed_at.to_s) - Time.parse(@job.enqueued_at.to_s)) * 1000).round(0) rescue "—" %>ms</td>
+            </tr>
+          <% end %>
+          <tr>
+            <td class="text-sm font-medium">Occurred At</td>
+            <td class="text-sm"><%= @job.occurred_at %></td>
+          </tr>
+          <% if @job.trace_id.present? %>
+            <tr>
+              <td class="text-sm font-medium">Trace ID</td>
+              <td class="dl-mono text-xs"><%= @job.trace_id %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<% if @job.status == "failed" %>
+  <div class="dl-section">
+    <div class="card">
+      <div class="card__header">
+        <h2 class="card__title">Error</h2>
+        <% if @related_error %>
+          <%= link_to "View Error →", error_path(@related_error.id), class: "btn btn--sm btn--outline" %>
+        <% end %>
+      </div>
+      <div class="table-scroll">
+        <table class="table">
+          <tbody>
+            <tr>
+              <td class="text-sm font-medium" style="width: 12rem;">Error Class</td>
+              <td class="dl-mono text-sm"><%= @job.error_class %></td>
+            </tr>
+            <tr>
+              <td class="text-sm font-medium">Message</td>
+              <td class="text-sm" style="word-break: break-word;"><%= @job.error_message %></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+<% end %>
+
+<% if @queries.any? %>
+  <div class="dl-section">
+    <div class="card card--flush">
+      <div class="card__header" style="padding: var(--size-5); padding-block-end: 0;">
+        <h2 class="card__title">Queries (<%= @queries.size %>)</h2>
+      </div>
+      <table class="table" style="margin-block-start: var(--size-4);">
+        <thead>
+          <tr>
+            <th>SQL</th>
+            <th class="text-end" style="width: 6rem;">Duration</th>
+            <th style="width: 12rem;">Source</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @queries.each do |q| %>
+            <tr>
+              <td class="dl-mono text-xs" style="word-break: break-all; max-width: 30rem;"><%= truncate(q.sql, length: 200) %></td>
+              <td class="text-end text-xs"><%= q.duration_ms&.round(1) %>ms</td>
+              <td class="text-xs text-subtle"><%= q.source_location %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<% end %>
+
+<% if @http_requests.any? %>
+  <div class="dl-section">
+    <div class="card card--flush">
+      <div class="card__header" style="padding: var(--size-5); padding-block-end: 0;">
+        <h2 class="card__title">HTTP Requests (<%= @http_requests.size %>)</h2>
+      </div>
+      <table class="table" style="margin-block-start: var(--size-4);">
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>URL</th>
+            <th class="text-end">Status</th>
+            <th class="text-end">Duration</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @http_requests.each do |req| %>
+            <tr>
+              <td class="text-xs font-medium"><%= req.method %></td>
+              <td class="text-xs text-subtle" style="word-break: break-all; max-width: 24rem;"><%= truncate(req.url, length: 100) %></td>
+              <td class="text-end text-xs">
+                <% if req.status_code %>
+                  <span class="badge badge--<%= req.status_code < 400 ? '2xx' : req.status_code < 500 ? '4xx' : '5xx' %>"><%= req.status_code %></span>
+                <% end %>
+              </td>
+              <td class="text-end text-xs"><%= req.duration_ms&.round(1) %>ms</td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<% end %>
+
+<% if @logs.any? %>
+  <div class="dl-section">
+    <div class="card card--flush">
+      <div class="card__header" style="padding: var(--size-5); padding-block-end: 0;">
+        <h2 class="card__title">Logs (<%= @logs.size %>)</h2>
+      </div>
+      <table class="table" style="margin-block-start: var(--size-4);">
+        <thead>
+          <tr>
+            <th style="width: 5rem;">Level</th>
+            <th>Message</th>
+            <th style="width: 8rem;">When</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @logs.each do |log| %>
+            <tr>
+              <td><span class="badge badge--<%= log.level == 'error' || log.level == 'fatal' ? 'red' : log.level == 'warn' ? 'yellow' : 'default' %>"><%= log.level %></span></td>
+              <td class="text-xs" style="word-break: break-word;"><%= truncate(log.message, length: 300) %></td>
+              <td class="text-xs text-subtle"><%= log.occurred_at&.then { |t| l(Time.parse(t.to_s), format: :short) rescue t } %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<% end %>

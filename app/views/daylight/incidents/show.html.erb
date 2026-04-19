@@ -29,7 +29,6 @@
   </div>
 </div>
 
-<%= turbo_stream_from "daylight_incident_#{@incident.id}" %>
 <%= render "daylight/incidents/investigation", incident: @incident %>
 
 <% if @related_error %>

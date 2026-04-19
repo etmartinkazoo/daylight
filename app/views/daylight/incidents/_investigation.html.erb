@@ -1,9 +1,17 @@
-<div id="<%= dom_id(incident, :investigation) %>">
+<div id="<%= dom_id(incident, :investigation) %>"
+  <% if incident.status == "investigating" %>
+    data-controller="poll"
+    data-poll-url-value="<%= ai_status_incident_path(incident.id) %>"
+    data-poll-interval-value="3000"
+    data-poll-pending
+  <% end %>>
   <div class="dl-section">
     <div class="card">
       <div class="card__header">
         <h2 class="card__title">Investigation</h2>
-        <% if Daylight::AI.configured? %>
+        <% if incident.status == "investigating" %>
+          <span class="badge badge--ai-pending">Investigating</span>
+        <% elsif Daylight::AI.configured? %>
           <%= button_to(incident.investigation.present? ? "Re-investigate" : "Investigate",
                 investigate_incident_path(incident.id), method: :post,
                 class: "btn btn--sm btn--primary") %>

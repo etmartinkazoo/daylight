@@ -100,6 +100,14 @@
     </div>
 
     <div class="card">
+      <h3 class="card__title">Investigate All</h3>
+      <div class="flex flex-col gap-half">
+        <p class="text-xs text-subtle">Run the AI agent on all open errors and incidents that haven't been investigated yet.</p>
+        <%= button_to "Investigate All Uninvestigated", settings_investigate_all_path, method: :post, data: { turbo: false }, class: "btn btn--sm btn--primary", style: "align-self: flex-start;" %>
+      </div>
+    </div>
+
+    <div class="card">
       <h3 class="card__title">Context</h3>
       <div class="flex flex-col gap-half">
         <label for="settings_ai_context_notes" class="text-sm font-medium">AI Context Notes</label>

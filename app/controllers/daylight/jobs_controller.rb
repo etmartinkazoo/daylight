@@ -6,9 +6,44 @@ module Daylight
 
     before_action :ensure_connected
 
+    def show
+      @job = Database::JobRecord.find(params[:id])
+
+      # Find related queries and HTTP requests via trace_id
+      if @job.trace_id.present?
+        @queries = Database::QueryRecord.where(trace_id: @job.trace_id).order(occurred_at: :asc).limit(50)
+        @http_requests = Database::HttpRequestRecord.where(trace_id: @job.trace_id).order(occurred_at: :asc).limit(20)
+        @logs = Database::LogRecord.where(trace_id: @job.trace_id).order(occurred_at: :asc).limit(50)
+      else
+        @queries = Database::QueryRecord.none
+        @http_requests = Database::HttpRequestRecord.none
+        @logs = Database::LogRecord.none
+      end
+
+      # Find related error if the job failed
+      if @job.error_class.present?
+        @related_error = Database::ErrorRecord.find_by(error_class: @job.error_class)
+      end
+    end
+
     def index
       period = current_period
       scope = Database::JobRecord.where(occurred_at: period_start(period)..)
+
+      # Filter by job class if specified
+      if params[:job_class].present?
+        @job_class_filter = params[:job_class]
+        filtered = scope.where(job_class: @job_class_filter).order(occurred_at: :desc)
+        @pagination, @executions = paginate(filtered, limit: 50)
+        @period = period
+        @totals = {
+          total: filtered.count,
+          completed: filtered.completed.count,
+          failed: filtered.failed.count
+        }
+        @volume_series = time_series_buckets(filtered, period)
+        return render :executions
+      end
 
       grouped = scope.grouped_by_class.order(sort_order_sql(
         default: "total",
