@@ -22,7 +22,7 @@ module Daylight
       ))
 
       count = scope.group(:mailer_class).count.length
-      @pagy, page_rows = pagy(:offset, grouped, count: count, limit: 20)
+      @pagination, page_rows = paginate(grouped, count: count, limit: 20)
       mailers = page_rows.map do |row|
         {
           mailer_class: row.mailer_class,

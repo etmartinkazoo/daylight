@@ -17,7 +17,7 @@ module Daylight
       scope = scope.where(incident_type: params[:incident_type]) if params[:incident_type].present?
 
       scope = scope.order(occurred_at: :desc)
-      @pagy, incidents = pagy(scope, limit: 20)
+      @pagination, incidents = paginate(scope, limit: 20)
 
       incident_scope = Database::IncidentRecord.where(occurred_at: period_start(period)..)
 

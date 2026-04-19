@@ -71,7 +71,7 @@
     </table>
   </div>
 
-  <%= render "daylight/shared/pagination", pagy: @pagy %>
+  <%= render "daylight/shared/pagination", pagination: @pagination %>
 <% elsif @selected_host %>
   <%= render "daylight/shared/empty_state", message: "No requests found for #{@selected_host}." %>
 <% end %>

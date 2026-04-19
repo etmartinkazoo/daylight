@@ -39,7 +39,7 @@
     </table>
   </div>
 
-  <%= render "daylight/shared/pagination", pagy: @pagy %>
+  <%= render "daylight/shared/pagination", pagination: @pagination %>
 <% else %>
   <%= render "daylight/shared/empty_state", message: "No cache events found for the selected period." %>
 <% end %>

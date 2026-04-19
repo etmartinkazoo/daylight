@@ -25,7 +25,7 @@ module Daylight
       ))
 
       count = scope.group(Database::RequestRecord::ROUTE_GROUP_EXPR).count.length
-      @pagy, page_rows = pagy(:offset, grouped, count: count, limit: 20)
+      @pagination, page_rows = paginate(grouped, count: count, limit: 20)
       routes_on_page = page_rows.map(&:route)
 
       p95s = Database::RequestRecord.p95_by_route(scope, routes_on_page)

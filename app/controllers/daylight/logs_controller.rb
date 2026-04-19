@@ -11,7 +11,7 @@ module Daylight
       period_scope = Database::LogRecord.where(occurred_at: period_start(period)..)
       scope = params[:level].present? ? period_scope.where(level: params[:level]) : period_scope
 
-      @pagy, log_records = pagy(scope.order(occurred_at: :desc), limit: 20)
+      @pagination, log_records = paginate(scope.order(occurred_at: :desc), limit: 20)
 
       @logs = log_records
       @counts = period_scope.group(:level).count

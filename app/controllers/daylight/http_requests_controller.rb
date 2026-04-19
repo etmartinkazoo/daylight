@@ -13,7 +13,7 @@ module Daylight
       grouped = scope.grouped_by_host
 
       count = scope.group(:host).count.length
-      @pagy, page_rows = pagy(:offset, grouped, count: count, limit: 20)
+      @pagination, page_rows = paginate(grouped, count: count, limit: 20)
       hosts = page_rows.map do |row|
         {
           host: row.host,

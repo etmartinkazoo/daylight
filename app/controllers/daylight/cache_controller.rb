@@ -19,7 +19,7 @@ module Daylight
       grouped = scope.grouped_by_key_pattern
 
       count = scope.group(Database::CacheEventRecord.key_pattern_expr).count.length
-      @pagy, page_rows = pagy(:offset, grouped, count: count, limit: 20)
+      @pagination, page_rows = paginate(grouped, count: count, limit: 20)
       key_groups = page_rows.map do |row|
         {
           key_pattern: row.key_pattern,

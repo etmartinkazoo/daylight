@@ -18,7 +18,6 @@ Gem::Specification.new do |spec|
   spec.add_dependency "brakeman"
   spec.add_dependency "bullet"
   spec.add_dependency "alba"
-  spec.add_dependency "pagy"
   spec.add_dependency "turbo-rails"
   spec.add_dependency "stimulus-rails"
   spec.add_dependency "importmap-rails"

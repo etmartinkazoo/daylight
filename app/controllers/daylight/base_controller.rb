@@ -4,7 +4,7 @@ module Daylight
   class BaseController < ActionController::Base
     include Daylight::Periodable
     include Daylight::Sortable
-    include Pagy::Backend
+    include Daylight::Paginatable
 
     protect_from_forgery with: :exception
 

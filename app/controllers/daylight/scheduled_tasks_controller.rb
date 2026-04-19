@@ -23,7 +23,7 @@ module Daylight
       ))
 
       count = scope.group(:task_class).count.length
-      @pagy, page_rows = pagy(:offset, grouped, count: count, limit: 20)
+      @pagination, page_rows = paginate(grouped, count: count, limit: 20)
       task_classes = page_rows.map do |row|
         {
           task_class: row.task_class,

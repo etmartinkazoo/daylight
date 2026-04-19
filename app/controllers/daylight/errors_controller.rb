@@ -39,7 +39,7 @@ module Daylight
       scope = scope.search(params[:q]) if params[:q].present?
       scope = apply_sort(scope, default: "last_seen_at",
                                 allowed: %w[error_class occurrences_count last_seen_at first_seen_at], direction: "desc")
-      @pagy, @errors = pagy(scope, limit: 20)
+      @pagination, @errors = paginate(scope, limit: 20)
 
       occurrence_scope = Database::OccurrenceRecord.where(occurred_at: period_start(current_period)..)
       @counts = Database::ErrorRecord.status_counts

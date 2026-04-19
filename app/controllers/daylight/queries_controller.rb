@@ -21,7 +21,7 @@ module Daylight
       ))
 
       count = scope.group(:normalized_sql).count.length
-      @pagy, page_rows = pagy(:offset, grouped, count: count, limit: 20)
+      @pagination, page_rows = paginate(grouped, count: count, limit: 20)
       queries = page_rows.map do |row|
         {
           normalized_sql: row.normalized_sql,
