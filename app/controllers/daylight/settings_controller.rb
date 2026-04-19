@@ -67,12 +67,14 @@ module Daylight
       notification_emails slack_webhook_url
       slow_request_threshold_ms slow_query_threshold_ms
       retention_days sample_rate ai_context_notes
-      gemini_api_key anthropic_api_key openai_api_key default_ai_model
+      gemini_api_key anthropic_api_key openai_api_key
+      default_ai_model ai_investigation_model ai_solution_model
       github_api_token
       performance_scan_enabled performance_scan_interval
       security_scan_enabled security_scan_interval security_scan_min_confidence
       solutions_scan_enabled
       auto_investigate_errors
+      auto_push_fix_branches
     ].freeze
 
     SECTION_PATHS = {
@@ -107,7 +109,10 @@ module Daylight
         openai_api_key: settings["openai_api_key"].present? ? "••••••••" : "",
         openai_api_key_saved_at: settings["openai_api_key_saved_at"],
         default_ai_model: settings["default_ai_model"] || "gemini-2.5-flash",
+        ai_investigation_model: settings["ai_investigation_model"] || "gemini-2.5-flash",
+        ai_solution_model: settings["ai_solution_model"] || "gemini-2.5-pro",
         auto_investigate_errors: settings["auto_investigate_errors"] || "true",
+        auto_push_fix_branches: settings["auto_push_fix_branches"] || "false",
         github_api_token: settings["github_api_token"].present? ? "••••••••" : "",
         github_api_token_saved_at: settings["github_api_token_saved_at"],
         solutions_scan_enabled: settings["solutions_scan_enabled"] || "false",

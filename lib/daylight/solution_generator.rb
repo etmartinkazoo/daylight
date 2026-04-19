@@ -207,7 +207,7 @@ module Daylight
         source_code = read_source_file(issue)
         prompt = build_generation_prompt(issue, source_type, source_code)
 
-        chat = Daylight::AI.chat
+        chat = Daylight::AI.chat(model: Daylight::AI.solution_model)
         response = chat.ask(prompt)
         content = response.content
 

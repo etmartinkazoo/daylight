@@ -11,8 +11,9 @@ module Daylight
           event = ActiveSupport::Notifications::Event.new(*args)
           payload = event.payload
 
-          # Skip SCHEMA and internal queries
+          # Skip SCHEMA, Daylight internal queries, and queries from Daylight jobs
           next if payload[:name] == "SCHEMA" || payload[:name]&.include?("Daylight")
+          next if Thread.current[:daylight_internal_request]
           next unless payload[:sql].present?
 
           # Count all queries per request

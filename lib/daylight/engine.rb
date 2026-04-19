@@ -95,6 +95,12 @@ module Daylight
 
   class ErrorSubscriber
     def report(error, handled:, severity:, context: {}, source: nil)
+      # Don't track Daylight's own errors — only monitor the host app
+      return if error.class.name&.start_with?("Daylight")
+      return if source&.to_s&.start_with?("daylight")
+      backtrace_line = error.backtrace&.first.to_s
+      return if backtrace_line.include?("/daylight/") && !backtrace_line.include?("/app/")
+
       Daylight::Tracker.record(error, context: context.merge(
         handled: handled,
         severity: severity.to_s,

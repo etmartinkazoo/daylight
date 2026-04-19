@@ -11,6 +11,9 @@ module Daylight
           url = payload[:url]&.to_s
           next if url.blank?
           next if url.include?("/daylight")
+          # Skip outbound HTTP from Daylight's own controllers/jobs (AI calls, GitHub API)
+          next if Thread.current[:daylight_controller_action]&.start_with?("Daylight")
+          next if Thread.current[:daylight_internal_request]
           next unless Daylight::Sampler.request_sampled?
 
           uri = URI.parse(url) rescue nil

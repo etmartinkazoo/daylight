@@ -25,7 +25,7 @@ module Daylight
 
         begin
           response = Timeout.timeout(INVESTIGATION_TIMEOUT) do
-            chat = Daylight::AI.chat
+            chat = Daylight::AI.chat(model: Daylight::AI.investigation_model)
             chat.ask(prompt)
           end
 
@@ -48,9 +48,12 @@ module Daylight
             status: "open"
           )
         end
+
+        broadcast_update(incident)
       rescue StandardError => e
         # Last-resort rescue: ensure the incident never stays stuck in "investigating"
         incident.update(status: "open", investigation: "Investigation error: #{e.message}") rescue nil
+        broadcast_update(incident) rescue nil
       end
 
       # Unstick any incidents that have been in "investigating" for too long
@@ -70,6 +73,19 @@ module Daylight
       end
 
       private
+
+      def broadcast_update(incident)
+        return unless defined?(Turbo::StreamsChannel)
+
+        Turbo::StreamsChannel.broadcast_replace_to(
+          "daylight_incident_#{incident.id}",
+          target: "investigation_incident_record_#{incident.id}",
+          partial: "daylight/incidents/investigation",
+          locals: { incident: incident }
+        )
+      rescue StandardError => e
+        Rails.logger.debug("[Daylight] Broadcast failed: #{e.message}") if defined?(Rails)
+      end
 
       def gather_context(incident)
         ctx = {}

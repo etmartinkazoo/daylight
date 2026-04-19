@@ -79,7 +79,16 @@
                 <span class="badge badge--<%= error.severity %>"><%= error.severity %></span>
               </td>
               <td class="text-subtle text-xs"><%= time_ago_in_words(error.last_seen_at) + " ago" %></td>
-              <td><%= render "daylight/shared/status_badge", status: error.status %></td>
+              <td>
+                <div class="flex items-center gap-half">
+                  <%= render "daylight/shared/status_badge", status: error.status %>
+                  <% if error.ai_solution == "" %>
+                    <span class="badge badge--ai-pending">AI</span>
+                  <% elsif error.ai_solution.present? %>
+                    <span class="badge badge--ai">AI</span>
+                  <% end %>
+                </div>
+              </td>
             </tr>
           <% end %>
         </tbody>

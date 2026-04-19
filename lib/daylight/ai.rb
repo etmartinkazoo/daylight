@@ -40,6 +40,18 @@ module Daylight
         Database.get_setting("default_ai_model").presence || "gemini-2.5-flash"
       end
 
+      # Fast/cheap model for triage and investigation
+      def investigation_model
+        Database.ensure_connected!
+        Database.get_setting("ai_investigation_model").presence || "gemini-2.5-flash"
+      end
+
+      # Capable model for code generation and fix branches
+      def solution_model
+        Database.ensure_connected!
+        Database.get_setting("ai_solution_model").presence || "gemini-2.5-pro"
+      end
+
       # Returns only models whose provider has a configured API key
       def available_models
         configure!

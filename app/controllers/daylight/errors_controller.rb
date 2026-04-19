@@ -34,8 +34,8 @@ module Daylight
 
     def investigate
       error = Database::ErrorRecord.find(params[:id])
+      error.update!(ai_solution: "") # empty string = investigating state
       Daylight::InvestigateErrorJob.perform_later(error.id)
-      flash[:success] = "AI investigation started"
       redirect_to error_path(error)
     end
 

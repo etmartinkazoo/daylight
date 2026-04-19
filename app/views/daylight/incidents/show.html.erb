@@ -29,23 +29,8 @@
   </div>
 </div>
 
-<div class="dl-section">
-  <div class="card">
-    <div class="card__header">
-      <h2 class="card__title">Investigation</h2>
-      <% if Daylight::AI.configured? %>
-        <%= button_to(@incident.investigation.present? ? "Re-investigate" : "Investigate",
-              investigate_incident_path(@incident.id), method: :post,
-              class: "btn btn--sm btn--primary") %>
-      <% end %>
-    </div>
-    <% if @incident.investigation.present? %>
-      <div style="font-size: 0.875rem; line-height: 1.6; white-space: pre-wrap;"><%= @incident.investigation %></div>
-    <% else %>
-      <p class="text-xs text-subtle">No AI investigation yet. Click Investigate to analyze this incident.</p>
-    <% end %>
-  </div>
-</div>
+<%= turbo_stream_from "daylight_incident_#{@incident.id}" %>
+<%= render "daylight/incidents/investigation", incident: @incident %>
 
 <% if @related_error %>
   <div class="dl-section">

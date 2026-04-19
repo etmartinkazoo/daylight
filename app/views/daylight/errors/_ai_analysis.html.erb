@@ -1,0 +1,36 @@
+<div id="<%= dom_id(error, :ai_analysis) %>">
+  <% if error.ai_solution == "" %>
+    <div class="dl-section">
+      <div class="card">
+        <div class="card__header">
+          <h2 class="card__title">AI Analysis</h2>
+        </div>
+        <div class="flex items-center gap-half" style="padding: var(--size-2) 0;">
+          <span class="text-sm text-subtle">AI is investigating this error...</span>
+        </div>
+      </div>
+    </div>
+  <% elsif error.ai_solution.present? %>
+    <div class="dl-section">
+      <div class="card">
+        <div class="card__header">
+          <h2 class="card__title">AI Analysis</h2>
+          <% if Daylight::AI.configured? %>
+            <%= button_to "Re-investigate", investigate_error_path(error.id), method: :post, class: "btn btn--sm btn--outline" %>
+          <% end %>
+        </div>
+        <div style="font-size: 0.875rem; line-height: 1.6; white-space: pre-wrap;"><%= error.ai_solution %></div>
+      </div>
+    </div>
+  <% elsif Daylight::AI.configured? %>
+    <div class="dl-section">
+      <div class="card">
+        <div class="card__header">
+          <h2 class="card__title">AI Analysis</h2>
+          <%= button_to "Investigate", investigate_error_path(error.id), method: :post, class: "btn btn--sm btn--primary" %>
+        </div>
+        <p class="text-xs text-subtle">Run the AI agent to analyze this error and propose a fix.</p>
+      </div>
+    </div>
+  <% end %>
+</div>

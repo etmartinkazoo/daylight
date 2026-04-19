@@ -8,6 +8,7 @@ module Daylight
         ActiveSupport::Notifications.subscribe("deliver.action_mailer") do |*args|
           event = ActiveSupport::Notifications::Event.new(*args)
           payload = event.payload
+          next if payload[:mailer]&.start_with?("Daylight")
           next unless Daylight::Sampler.sample?(:mail_events)
 
           Database.ensure_connected!
@@ -32,6 +33,7 @@ module Daylight
         ActiveSupport::Notifications.subscribe("process.action_mailer") do |*args|
           event = ActiveSupport::Notifications::Event.new(*args)
           payload = event.payload
+          next if payload[:mailer]&.start_with?("Daylight")
           next unless Daylight::Sampler.sample?(:mail_events)
 
           Database.ensure_connected!

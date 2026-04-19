@@ -28,6 +28,11 @@
             </h3>
             <span class="badge badge--<%= incident.severity %>"><%= incident.severity %></span>
             <%= render "daylight/shared/status_badge", status: incident.status %>
+            <% if incident.status == "investigating" %>
+              <span class="badge badge--ai-pending">AI</span>
+            <% elsif incident.investigation.present? %>
+              <span class="badge badge--ai">AI</span>
+            <% end %>
           </div>
 
           <% if incident.summary.present? %>

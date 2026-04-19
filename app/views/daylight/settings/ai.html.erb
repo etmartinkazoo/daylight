@@ -7,17 +7,42 @@
     <%= hidden_field_tag :section, "ai" %>
 
     <div class="card">
-      <h3 class="card__title">Default Model</h3>
-      <div class="flex flex-col gap-half">
-        <label for="settings_default_ai_model" class="text-sm font-medium">Model</label>
-        <select name="settings[default_ai_model]" id="settings_default_ai_model" class="input">
-          <% Daylight::AI::MODELS.each do |model| %>
-            <option value="<%= model[:id] %>" <%= "selected" if @settings[:default_ai_model] == model[:id] %>>
-              <%= model[:label] %> (<%= model[:provider] %>)
-            </option>
-          <% end %>
-        </select>
-        <p class="text-xs text-subtle">Used for auto-investigation of errors and incidents. Only models with a configured API key will work.</p>
+      <h3 class="card__title">Models</h3>
+      <p class="text-xs text-subtle" style="margin-block-end: var(--size-3);">Use a fast, cheap model for investigation/triage and a more capable model for generating code fixes. Only models whose API key is configured above will work.</p>
+      <div class="flex flex-col gap-1">
+        <div class="flex flex-col gap-half">
+          <label for="settings_ai_investigation_model" class="text-sm font-medium">Investigation Model</label>
+          <select name="settings[ai_investigation_model]" id="settings_ai_investigation_model" class="input">
+            <% Daylight::AI::MODELS.each do |model| %>
+              <option value="<%= model[:id] %>" <%= "selected" if @settings[:ai_investigation_model] == model[:id] %>>
+                <%= model[:label] %> (<%= model[:provider] %>)
+              </option>
+            <% end %>
+          </select>
+          <p class="text-xs text-subtle">Used for error/incident triage and root cause analysis. A smaller model like Gemini Flash, GPT-4.1 Mini, or Claude Haiku works well here.</p>
+        </div>
+        <div class="flex flex-col gap-half">
+          <label for="settings_ai_solution_model" class="text-sm font-medium">Solution Model</label>
+          <select name="settings[ai_solution_model]" id="settings_ai_solution_model" class="input">
+            <% Daylight::AI::MODELS.each do |model| %>
+              <option value="<%= model[:id] %>" <%= "selected" if @settings[:ai_solution_model] == model[:id] %>>
+                <%= model[:label] %> (<%= model[:provider] %>)
+              </option>
+            <% end %>
+          </select>
+          <p class="text-xs text-subtle">Used for generating code fixes and GitHub branches. A more capable model like Gemini Pro, GPT-4.1, or Claude Sonnet/Opus produces better results.</p>
+        </div>
+        <div class="flex flex-col gap-half">
+          <label for="settings_default_ai_model" class="text-sm font-medium">Chat Model</label>
+          <select name="settings[default_ai_model]" id="settings_default_ai_model" class="input">
+            <% Daylight::AI::MODELS.each do |model| %>
+              <option value="<%= model[:id] %>" <%= "selected" if @settings[:default_ai_model] == model[:id] %>>
+                <%= model[:label] %> (<%= model[:provider] %>)
+              </option>
+            <% end %>
+          </select>
+          <p class="text-xs text-subtle">Used for interactive AI chat and solution refinement conversations.</p>
+        </div>
       </div>
     </div>
 
@@ -63,6 +88,14 @@
           <label for="settings_auto_investigate_errors" class="text-sm font-medium">Investigate new errors and incidents automatically</label>
         </div>
         <p class="text-xs text-subtle">When enabled, the AI agent will automatically analyze every new error (first occurrence) and every new incident, proposing a root cause and fix. Requires at least one API key configured above.</p>
+
+        <div class="flex items-center gap-half" style="margin-block-start: var(--size-2);">
+          <input type="hidden" name="settings[auto_push_fix_branches]" value="false">
+          <input type="checkbox" name="settings[auto_push_fix_branches]" id="settings_auto_push_fix_branches" value="true"
+            <%= "checked" if @settings[:auto_push_fix_branches] == "true" %>>
+          <label for="settings_auto_push_fix_branches" class="text-sm font-medium">Push suggested fix branches to GitHub</label>
+        </div>
+        <p class="text-xs text-subtle">When enabled and a GitHub token + repo are configured, the AI will automatically create a branch with the proposed fix after investigating an error. Branches are prefixed with <code>daylight/fix-</code> for easy identification.</p>
       </div>
     </div>
 
@@ -70,8 +103,8 @@
       <h3 class="card__title">Context</h3>
       <div class="flex flex-col gap-half">
         <label for="settings_ai_context_notes" class="text-sm font-medium">AI Context Notes</label>
-        <textarea name="settings[ai_context_notes]" id="settings_ai_context_notes" class="input" rows="4"><%= @settings[:ai_context_notes] %></textarea>
-        <p class="text-xs text-subtle">Extra context passed to the model when generating solutions (e.g. app architecture, known quirks, team conventions).</p>
+        <textarea name="settings[ai_context_notes]" id="settings_ai_context_notes" class="input" rows="6" placeholder="e.g. Rails 8 app, SQLite database, ActiveRecord multi-tenanted, ERB views with Hotwire/Turbo, SolidQueue for background jobs, Propshaft asset pipeline."><%= @settings[:ai_context_notes] %></textarea>
+        <p class="text-xs text-subtle">Describe your app's stack and architecture so the AI can give more relevant analysis. Include framework version, database, templating, background jobs, and any notable patterns or conventions.</p>
       </div>
     </div>
 

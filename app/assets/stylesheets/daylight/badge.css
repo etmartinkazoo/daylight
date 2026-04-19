@@ -26,6 +26,12 @@
 .badge--4xx { background-color: light-dark(#fef9c3, #2a2000); color: var(--color-4xx); }
 .badge--5xx { background-color: light-dark(#fef2f2, #2a0a0a); color: var(--color-5xx); }
 
+/* AI investigation */
+.badge--ai { background-color: light-dark(#ede9fe, #1a0a2e); color: light-dark(#7c3aed, #a78bfa); }
+.badge--ai-pending { background-color: light-dark(#ede9fe, #1a0a2e); color: light-dark(#7c3aed, #a78bfa); animation: ai-pulse 2s ease-in-out infinite; }
+@keyframes ai-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+.badge--investigating { background-color: light-dark(#ede9fe, #1a0a2e); color: light-dark(#7c3aed, #a78bfa); animation: ai-pulse 2s ease-in-out infinite; }
+
 /* Severity */
 .badge--critical { background-color: light-dark(#fef2f2, #2a0a0a); color: var(--color-negative); }
 .badge--high { background-color: light-dark(#fff7ed, #2a1500); color: light-dark(#ea580c, #fb923c); }

@@ -2,6 +2,12 @@
 
 module Daylight
   class ApplicationJob < ActiveJob::Base
-    before_perform { Database.ensure_connected! }
+    around_perform do |_job, block|
+      Database.ensure_connected!
+      Thread.current[:daylight_internal_request] = true
+      block.call
+    ensure
+      Thread.current[:daylight_internal_request] = false
+    end
   end
 end

@@ -8,6 +8,8 @@ module Daylight
         ActiveSupport::Notifications.subscribe("perform.solid_queue") do |*args|
           event = ActiveSupport::Notifications::Event.new(*args)
           payload = event.payload
+          task_class = payload[:task_class] || payload[:job_class] || ""
+          next if task_class.start_with?("Daylight")
           next unless Daylight::Sampler.sample?(:scheduled_tasks)
 
           Daylight::TraceContext.start!
