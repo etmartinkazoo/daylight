@@ -108,7 +108,10 @@ module Daylight
           Daylight::SecurityIssueRecord,
           Daylight::SolutionRecord,
           Daylight::SolutionMessageRecord,
-          Daylight::InvestigationQueueRecord
+          Daylight::InvestigationQueueRecord,
+          Daylight::ChatRecord,
+          Daylight::ChatMessageRecord,
+          Daylight::ToolCallRecord
         ]
       end
     end
