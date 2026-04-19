@@ -3,7 +3,7 @@
 <% visible_messages = messages.reject { |m| m.role == "system" } %>
 <% has_pending = visible_messages.any? && visible_messages.last.role == "user" %>
 
-<div class="dl-section">
+<div id="ai-chat" class="dl-section">
   <div class="card" style="padding: 0; overflow: hidden;">
     <div style="padding: var(--size-4) var(--size-5); border-block-end: 1px solid var(--color-border);">
       <div class="flex items-center gap-half">
@@ -48,6 +48,7 @@
         <%= form_with url: context_chats_path, method: :post, data: { turbo: false } do |f| %>
           <%= hidden_field_tag :context_type, context_type %>
           <%= hidden_field_tag :context_id, context_id %>
+          <%= hidden_field_tag :redirect_url, request.path + "#ai-chat" %>
           <div style="display: flex; gap: var(--size-2); align-items: flex-end;">
             <textarea name="content" placeholder="Ask about this <%= context_type %>..." class="input" rows="2"
               style="flex: 1; resize: vertical; min-height: 2.5rem; font-size: 0.8125rem;"

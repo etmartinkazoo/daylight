@@ -9,7 +9,7 @@ module Daylight
       Daylight::AI.configure!
       chat = find_or_create_chat
       content = params[:content].to_s.strip
-      return redirect_back(fallback_location: root_path) if content.blank?
+      return redirect_to(params[:redirect_url] || request.referer || root_path) if content.blank?
 
       # Persist user message immediately (RubyLLM docs pattern)
       chat.add_message(role: :user, content: content)
@@ -17,7 +17,7 @@ module Daylight
       # Process AI response in background
       Daylight::ContextChatJob.perform_later(chat.id)
 
-      redirect_back(fallback_location: root_path)
+      redirect_to(params[:redirect_url] || request.referer || root_path)
     end
 
     # GET /context_chats/messages?context_type=error&context_id=1

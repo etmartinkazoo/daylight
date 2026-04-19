@@ -43,8 +43,13 @@ module Daylight
         config = {
           adapter: "sqlite3",
           database: db_path,
-          pool: 5,
-          timeout: 5000
+          pool: 10,
+          timeout: 15000,
+          pragmas: {
+            journal_mode: "wal",
+            synchronous: "normal",
+            busy_timeout: 15000
+          }
         }
 
         all_record_classes.each { |klass| klass.establish_connection(config) }
