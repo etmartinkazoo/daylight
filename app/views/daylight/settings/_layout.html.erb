@@ -1,0 +1,10 @@
+<% content_for :sidebar do %>
+  <%= render "daylight/settings/sidebar", active: local_assigns[:active] %>
+<% end %>
+
+<%= render "daylight/shared/page_header",
+      title: local_assigns[:section_label] || "Settings",
+      subtitle: local_assigns[:section_description],
+      actions: local_assigns[:actions] %>
+
+<%= yield %>

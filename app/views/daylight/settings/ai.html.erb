@@ -1,0 +1,53 @@
+<%= render layout: "daylight/settings/layout", locals: {
+      active: "ai",
+      section_label: "AI",
+      section_description: "Credentials and context for AI-assisted solutions."
+    } do %>
+  <%= form_with url: settings_path, method: :patch, class: "flex flex-col gap" do |f| %>
+    <%= hidden_field_tag :section, "ai" %>
+
+    <div class="card">
+      <h3 class="card__title">Models</h3>
+      <div class="flex flex-col gap-1">
+        <div class="flex flex-col gap-half">
+          <label for="settings_default_ai_model" class="text-sm font-medium">Default AI Model</label>
+          <select name="settings[default_ai_model]" id="settings_default_ai_model" class="input">
+            <% %w[gemini anthropic].each do |model| %>
+              <option value="<%= model %>" <%= "selected" if @settings[:default_ai_model] == model %>><%= model.capitalize %></option>
+            <% end %>
+          </select>
+        </div>
+        <div class="flex flex-col gap-half">
+          <label for="settings_gemini_api_key" class="text-sm font-medium">Gemini API Key</label>
+          <input type="password" name="settings[gemini_api_key]" id="settings_gemini_api_key" value="<%= @settings[:gemini_api_key] %>" class="input">
+        </div>
+        <div class="flex flex-col gap-half">
+          <label for="settings_anthropic_api_key" class="text-sm font-medium">Anthropic API Key</label>
+          <input type="password" name="settings[anthropic_api_key]" id="settings_anthropic_api_key" value="<%= @settings[:anthropic_api_key] %>" class="input">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="card__title">GitHub Token</h3>
+      <div class="flex flex-col gap-half">
+        <label for="settings_github_api_token" class="text-sm font-medium">Personal Access Token</label>
+        <input type="password" name="settings[github_api_token]" id="settings_github_api_token" value="<%= @settings[:github_api_token] %>" class="input">
+        <p class="text-xs text-subtle">Used when AI opens pull requests for proposed fixes.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="card__title">Context</h3>
+      <div class="flex flex-col gap-half">
+        <label for="settings_ai_context_notes" class="text-sm font-medium">AI Context Notes</label>
+        <textarea name="settings[ai_context_notes]" id="settings_ai_context_notes" class="input" rows="4"><%= @settings[:ai_context_notes] %></textarea>
+        <p class="text-xs text-subtle">Extra context passed to the model when generating solutions.</p>
+      </div>
+    </div>
+
+    <div>
+      <button type="submit" class="btn btn--primary">Save</button>
+    </div>
+  <% end %>
+<% end %>

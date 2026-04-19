@@ -1,0 +1,42 @@
+<%= render layout: "daylight/settings/layout", locals: {
+      active: "performance",
+      section_label: "Performance",
+      section_description: "Thresholds and retention controls."
+    } do %>
+  <%= form_with url: settings_path, method: :patch, class: "flex flex-col gap" do |f| %>
+    <%= hidden_field_tag :section, "performance" %>
+
+    <div class="card">
+      <h3 class="card__title">Thresholds</h3>
+      <div class="flex flex-col gap-1">
+        <div class="flex flex-col gap-half">
+          <label for="settings_slow_request_threshold_ms" class="text-sm font-medium">Slow Request (ms)</label>
+          <input type="number" name="settings[slow_request_threshold_ms]" id="settings_slow_request_threshold_ms" value="<%= @settings[:slow_request_threshold_ms] %>" class="input">
+        </div>
+        <div class="flex flex-col gap-half">
+          <label for="settings_slow_query_threshold_ms" class="text-sm font-medium">Slow Query (ms)</label>
+          <input type="number" name="settings[slow_query_threshold_ms]" id="settings_slow_query_threshold_ms" value="<%= @settings[:slow_query_threshold_ms] %>" class="input">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="card__title">Data Retention</h3>
+      <div class="flex flex-col gap-1">
+        <div class="flex flex-col gap-half">
+          <label for="settings_retention_days" class="text-sm font-medium">Retention Days</label>
+          <input type="number" name="settings[retention_days]" id="settings_retention_days" value="<%= @settings[:retention_days] %>" class="input">
+        </div>
+        <div class="flex flex-col gap-half">
+          <label for="settings_sample_rate" class="text-sm font-medium">Sample Rate</label>
+          <input type="number" name="settings[sample_rate]" id="settings_sample_rate" value="<%= @settings[:sample_rate] %>" class="input" step="0.01" min="0" max="1">
+          <p class="text-xs text-subtle">Fraction of requests to record (0.0 to 1.0).</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-1" style="margin-block-start: var(--size-3)">
+        <button type="submit" class="btn btn--primary">Save</button>
+        <%= button_to "Run cleanup now", settings_cleanup_path, method: :post, class: "btn btn--outline" %>
+      </div>
+    </div>
+  <% end %>
+<% end %>

@@ -1,7 +1,16 @@
-<div class="sidebar-brand">
-  <div class="sidebar-brand__icon">☀</div>
-  Daylight
-</div>
+<%
+  brand_name = daylight_settings["app_name"].presence || "Daylight"
+  brand_logo = daylight_settings["app_logo_url"].presence
+  brand_icon = daylight_settings["app_icon"].presence || "☀"
+%>
+<%= link_to root_path, class: "sidebar-brand" do %>
+  <% if brand_logo %>
+    <img src="<%= brand_logo %>" alt="<%= brand_name %>" class="sidebar-brand__logo">
+  <% else %>
+    <span class="sidebar-brand__icon"><%= brand_icon %></span>
+    <span><%= brand_name %></span>
+  <% end %>
+<% end %>
 
 <nav>
   <div class="sidebar-menu__section">

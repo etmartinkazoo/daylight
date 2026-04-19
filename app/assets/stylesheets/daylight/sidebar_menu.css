@@ -59,8 +59,20 @@
 }
 
 .sidebar-brand__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 1.5rem;
   height: 1.5rem;
   background-color: var(--color-primary);
   border-radius: var(--rounded-md);
+  font-size: 0.875rem;
+  line-height: 1;
+}
+
+.sidebar-brand__logo {
+  display: block;
+  max-block-size: 1.75rem;
+  max-inline-size: 100%;
+  object-fit: contain;
 }

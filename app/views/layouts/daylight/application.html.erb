@@ -1,7 +1,8 @@
+<% app_name = daylight_settings["app_name"].presence || "Daylight" %>
 <!DOCTYPE html>
 <html data-controller="color-scheme">
   <head>
-    <title><%= content_for(:title) || "Daylight" %></title>
+    <title><%= content_for(:title) || app_name %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
@@ -22,13 +23,18 @@
     <%= stylesheet_link_tag "css-zero/variables", "data-turbo-track": "reload" %>
     <%= stylesheet_link_tag "daylight/application", "data-turbo-track": "reload" %>
     <%= stylesheet_link_tag "css-zero/utilities", "data-turbo-track": "reload" %>
+    <%= render "layouts/daylight/branding_styles" %>
     <%= javascript_importmap_tags "daylight/application" %>
   </head>
 
   <body>
     <div class="sidebar-layout" data-controller="toggle-class" data-toggle-class-toggle-class="closed">
       <aside id="sidebar">
-        <%= render "daylight/shared/sidebar" %>
+        <% if content_for?(:sidebar) %>
+          <%= yield :sidebar %>
+        <% else %>
+          <%= render "daylight/shared/sidebar" %>
+        <% end %>
       </aside>
 
       <main id="main">

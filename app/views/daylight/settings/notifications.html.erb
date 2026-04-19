@@ -1,0 +1,28 @@
+<%= render layout: "daylight/settings/layout", locals: {
+      active: "notifications",
+      section_label: "Notifications",
+      section_description: "Where to send alerts when something goes wrong."
+    } do %>
+  <%= form_with url: settings_path, method: :patch, class: "flex flex-col gap" do |f| %>
+    <%= hidden_field_tag :section, "notifications" %>
+
+    <div class="card">
+      <h3 class="card__title">Channels</h3>
+      <div class="flex flex-col gap-1">
+        <div class="flex flex-col gap-half">
+          <label for="settings_notification_emails" class="text-sm font-medium">Notification Emails</label>
+          <input type="text" name="settings[notification_emails]" id="settings_notification_emails" value="<%= @settings[:notification_emails] %>" class="input">
+          <p class="text-xs text-subtle">Comma-separated list of email addresses.</p>
+        </div>
+        <div class="flex flex-col gap-half">
+          <label for="settings_slack_webhook_url" class="text-sm font-medium">Slack Webhook URL</label>
+          <input type="text" name="settings[slack_webhook_url]" id="settings_slack_webhook_url" value="<%= @settings[:slack_webhook_url] %>" class="input">
+        </div>
+      </div>
+      <div class="flex items-center gap-1" style="margin-block-start: var(--size-3)">
+        <button type="submit" class="btn btn--primary">Save</button>
+        <%= button_to "Send test notification", settings_notification_test_path, method: :post, class: "btn btn--outline" %>
+      </div>
+    </div>
+  <% end %>
+<% end %>

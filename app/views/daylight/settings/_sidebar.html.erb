@@ -1,0 +1,31 @@
+<%
+  sections = [
+    { key: "general",       label: "General",       path: settings_general_path,       icon: :gear },
+    { key: "branding",      label: "Branding",      path: settings_branding_path,      icon: :sparkles },
+    { key: "notifications", label: "Notifications", path: settings_notifications_path, icon: :bell },
+    { key: "performance",   label: "Performance",   path: settings_performance_path,   icon: :gauge },
+    { key: "ai",            label: "AI",            path: settings_ai_path,            icon: :spark },
+    { key: "scans",         label: "Scans",         path: settings_scans_path,         icon: :shield }
+  ]
+  active = local_assigns[:active] || "general"
+%>
+
+<%= link_to root_path, class: "settings-sidebar__back" do %>
+  <svg class="sidebar-menu__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+  Back to dashboard
+<% end %>
+
+<div class="settings-sidebar__title">Settings</div>
+
+<nav>
+  <ul class="sidebar-menu">
+    <% sections.each do |s| %>
+      <li>
+        <%= link_to s[:path], class: "sidebar-menu__item", aria: { current: (active == s[:key]) ? "page" : nil } do %>
+          <%= render "daylight/settings/icon_#{s[:icon]}" %>
+          <%= s[:label] %>
+        <% end %>
+      </li>
+    <% end %>
+  </ul>
+</nav>

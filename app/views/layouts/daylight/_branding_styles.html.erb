@@ -1,0 +1,19 @@
+<%
+  settings = daylight_settings
+  primary  = Daylight::Color.normalize(settings["primary_color"], fallback: Daylight::Color::DEFAULT_PRIMARY)
+  hover    = Daylight::Color.darken(primary, 0.15)
+  hover_d  = Daylight::Color.lighten(primary, 0.20)
+  subtle   = Daylight::Color.lighten(primary, 0.90)
+  subtle_d = Daylight::Color.darken(primary, 0.60)
+  on_prim  = Daylight::Color.readable_on(primary)
+%>
+<style>
+  :root {
+    --color-primary: light-dark(<%= primary %>, <%= primary %>);
+    --color-primary-hover: light-dark(<%= hover %>, <%= hover_d %>);
+    --color-primary-subtle: light-dark(<%= subtle %>, <%= subtle_d %>);
+    --color-on-primary: <%= on_prim %>;
+  }
+  .sidebar-menu__item[aria-current="page"] { color: var(--color-on-primary); }
+  .sidebar-brand__icon { background-color: var(--color-primary); }
+</style>

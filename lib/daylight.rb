@@ -2,6 +2,7 @@
 
 require "daylight/version"
 require "daylight/configuration"
+require "daylight/color"
 require "daylight/sanitizer"
 require "daylight/database"
 require "daylight/tracker"

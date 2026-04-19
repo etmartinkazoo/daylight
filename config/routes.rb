@@ -41,8 +41,14 @@ Daylight::Engine.routes.draw do
     resource  :proposal, only: [:create, :update], controller: "proposals"
   end
 
-  get  :settings, to: "settings#index"
+  get   :settings, to: "settings#index"
   patch :settings, to: "settings#update"
+  get   "settings/general",       to: "settings#general",       as: :settings_general
+  get   "settings/branding",      to: "settings#branding",      as: :settings_branding
+  get   "settings/notifications", to: "settings#notifications", as: :settings_notifications
+  get   "settings/performance",   to: "settings#performance",   as: :settings_performance
+  get   "settings/ai",            to: "settings#ai",            as: :settings_ai
+  get   "settings/scans",         to: "settings#scans",         as: :settings_scans
   get :health, to: "health#index"
 
   # Export endpoints
