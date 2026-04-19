@@ -31,10 +31,10 @@ module Daylight
 
     def merged_failures
       sq = available? ? sq_failures : []
-      merge(sq, @daylight_failures)
+      merge(sq, @daylight_failures.map { |f| daylight_failure_hash(f) })
     rescue StandardError => e
       Rails.logger.debug "[Daylight] Solid Queue failures query failed: #{e.message}"
-      @daylight_failures
+      @daylight_failures.map { |f| daylight_failure_hash(f) }
     end
 
     private
@@ -61,6 +61,19 @@ module Daylight
       SolidQueue::Process.order(created_at: :desc).map do |p|
         { id: p.id, kind: p.kind, hostname: p.hostname, pid: p.pid, created_at: p.created_at, last_heartbeat_at: p.last_heartbeat_at }
       end
+    end
+
+    def daylight_failure_hash(f)
+      {
+        id: f.id,
+        source: "daylight",
+        job_class: f.job_class,
+        queue: f.queue,
+        error_class: f.error_class,
+        error_message: f.error_message,
+        duration_ms: f.duration_ms,
+        occurred_at: f.occurred_at
+      }
     end
 
     def sq_failures

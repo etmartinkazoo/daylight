@@ -72,12 +72,12 @@
         <tbody>
           <% @failures.each do |job| %>
             <tr>
-              <td class="dl-mono"><%= job.job_class %></td>
-              <td><%= job.queue %></td>
-              <td class="dl-mono"><%= job.error_class %></td>
-              <td><%= truncate(job.error_message.to_s, length: 80) %></td>
-              <td class="text-end"><%= job.duration_ms.to_i %>ms</td>
-              <td class="text-subtle"><%= time_ago_in_words(job.occurred_at) %> ago</td>
+              <td class="dl-mono"><%= job[:job_class] %></td>
+              <td><%= job[:queue] %></td>
+              <td class="dl-mono"><%= job[:error_class] %></td>
+              <td><%= truncate(job[:error_message].to_s, length: 80) %></td>
+              <td class="text-end"><%= job[:duration_ms].to_i %>ms</td>
+              <td class="text-subtle"><%= time_ago_in_words(job[:occurred_at]) %> ago</td>
             </tr>
           <% end %>
         </tbody>
