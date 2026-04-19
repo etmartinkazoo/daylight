@@ -1,14 +1,18 @@
 <%# locals: (context_type:, context_id:, chat: nil) %>
 <% messages = chat&.messages&.order(:created_at) || [] %>
 <% has_pending = messages.any? && messages.last.role == "user" %>
+<% visible_messages = messages.reject { |m| m == messages.first && messages.size > 1 && m.role == "user" && m.content&.include?("acknowledge you understand") } %>
 
 <div class="dl-section">
-  <div class="card">
-    <div class="card__header">
-      <h2 class="card__title">AI Chat</h2>
-      <% if chat %>
-        <span class="text-xs text-subtle"><%= chat.messages.count %> messages</span>
-      <% end %>
+  <div class="card" style="padding: 0; overflow: hidden;">
+    <div style="padding: var(--size-4) var(--size-5); border-block-end: 1px solid var(--color-border);">
+      <div class="flex items-center gap-half">
+        <h2 class="card__title" style="margin: 0;">AI Chat</h2>
+        <span class="badge badge--ai">beta</span>
+        <% if visible_messages.any? %>
+          <span class="text-xs text-subtle" style="margin-inline-start: auto;"><%= visible_messages.size %> messages</span>
+        <% end %>
+      </div>
     </div>
 
     <div id="chat_messages_<%= context_type %>_<%= context_id %>"
@@ -18,43 +22,52 @@
         data-poll-interval-value="2000"
         data-poll-pending
       <% end %>
-      style="max-height: 32rem; overflow-y: auto; margin-block-end: var(--size-3);">
+      style="max-height: 28rem; overflow-y: auto; padding: var(--size-4) var(--size-5);">
 
-      <% if messages.any? %>
-        <% messages.each do |msg| %>
-          <% next if msg == messages.first && messages.size > 1 && msg.role == "user" && msg.content&.include?("acknowledge you understand") %>
-          <div style="margin-block-end: var(--size-3); padding: var(--size-3); border-radius: var(--rounded-lg);
-            background: <%= msg.role == 'user' ? 'var(--color-surface-alt, var(--color-border-light))' : 'transparent' %>;">
-            <div class="flex items-center gap-half" style="margin-block-end: var(--size-1);">
-              <span class="text-xs font-medium"><%= msg.role == "user" ? "You" : "AI" %></span>
-              <span class="text-xs text-subtle"><%= time_ago_in_words(msg.created_at) %> ago</span>
-              <% if msg.model_id.present? %>
-                <span class="badge badge--ai" style="font-size: 0.6rem;"><%= msg.model_id %></span>
+      <% if visible_messages.any? %>
+        <% visible_messages.each do |msg| %>
+          <div style="margin-block-end: var(--size-4);">
+            <div class="flex items-center gap-half" style="margin-block-end: var(--size-2);">
+              <% if msg.role == "user" %>
+                <span style="display: inline-flex; align-items: center; justify-content: center; width: 1.25rem; height: 1.25rem; border-radius: var(--rounded-full); background: var(--color-primary); color: white; font-size: 0.625rem; font-weight: 700;">Y</span>
+                <span class="text-xs font-medium">You</span>
+              <% else %>
+                <span style="display: inline-flex; align-items: center; justify-content: center; width: 1.25rem; height: 1.25rem; border-radius: var(--rounded-full); background: light-dark(#ede9fe, #1a0a2e); color: light-dark(#7c3aed, #a78bfa); font-size: 0.625rem; font-weight: 700;">AI</span>
+                <span class="text-xs font-medium">AI</span>
               <% end %>
+              <span class="text-xs text-subtle"><%= time_ago_in_words(msg.created_at) %> ago</span>
             </div>
-            <div style="font-size: 0.875rem; line-height: 1.6; white-space: pre-wrap;"><%= msg.content %></div>
+            <div style="font-size: 0.8125rem; line-height: 1.7; white-space: pre-wrap; padding-inline-start: 1.75rem;"><%= msg.content %></div>
           </div>
         <% end %>
 
         <% if has_pending %>
-          <div style="padding: var(--size-3);">
+          <div style="padding-inline-start: 1.75rem;">
             <span class="badge badge--ai-pending">AI is thinking...</span>
           </div>
         <% end %>
       <% else %>
-        <p class="text-xs text-subtle" style="padding: var(--size-2);">Start a conversation about this <%= context_type %>. The AI will have full context of the error details, backtrace, and investigation.</p>
+        <p class="text-sm text-subtle">Ask a question about this <%= context_type %>. The AI has full context of the details, backtrace, and any investigation.</p>
       <% end %>
     </div>
 
     <% if Daylight::AI.configured? %>
-      <%= form_with url: context_chats_path, method: :post, data: { turbo: false }, style: "display: flex; gap: var(--size-2);" do |f| %>
-        <%= hidden_field_tag :context_type, context_type %>
-        <%= hidden_field_tag :context_id, context_id %>
-        <%= f.text_field :content, placeholder: "Ask about this #{context_type}...", class: "input", style: "flex: 1;", autofocus: false %>
-        <button type="submit" class="btn btn--primary">Send</button>
-      <% end %>
+      <div style="padding: var(--size-3) var(--size-5); border-block-start: 1px solid var(--color-border); background: var(--color-surface-alt, var(--color-border-light));">
+        <%= form_with url: context_chats_path, method: :post, data: { turbo: false } do |f| %>
+          <%= hidden_field_tag :context_type, context_type %>
+          <%= hidden_field_tag :context_id, context_id %>
+          <div style="display: flex; gap: var(--size-2); align-items: flex-end;">
+            <textarea name="content" placeholder="Ask about this <%= context_type %>..." class="input" rows="2"
+              style="flex: 1; resize: vertical; min-height: 2.5rem; font-size: 0.8125rem;"
+              onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();this.form.requestSubmit();}"></textarea>
+            <button type="submit" class="btn btn--primary" style="white-space: nowrap;">Send</button>
+          </div>
+        <% end %>
+      </div>
     <% else %>
-      <p class="text-xs text-subtle">Configure an AI API key in Settings to use chat.</p>
+      <div style="padding: var(--size-3) var(--size-5); border-block-start: 1px solid var(--color-border);">
+        <p class="text-xs text-subtle">Configure an AI API key in Settings to use chat.</p>
+      </div>
     <% end %>
   </div>
 </div>

@@ -111,7 +111,8 @@ module Daylight
           Daylight::InvestigationQueueRecord,
           Daylight::ChatRecord,
           Daylight::ChatMessageRecord,
-          Daylight::ToolCallRecord
+          Daylight::ToolCallRecord,
+          Daylight::ModelRecord
         ]
       end
     end

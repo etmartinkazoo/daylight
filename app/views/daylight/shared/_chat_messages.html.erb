@@ -1,6 +1,7 @@
 <%# locals: (chat:) %>
 <% messages = chat.messages.order(:created_at) %>
 <% has_pending = messages.any? && messages.last.role == "user" %>
+<% visible_messages = messages.reject { |m| m == messages.first && messages.size > 1 && m.role == "user" && m.content&.include?("acknowledge you understand") } %>
 
 <div id="chat_messages_<%= chat.context_type %>_<%= chat.context_id %>"
   <% if has_pending %>
@@ -9,25 +10,26 @@
     data-poll-interval-value="2000"
     data-poll-pending
   <% end %>
-  style="max-height: 32rem; overflow-y: auto; margin-block-end: var(--size-3);">
+  style="max-height: 28rem; overflow-y: auto; padding: var(--size-4) var(--size-5);">
 
-  <% messages.each do |msg| %>
-    <% next if msg == messages.first && messages.size > 1 && msg.role == "user" && msg.content&.include?("acknowledge you understand") %>
-    <div style="margin-block-end: var(--size-3); padding: var(--size-3); border-radius: var(--rounded-lg);
-      background: <%= msg.role == 'user' ? 'var(--color-surface-alt, var(--color-border-light))' : 'transparent' %>;">
-      <div class="flex items-center gap-half" style="margin-block-end: var(--size-1);">
-        <span class="text-xs font-medium"><%= msg.role == "user" ? "You" : "AI" %></span>
-        <span class="text-xs text-subtle"><%= time_ago_in_words(msg.created_at) %> ago</span>
-        <% if msg.model_id.present? %>
-          <span class="badge badge--ai" style="font-size: 0.6rem;"><%= msg.model_id %></span>
+  <% visible_messages.each do |msg| %>
+    <div style="margin-block-end: var(--size-4);">
+      <div class="flex items-center gap-half" style="margin-block-end: var(--size-2);">
+        <% if msg.role == "user" %>
+          <span style="display: inline-flex; align-items: center; justify-content: center; width: 1.25rem; height: 1.25rem; border-radius: var(--rounded-full); background: var(--color-primary); color: white; font-size: 0.625rem; font-weight: 700;">Y</span>
+          <span class="text-xs font-medium">You</span>
+        <% else %>
+          <span style="display: inline-flex; align-items: center; justify-content: center; width: 1.25rem; height: 1.25rem; border-radius: var(--rounded-full); background: light-dark(#ede9fe, #1a0a2e); color: light-dark(#7c3aed, #a78bfa); font-size: 0.625rem; font-weight: 700;">AI</span>
+          <span class="text-xs font-medium">AI</span>
         <% end %>
+        <span class="text-xs text-subtle"><%= time_ago_in_words(msg.created_at) %> ago</span>
       </div>
-      <div style="font-size: 0.875rem; line-height: 1.6; white-space: pre-wrap;"><%= msg.content %></div>
+      <div style="font-size: 0.8125rem; line-height: 1.7; white-space: pre-wrap; padding-inline-start: 1.75rem;"><%= msg.content %></div>
     </div>
   <% end %>
 
   <% if has_pending %>
-    <div style="padding: var(--size-3);">
+    <div style="padding-inline-start: 1.75rem;">
       <span class="badge badge--ai-pending">AI is thinking...</span>
     </div>
   <% end %>

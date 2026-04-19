@@ -316,6 +316,15 @@ module Daylight
         add_column_once(conn, :daylight_solutions,    :incident_id,              :integer, index: true)
         add_column_once(conn, :daylight_errors,        :ai_solution,              :text)
 
+        create_table_once(conn, :daylight_models) do |t|
+          t.string   :model_id,   null: false
+          t.string   :name
+          t.string   :provider
+          t.string   :model_family
+          t.datetime :created_at,  null: false
+          t.index :model_id, unique: true
+        end
+
         create_table_once(conn, :daylight_investigation_queue) do |t|
           t.string   :subject_type,  null: false   # error, incident
           t.integer  :subject_id,    null: false
