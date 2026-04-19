@@ -3,7 +3,7 @@
       section_label: "Performance",
       section_description: "Thresholds and retention controls."
     } do %>
-  <%= form_with url: settings_path, method: :patch, class: "flex flex-col gap" do |f| %>
+  <%= form_with url: settings_path, method: :patch, data: { turbo: false }, class: "flex flex-col gap" do |f| %>
     <%= hidden_field_tag :section, "performance" %>
 
     <div class="card">

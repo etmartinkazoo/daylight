@@ -3,7 +3,7 @@
       section_label: "Branding",
       section_description: "Customize how Daylight appears in this app."
     } do %>
-  <%= form_with url: settings_path, method: :patch, class: "flex flex-col gap" do |f| %>
+  <%= form_with url: settings_path, method: :patch, data: { turbo: false }, class: "flex flex-col gap" do |f| %>
     <%= hidden_field_tag :section, "branding" %>
 
     <div class="card">

@@ -3,7 +3,7 @@
       section_label: "AI",
       section_description: "API keys, model selection, and auto-investigation settings."
     } do %>
-  <%= form_with url: settings_path, method: :patch, class: "flex flex-col gap" do |f| %>
+  <%= form_with url: settings_path, method: :patch, data: { turbo: false }, class: "flex flex-col gap" do |f| %>
     <%= hidden_field_tag :section, "ai" %>
 
     <div class="card">

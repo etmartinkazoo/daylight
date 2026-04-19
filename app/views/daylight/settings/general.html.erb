@@ -3,7 +3,7 @@
       section_label: "General",
       section_description: "Connect Daylight to your repository."
     } do %>
-  <%= form_with url: settings_path, method: :patch, class: "flex flex-col gap" do |f| %>
+  <%= form_with url: settings_path, method: :patch, data: { turbo: false }, class: "flex flex-col gap" do |f| %>
     <%= hidden_field_tag :section, "general" %>
 
     <div class="card">
