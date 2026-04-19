@@ -50,6 +50,7 @@ module Daylight
         all_record_classes.each { |klass| klass.establish_connection(config) }
 
         migrate!
+        all_record_classes.each { |klass| klass.reset_column_information }
         @connected = true
       end
 
