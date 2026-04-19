@@ -14,7 +14,7 @@ module Daylight
 
         unless Daylight::AI.configured?
           incident.update!(
-            investigation: "AI investigation unavailable — configure a Gemini or Anthropic API key in Settings.",
+            investigation: "AI investigation unavailable — configure an API key in Settings.",
             status: "open"
           )
           return
@@ -25,7 +25,7 @@ module Daylight
 
         begin
           response = Timeout.timeout(INVESTIGATION_TIMEOUT) do
-            chat = Daylight::AI.chat(model: "claude-sonnet-4-6")
+            chat = Daylight::AI.chat
             chat.ask(prompt)
           end
 

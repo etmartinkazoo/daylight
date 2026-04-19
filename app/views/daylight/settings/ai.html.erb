@@ -1,39 +1,68 @@
 <%= render layout: "daylight/settings/layout", locals: {
       active: "ai",
       section_label: "AI",
-      section_description: "Credentials and context for AI-assisted solutions."
+      section_description: "API keys, model selection, and auto-investigation settings."
     } do %>
   <%= form_with url: settings_path, method: :patch, class: "flex flex-col gap" do |f| %>
     <%= hidden_field_tag :section, "ai" %>
 
     <div class="card">
-      <h3 class="card__title">Models</h3>
+      <h3 class="card__title">Default Model</h3>
+      <div class="flex flex-col gap-half">
+        <label for="settings_default_ai_model" class="text-sm font-medium">Model</label>
+        <select name="settings[default_ai_model]" id="settings_default_ai_model" class="input">
+          <% Daylight::AI::MODELS.each do |model| %>
+            <option value="<%= model[:id] %>" <%= "selected" if @settings[:default_ai_model] == model[:id] %>>
+              <%= model[:label] %> (<%= model[:provider] %>)
+            </option>
+          <% end %>
+        </select>
+        <p class="text-xs text-subtle">Used for auto-investigation of errors and incidents. Only models with a configured API key will work.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="card__title">API Keys</h3>
       <div class="flex flex-col gap-1">
         <div class="flex flex-col gap-half">
-          <label for="settings_default_ai_model" class="text-sm font-medium">Default AI Model</label>
-          <select name="settings[default_ai_model]" id="settings_default_ai_model" class="input">
-            <% %w[gemini anthropic].each do |model| %>
-              <option value="<%= model %>" <%= "selected" if @settings[:default_ai_model] == model %>><%= model.capitalize %></option>
-            <% end %>
-          </select>
+          <label for="settings_openai_api_key" class="text-sm font-medium">OpenAI API Key</label>
+          <input type="password" name="settings[openai_api_key]" id="settings_openai_api_key" value="<%= @settings[:openai_api_key] %>" class="input" placeholder="sk-...">
+          <p class="text-xs text-subtle">For GPT-4.1, o3, and o4-mini models.</p>
+        </div>
+        <div class="flex flex-col gap-half">
+          <label for="settings_anthropic_api_key" class="text-sm font-medium">Anthropic API Key</label>
+          <input type="password" name="settings[anthropic_api_key]" id="settings_anthropic_api_key" value="<%= @settings[:anthropic_api_key] %>" class="input" placeholder="sk-ant-...">
+          <p class="text-xs text-subtle">For Claude Haiku, Sonnet, and Opus models.</p>
         </div>
         <div class="flex flex-col gap-half">
           <label for="settings_gemini_api_key" class="text-sm font-medium">Gemini API Key</label>
           <input type="password" name="settings[gemini_api_key]" id="settings_gemini_api_key" value="<%= @settings[:gemini_api_key] %>" class="input">
-        </div>
-        <div class="flex flex-col gap-half">
-          <label for="settings_anthropic_api_key" class="text-sm font-medium">Anthropic API Key</label>
-          <input type="password" name="settings[anthropic_api_key]" id="settings_anthropic_api_key" value="<%= @settings[:anthropic_api_key] %>" class="input">
+          <p class="text-xs text-subtle">For Gemini 2.5 Flash and Pro models.</p>
         </div>
       </div>
     </div>
 
     <div class="card">
-      <h3 class="card__title">GitHub Token</h3>
-      <div class="flex flex-col gap-half">
-        <label for="settings_github_api_token" class="text-sm font-medium">Personal Access Token</label>
-        <input type="password" name="settings[github_api_token]" id="settings_github_api_token" value="<%= @settings[:github_api_token] %>" class="input">
-        <p class="text-xs text-subtle">Used when AI opens pull requests for proposed fixes.</p>
+      <h3 class="card__title">GitHub</h3>
+      <div class="flex flex-col gap-1">
+        <div class="flex flex-col gap-half">
+          <label for="settings_github_api_token" class="text-sm font-medium">Personal Access Token</label>
+          <input type="password" name="settings[github_api_token]" id="settings_github_api_token" value="<%= @settings[:github_api_token] %>" class="input">
+          <p class="text-xs text-subtle">Used to fetch source code for AI analysis and to open pull requests for proposed fixes.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="card__title">Auto-Investigation</h3>
+      <div class="flex flex-col gap-1">
+        <div class="flex items-center gap-half">
+          <input type="hidden" name="settings[auto_investigate_errors]" value="false">
+          <input type="checkbox" name="settings[auto_investigate_errors]" id="settings_auto_investigate_errors" value="true"
+            <%= "checked" if @settings[:auto_investigate_errors] == "true" %>>
+          <label for="settings_auto_investigate_errors" class="text-sm font-medium">Investigate new errors and incidents automatically</label>
+        </div>
+        <p class="text-xs text-subtle">When enabled, the AI agent will automatically analyze every new error (first occurrence) and every new incident, proposing a root cause and fix. Requires at least one API key configured above.</p>
       </div>
     </div>
 
@@ -42,7 +71,7 @@
       <div class="flex flex-col gap-half">
         <label for="settings_ai_context_notes" class="text-sm font-medium">AI Context Notes</label>
         <textarea name="settings[ai_context_notes]" id="settings_ai_context_notes" class="input" rows="4"><%= @settings[:ai_context_notes] %></textarea>
-        <p class="text-xs text-subtle">Extra context passed to the model when generating solutions.</p>
+        <p class="text-xs text-subtle">Extra context passed to the model when generating solutions (e.g. app architecture, known quirks, team conventions).</p>
       </div>
     </div>
 

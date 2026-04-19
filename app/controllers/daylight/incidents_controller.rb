@@ -36,6 +36,14 @@ module Daylight
       @related_deploy = incident.related_deploy
     end
 
+    def investigate
+      incident = Database::IncidentRecord.find(params[:id])
+      incident.update!(status: "investigating")
+      Daylight::InvestigateIncidentJob.perform_later(incident.id)
+      flash[:success] = "AI investigation started"
+      redirect_to incident_path(incident)
+    end
+
     def update
       incident = Database::IncidentRecord.find(params[:id])
 

@@ -32,6 +32,13 @@ module Daylight
       redirect_to errors_path
     end
 
+    def investigate
+      error = Database::ErrorRecord.find(params[:id])
+      Daylight::InvestigateErrorJob.perform_later(error.id)
+      flash[:success] = "AI investigation started"
+      redirect_to error_path(error)
+    end
+
     private
 
     def render_errors_list(status)

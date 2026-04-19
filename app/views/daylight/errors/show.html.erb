@@ -32,6 +32,27 @@
   </div>
 </div>
 
+<% if @error.ai_solution.present? %>
+  <div class="dl-section">
+    <div class="card">
+      <div class="card__header">
+        <h2 class="card__title">AI Analysis</h2>
+      </div>
+      <div style="font-size: 0.875rem; line-height: 1.6; white-space: pre-wrap;"><%= @error.ai_solution %></div>
+    </div>
+  </div>
+<% elsif Daylight::AI.configured? %>
+  <div class="dl-section">
+    <div class="card">
+      <div class="card__header">
+        <h2 class="card__title">AI Analysis</h2>
+        <%= button_to "Investigate", investigate_error_path(@error.id), method: :post, class: "btn btn--sm btn--primary" %>
+      </div>
+      <p class="text-xs text-subtle">Run the AI agent to analyze this error and propose a fix.</p>
+    </div>
+  </div>
+<% end %>
+
 <% if @error.backtrace_summary.present? %>
   <div class="dl-section">
     <div class="card">

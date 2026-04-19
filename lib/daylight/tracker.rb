@@ -107,6 +107,15 @@ module Daylight
         ActiveSupport::Notifications.instrument("error_recorded.daylight",
                                                 error: err, was_new: was_new, was_reopened: was_reopened)
 
+        # Auto-investigate new errors with AI
+        if was_new && auto_investigate?
+          begin
+            Daylight::InvestigateErrorJob.perform_later(err.id)
+          rescue StandardError
+            # Fire-and-forget: don't break error recording if job enqueue fails
+          end
+        end
+
         err
       rescue Exception => e # rubocop:disable Lint/RescueException
         Rails.logger.error("[Daylight] Failed to record error: #{e.class}: #{e.message}") if defined?(Rails)
@@ -142,6 +151,11 @@ module Daylight
       def ignored?(error)
         Daylight.configuration.ignored_exceptions.include?(error.class.name) ||
           IGNORED_ERRORS.include?(error.class.name)
+      end
+
+      def auto_investigate?
+        Daylight::AI.configured? &&
+          Database.get_setting("auto_investigate_errors") != "false"
       end
     end
   end

@@ -314,6 +314,7 @@ module Daylight
         add_column_once(conn, :daylight_errors,        :max_duration_ms,          :float)
         add_column_once(conn, :daylight_errors,        :threshold_exceeded_count, :integer, default: 0)
         add_column_once(conn, :daylight_solutions,    :incident_id,              :integer, index: true)
+        add_column_once(conn, :daylight_errors,        :ai_solution,              :text)
       end
     end
   end

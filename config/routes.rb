@@ -7,7 +7,9 @@ Daylight::Engine.routes.draw do
     get "all",      to: "all#index",      as: :all
   end
 
-  resources :errors, only: [:index, :show, :update, :destroy], constraints: { id: /\d+/ }
+  resources :errors, only: [:index, :show, :update, :destroy], constraints: { id: /\d+/ } do
+    post :investigate, on: :member
+  end
   post "errors/batch", to: "error_batches#create", as: :error_batch
 
   resources :requests, only: [:index]
@@ -19,7 +21,9 @@ Daylight::Engine.routes.draw do
   resources :deploys, only: [:index, :create]
   resources :http_requests, only: [:index]
   resources :cache, only: [:index]
-  resources :incidents, only: [:index, :show, :update]
+  resources :incidents, only: [:index, :show, :update] do
+    post :investigate, on: :member
+  end
 
   resources :solutions, only: [:index, :show, :update]
   namespace :solutions do

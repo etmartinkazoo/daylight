@@ -24,6 +24,7 @@ module Daylight
       SENSITIVE_KEYS = {
         "gemini_api_key" => "gemini_api_key_saved_at",
         "anthropic_api_key" => "anthropic_api_key_saved_at",
+        "openai_api_key" => "openai_api_key_saved_at",
         "github_api_token" => "github_api_token_saved_at"
       }.freeze
 

@@ -67,11 +67,12 @@ module Daylight
       notification_emails slack_webhook_url
       slow_request_threshold_ms slow_query_threshold_ms
       retention_days sample_rate ai_context_notes
-      gemini_api_key anthropic_api_key default_ai_model
+      gemini_api_key anthropic_api_key openai_api_key default_ai_model
       github_api_token
       performance_scan_enabled performance_scan_interval
       security_scan_enabled security_scan_interval security_scan_min_confidence
       solutions_scan_enabled
+      auto_investigate_errors
     ].freeze
 
     SECTION_PATHS = {
@@ -103,7 +104,10 @@ module Daylight
         gemini_api_key_saved_at: settings["gemini_api_key_saved_at"],
         anthropic_api_key: settings["anthropic_api_key"].present? ? "••••••••" : "",
         anthropic_api_key_saved_at: settings["anthropic_api_key_saved_at"],
+        openai_api_key: settings["openai_api_key"].present? ? "••••••••" : "",
+        openai_api_key_saved_at: settings["openai_api_key_saved_at"],
         default_ai_model: settings["default_ai_model"] || "gemini-2.5-flash",
+        auto_investigate_errors: settings["auto_investigate_errors"] || "true",
         github_api_token: settings["github_api_token"].present? ? "••••••••" : "",
         github_api_token_saved_at: settings["github_api_token_saved_at"],
         solutions_scan_enabled: settings["solutions_scan_enabled"] || "false",

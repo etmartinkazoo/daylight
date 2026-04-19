@@ -134,6 +134,11 @@ module Daylight
           occurred_at: now
         )
 
+        # Auto-investigate new incidents with AI
+        if Daylight::AI.configured? && Database.get_setting("auto_investigate_errors") != "false"
+          investigate_async(incident)
+        end
+
         incident
       end
 
