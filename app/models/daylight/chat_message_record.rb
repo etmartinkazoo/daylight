@@ -5,8 +5,10 @@ module Daylight
     self.table_name = "daylight_chat_messages"
 
     acts_as_message chat_class: "Daylight::ChatRecord",
+                    chat_foreign_key: :chat_id,
                     model_class: "Daylight::ModelRecord",
-                    tool_call_class: "Daylight::ToolCallRecord"
+                    tool_call_class: "Daylight::ToolCallRecord",
+                    tool_calls_foreign_key: :chat_message_id
 
     # Broadcast completed messages to the chat's Turbo Stream
     after_create_commit :broadcast_message, if: -> { role == "assistant" && content.present? }

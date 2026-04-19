@@ -4,6 +4,7 @@ module Daylight
   class ToolCallRecord < Record
     self.table_name = "daylight_tool_calls"
 
-    acts_as_tool_call message_class: "Daylight::ChatMessageRecord"
+    acts_as_tool_call message_class: "Daylight::ChatMessageRecord",
+                      message_foreign_key: :chat_message_id
   end
 end

@@ -44,13 +44,11 @@ module Daylight
       return existing if existing
 
       model_name = Daylight::AI.default_model
-      chat = Database::ChatRecord.new(
+      chat = Database::ChatRecord.create!(
+        model: model_name,
         context_type: params[:context_type],
         context_id: params[:context_id]
       )
-      chat.model = model_name
-      chat.assume_model_exists = true
-      chat.save!
 
       # Set system instructions with error/incident context
       system_prompt = build_system_prompt(chat)
