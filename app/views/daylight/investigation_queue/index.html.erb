@@ -1,0 +1,83 @@
+<% content_for(:title) { "AI Investigation Queue - Daylight" } %>
+
+<%= render "daylight/shared/page_header", title: "AI Investigation Queue" %>
+
+<%= render "daylight/shared/tabs", current: @status, tabs: [
+  { label: "All",           value: "all",           path: investigation_queue_index_path(status: "all"),           count: @counts.values.sum },
+  { label: "Pending",       value: "pending",       path: investigation_queue_index_path(status: "pending"),       count: @counts[:pending] },
+  { label: "Investigating", value: "investigating", path: investigation_queue_index_path(status: "investigating"), count: @counts[:investigating] },
+  { label: "Completed",     value: "completed",     path: investigation_queue_index_path(status: "completed"),     count: @counts[:completed] },
+  { label: "Failed",        value: "failed",        path: investigation_queue_index_path(status: "failed"),        count: @counts[:failed] }
+] %>
+
+<div class="dl-stat-grid" style="margin-block-start: var(--size-4);">
+  <%= render "daylight/shared/stat_card", label: "Pending", value: @counts[:pending] %>
+  <%= render "daylight/shared/stat_card", label: "In Progress", value: @counts[:investigating] %>
+  <%= render "daylight/shared/stat_card", label: "Completed", value: @counts[:completed] %>
+  <%= render "daylight/shared/stat_card", label: "Failed", value: @counts[:failed] %>
+</div>
+
+<% if @items.any? %>
+  <div class="card card--flush" style="margin-block-start: var(--size-4);">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Status</th>
+          <th>Type</th>
+          <th>Title</th>
+          <th>Priority</th>
+          <th>Queued</th>
+          <th>Duration</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @items.each do |item| %>
+          <% subject_path = item.subject_type == "error" ? error_path(item.subject_id) : incident_path(item.subject_id) %>
+          <tr style="cursor: pointer;" onclick="window.location='<%= subject_path %>'">
+            <td>
+              <% badge_class = case item.status
+                when "pending"       then "badge--yellow"
+                when "investigating" then "badge--ai-pending"
+                when "completed"     then "badge--green"
+                when "failed"        then "badge--red"
+                end %>
+              <span class="badge <%= badge_class %>"><%= item.status %></span>
+            </td>
+            <td>
+              <span class="badge badge--default"><%= item.subject_type %></span>
+            </td>
+            <td class="text-sm" style="max-width: 24rem;">
+              <%= link_to truncate(item.title, length: 80), subject_path, style: "color: inherit;" %>
+            </td>
+            <td>
+              <% if item.priority == "high" %>
+                <span class="badge badge--red">high</span>
+              <% else %>
+                <span class="text-xs text-subtle"><%= item.priority %></span>
+              <% end %>
+            </td>
+            <td class="text-xs text-subtle"><%= time_ago_in_words(item.queued_at) %> ago</td>
+            <td class="text-xs text-subtle">
+              <% if item.started_at && item.completed_at %>
+                <%= ((Time.parse(item.completed_at.to_s) - Time.parse(item.started_at.to_s))).round(1) %>s
+              <% elsif item.started_at %>
+                <span class="badge badge--ai-pending">running</span>
+              <% else %>
+                —
+              <% end %>
+            </td>
+          </tr>
+          <% if item.status == "failed" && item.error_message.present? %>
+            <tr>
+              <td colspan="6" class="text-xs" style="color: var(--color-negative); padding-block-start: 0;">
+                <%= truncate(item.error_message, length: 200) %>
+              </td>
+            </tr>
+          <% end %>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <%= render "daylight/shared/empty_state", message: "No investigations in the queue." %>
+<% end %>

@@ -1,0 +1,60 @@
+<%# locals: (context_type:, context_id:, chat: nil) %>
+<% messages = chat&.messages&.order(:created_at) || [] %>
+<% has_pending = messages.any? && messages.last.role == "user" %>
+
+<div class="dl-section">
+  <div class="card">
+    <div class="card__header">
+      <h2 class="card__title">AI Chat</h2>
+      <% if chat %>
+        <span class="text-xs text-subtle"><%= chat.messages.count %> messages</span>
+      <% end %>
+    </div>
+
+    <div id="chat_messages_<%= context_type %>_<%= context_id %>"
+      <% if has_pending %>
+        data-controller="poll"
+        data-poll-url-value="<%= messages_context_chats_path(context_type: context_type, context_id: context_id) %>"
+        data-poll-interval-value="2000"
+        data-poll-pending
+      <% end %>
+      style="max-height: 32rem; overflow-y: auto; margin-block-end: var(--size-3);">
+
+      <% if messages.any? %>
+        <% messages.each do |msg| %>
+          <% next if msg == messages.first && messages.size > 1 && msg.role == "user" && msg.content&.include?("acknowledge you understand") %>
+          <div style="margin-block-end: var(--size-3); padding: var(--size-3); border-radius: var(--rounded-lg);
+            background: <%= msg.role == 'user' ? 'var(--color-surface-alt, var(--color-border-light))' : 'transparent' %>;">
+            <div class="flex items-center gap-half" style="margin-block-end: var(--size-1);">
+              <span class="text-xs font-medium"><%= msg.role == "user" ? "You" : "AI" %></span>
+              <span class="text-xs text-subtle"><%= time_ago_in_words(msg.created_at) %> ago</span>
+              <% if msg.model_id.present? %>
+                <span class="badge badge--ai" style="font-size: 0.6rem;"><%= msg.model_id %></span>
+              <% end %>
+            </div>
+            <div style="font-size: 0.875rem; line-height: 1.6; white-space: pre-wrap;"><%= msg.content %></div>
+          </div>
+        <% end %>
+
+        <% if has_pending %>
+          <div style="padding: var(--size-3);">
+            <span class="badge badge--ai-pending">AI is thinking...</span>
+          </div>
+        <% end %>
+      <% else %>
+        <p class="text-xs text-subtle" style="padding: var(--size-2);">Start a conversation about this <%= context_type %>. The AI will have full context of the error details, backtrace, and investigation.</p>
+      <% end %>
+    </div>
+
+    <% if Daylight::AI.configured? %>
+      <%= form_with url: context_chats_path, method: :post, data: { turbo: false }, style: "display: flex; gap: var(--size-2);" do |f| %>
+        <%= hidden_field_tag :context_type, context_type %>
+        <%= hidden_field_tag :context_id, context_id %>
+        <%= f.text_field :content, placeholder: "Ask about this #{context_type}...", class: "input", style: "flex: 1;", autofocus: false %>
+        <button type="submit" class="btn btn--primary">Send</button>
+      <% end %>
+    <% else %>
+      <p class="text-xs text-subtle">Configure an AI API key in Settings to use chat.</p>
+    <% end %>
+  </div>
+</div>

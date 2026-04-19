@@ -1,0 +1,34 @@
+<%# locals: (chat:) %>
+<% messages = chat.messages.order(:created_at) %>
+<% has_pending = messages.any? && messages.last.role == "user" %>
+
+<div id="chat_messages_<%= chat.context_type %>_<%= chat.context_id %>"
+  <% if has_pending %>
+    data-controller="poll"
+    data-poll-url-value="<%= messages_context_chats_path(context_type: chat.context_type, context_id: chat.context_id) %>"
+    data-poll-interval-value="2000"
+    data-poll-pending
+  <% end %>
+  style="max-height: 32rem; overflow-y: auto; margin-block-end: var(--size-3);">
+
+  <% messages.each do |msg| %>
+    <% next if msg == messages.first && messages.size > 1 && msg.role == "user" && msg.content&.include?("acknowledge you understand") %>
+    <div style="margin-block-end: var(--size-3); padding: var(--size-3); border-radius: var(--rounded-lg);
+      background: <%= msg.role == 'user' ? 'var(--color-surface-alt, var(--color-border-light))' : 'transparent' %>;">
+      <div class="flex items-center gap-half" style="margin-block-end: var(--size-1);">
+        <span class="text-xs font-medium"><%= msg.role == "user" ? "You" : "AI" %></span>
+        <span class="text-xs text-subtle"><%= time_ago_in_words(msg.created_at) %> ago</span>
+        <% if msg.model_id.present? %>
+          <span class="badge badge--ai" style="font-size: 0.6rem;"><%= msg.model_id %></span>
+        <% end %>
+      </div>
+      <div style="font-size: 0.875rem; line-height: 1.6; white-space: pre-wrap;"><%= msg.content %></div>
+    </div>
+  <% end %>
+
+  <% if has_pending %>
+    <div style="padding: var(--size-3);">
+      <span class="badge badge--ai-pending">AI is thinking...</span>
+    </div>
+  <% end %>
+</div>

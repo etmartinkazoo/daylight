@@ -12,6 +12,7 @@ module Daylight
     def show
       @error = Database::ErrorRecord.find(params[:id])
       @occurrences = Database::OccurrenceRecord.where(error_id: @error.id).order(occurred_at: :desc).limit(50)
+      @chat = Database::ChatRecord.find_by(context_type: "error", context_id: @error.id)
     end
 
     def update
@@ -35,6 +36,11 @@ module Daylight
     def investigate
       error = Database::ErrorRecord.find(params[:id])
       error.update!(ai_solution: "") # empty string = investigating state
+      item = Database::InvestigationQueueRecord.enqueue(
+        subject_type: "error", subject_id: error.id,
+        title: "#{error.error_class}: #{error.message}".truncate(200)
+      )
+      # Run immediately for manual requests
       Daylight::InvestigateErrorJob.perform_later(error.id)
       redirect_to error_path(error)
     end

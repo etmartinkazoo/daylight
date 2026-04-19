@@ -34,6 +34,8 @@
 
 <%= render "daylight/errors/ai_analysis", error: @error %>
 
+<%= render "daylight/shared/chat", context_type: "error", context_id: @error.id, chat: @chat %>
+
 <% if @error.backtrace_summary.present? %>
   <div class="dl-section">
     <div class="card">

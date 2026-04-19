@@ -134,9 +134,15 @@ module Daylight
           occurred_at: now
         )
 
-        # Auto-investigate new incidents with AI
-        if Daylight::AI.configured? && Database.get_setting("auto_investigate_errors") != "false"
-          investigate_async(incident)
+        # Queue aggregate anomalies (spikes) for AI investigation.
+        # Skip "new_error" — those are handled via the error's own queue item.
+        if type != "new_error" && Daylight::AI.configured? && Database.get_setting("auto_investigate_errors") != "false"
+          Database::InvestigationQueueRecord.enqueue(
+            subject_type: "incident",
+            subject_id: incident.id,
+            title: title.truncate(200),
+            priority: severity == "critical" ? "high" : "normal"
+          )
         end
 
         incident

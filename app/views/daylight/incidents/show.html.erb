@@ -29,7 +29,21 @@
   </div>
 </div>
 
-<%= render "daylight/incidents/investigation", incident: @incident %>
+<% if @incident.incident_type == "new_error" && !@incident.investigation.present? && @related_error&.ai_solution.present? %>
+  <div class="dl-section">
+    <div class="card">
+      <div class="card__header">
+        <h2 class="card__title">AI Analysis</h2>
+        <span class="badge badge--ai">From error</span>
+      </div>
+      <div style="font-size: 0.875rem; line-height: 1.6; white-space: pre-wrap;"><%= @related_error.ai_solution %></div>
+    </div>
+  </div>
+<% else %>
+  <%= render "daylight/incidents/investigation", incident: @incident %>
+<% end %>
+
+<%= render "daylight/shared/chat", context_type: "incident", context_id: @incident.id, chat: @chat %>
 
 <% if @related_error %>
   <div class="dl-section">

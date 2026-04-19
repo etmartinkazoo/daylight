@@ -27,6 +27,7 @@ Daylight::Engine.routes.draw do
     get :ai_status, on: :member
   end
 
+  resources :investigation_queue, only: [:index]
   resources :solutions, only: [:index, :show, :update]
   namespace :solutions do
     resource :generation, only: [:create]
@@ -35,6 +36,11 @@ Daylight::Engine.routes.draw do
     resource :chat,       only: [:create], controller: "solutions/chats"
     resource :push,       only: [:create], controller: "solutions/pushes"
     resource :generation, only: [:update], controller: "solutions/generations"
+  end
+
+  # Context-bound chat (errors/incidents)
+  resources :context_chats, only: [:create] do
+    get :messages, on: :collection
   end
 
   # AI chat endpoints

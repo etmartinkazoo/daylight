@@ -315,6 +315,21 @@ module Daylight
         add_column_once(conn, :daylight_errors,        :threshold_exceeded_count, :integer, default: 0)
         add_column_once(conn, :daylight_solutions,    :incident_id,              :integer, index: true)
         add_column_once(conn, :daylight_errors,        :ai_solution,              :text)
+
+        create_table_once(conn, :daylight_investigation_queue) do |t|
+          t.string   :subject_type,  null: false   # error, incident
+          t.integer  :subject_id,    null: false
+          t.string   :status,        default: "pending", null: false  # pending, investigating, completed, failed
+          t.string   :title,         null: false
+          t.string   :priority,      default: "normal"   # high, normal, low
+          t.datetime :queued_at,     null: false
+          t.datetime :started_at
+          t.datetime :completed_at
+          t.text     :error_message
+          t.index :status
+          t.index :queued_at
+          t.index [:subject_type, :subject_id], unique: true
+        end
       end
     end
   end

@@ -34,13 +34,18 @@ module Daylight
       @incident = incident
       @related_error = incident.related_error
       @related_deploy = incident.related_deploy
+      @chat = Database::ChatRecord.find_by(context_type: "incident", context_id: incident.id)
     end
 
     def investigate
       incident = Database::IncidentRecord.find(params[:id])
       incident.update!(status: "investigating")
+      Database::InvestigationQueueRecord.enqueue(
+        subject_type: "incident", subject_id: incident.id,
+        title: incident.title.truncate(200)
+      )
+      # Run immediately for manual requests
       Daylight::InvestigateIncidentJob.perform_later(incident.id)
-      flash[:success] = "AI investigation started"
       redirect_to incident_path(incident)
     end
 

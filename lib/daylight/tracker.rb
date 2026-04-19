@@ -107,12 +107,16 @@ module Daylight
         ActiveSupport::Notifications.instrument("error_recorded.daylight",
                                                 error: err, was_new: was_new, was_reopened: was_reopened)
 
-        # Auto-investigate new errors with AI
+        # Queue new errors for AI investigation
         if was_new && auto_investigate?
           begin
-            Daylight::InvestigateErrorJob.perform_later(err.id)
+            Database::InvestigationQueueRecord.enqueue(
+              subject_type: "error",
+              subject_id: err.id,
+              title: "#{err.error_class}: #{err.message}".truncate(200)
+            )
           rescue StandardError
-            # Fire-and-forget: don't break error recording if job enqueue fails
+            # Fire-and-forget: don't break error recording if queue fails
           end
         end
 
