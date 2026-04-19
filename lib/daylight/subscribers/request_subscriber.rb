@@ -86,6 +86,33 @@ module Daylight
       def self.detect_performance_issue(route, duration_ms, threshold, request_record)
         fingerprint = Digest::SHA256.hexdigest("perf:#{route}")[0..31]
         now = Time.current
+        trace_id = Daylight::TraceContext.current
+
+        # Build a rich backtrace with timing breakdown
+        backtrace_lines = [
+          "#{request_record.method} #{request_record.path} → #{request_record.status_code} (#{duration_ms.round(0)}ms)",
+          "Controller: #{request_record.controller_action}",
+          "DB: #{request_record.db_duration_ms&.round(0) || 0}ms | Views: #{request_record.view_duration_ms&.round(0) || 0}ms | Queries: #{request_record.query_count || 0}",
+          ""
+        ]
+
+        # Add the slowest queries from this request
+        if trace_id.present?
+          slow_queries = Database::QueryRecord
+            .where(trace_id: trace_id)
+            .order(duration_ms: :desc)
+            .limit(10)
+
+          if slow_queries.any?
+            backtrace_lines << "Slowest queries:"
+            slow_queries.each do |q|
+              backtrace_lines << "  #{q.duration_ms&.round(1)}ms #{q.source_location}"
+              backtrace_lines << "    #{q.sql&.truncate(200)}"
+            end
+          end
+        end
+
+        backtrace_summary = backtrace_lines.join("\n")
 
         Database.ensure_connected!
         err = Database::ErrorRecord.find_or_initialize_by(fingerprint: fingerprint)
@@ -94,7 +121,7 @@ module Daylight
           err.assign_attributes(
             error_class: "Daylight::SlowEndpoint",
             message: "#{route} exceeded #{threshold.round(0)}ms threshold",
-            backtrace_summary: route,
+            backtrace_summary: backtrace_summary,
             occurrences_count: 1,
             status: "open",
             severity: "performance",
@@ -109,24 +136,35 @@ module Daylight
           err.occurrences_count += 1
           err.last_seen_at = now
           err.threshold_exceeded_count = (err.try(:threshold_exceeded_count) || 0) + 1
-          # Running average
           prev_avg = err.try(:avg_duration_ms) || duration_ms
           prev_count = err.threshold_exceeded_count - 1
           err.avg_duration_ms = ((prev_avg * prev_count) + duration_ms) / err.threshold_exceeded_count
           err.max_duration_ms = [err.try(:max_duration_ms) || 0, duration_ms].max
           err.message = "#{route} exceeded #{threshold.round(0)}ms threshold (avg: #{err.avg_duration_ms.round(0)}ms, max: #{err.max_duration_ms.round(0)}ms)"
+          err.backtrace_summary = backtrace_summary
           err.status = "open" if err.status == "resolved"
         end
 
         err.save!
 
+        # Occurrence gets the full breakdown for this specific request
+        occurrence_context = {
+          duration_ms: duration_ms,
+          threshold: threshold,
+          request_id: request_record.id,
+          db_ms: request_record.db_duration_ms&.round(1),
+          view_ms: request_record.view_duration_ms&.round(1),
+          query_count: request_record.query_count,
+          n_plus_one: request_record.try(:n_plus_one) || false
+        }
+
         Database::OccurrenceRecord.create!(
           error_id: err.id,
-          backtrace: "Duration: #{duration_ms.round(1)}ms\nThreshold: #{threshold.round(0)}ms\nRoute: #{route}",
-          context: { duration_ms: duration_ms, threshold: threshold, request_id: request_record.id }.to_json,
+          backtrace: backtrace_summary,
+          context: occurrence_context.to_json,
           request_url: request_record.path,
           request_method: request_record.method,
-          trace_id: Daylight::TraceContext.current,
+          trace_id: trace_id,
           occurred_at: now
         )
       rescue StandardError
