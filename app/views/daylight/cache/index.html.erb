@@ -2,7 +2,7 @@
 
 <%= render "daylight/shared/period_select", period: @period %>
 
-<div class="grid grid--stats">
+<div class="dl-stat-grid">
   <%= render "daylight/shared/stat_card", label: "Total Events", value: number_with_delimiter(@total_events) %>
   <%= render "daylight/shared/stat_card", label: "Hit Rate", value: number_to_percentage(@hit_rate, precision: 1) %>
   <%= render "daylight/shared/stat_card", label: "Total Reads", value: number_with_delimiter(@total_reads) %>

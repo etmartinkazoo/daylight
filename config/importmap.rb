@@ -1,6 +1,18 @@
 pin "daylight/application", to: "daylight/application.js"
 pin "daylight/controllers/application", to: "daylight/controllers/application.js"
 pin "daylight/controllers/index", to: "daylight/controllers/index.js"
+
+pin "daylight/controllers/auto_refresh_controller", to: "daylight/controllers/auto_refresh_controller.js"
+pin "daylight/controllers/bulk_select_controller", to: "daylight/controllers/bulk_select_controller.js"
+pin "daylight/controllers/chart_controller", to: "daylight/controllers/chart_controller.js"
+pin "daylight/controllers/color_scheme_controller", to: "daylight/controllers/color_scheme_controller.js"
+pin "daylight/controllers/copy_controller", to: "daylight/controllers/copy_controller.js"
+pin "daylight/controllers/dialog_controller", to: "daylight/controllers/dialog_controller.js"
+pin "daylight/controllers/filter_form_controller", to: "daylight/controllers/filter_form_controller.js"
+pin "daylight/controllers/sheet_controller", to: "daylight/controllers/sheet_controller.js"
+pin "daylight/controllers/tabs_controller", to: "daylight/controllers/tabs_controller.js"
+pin "daylight/controllers/toggle_class_controller", to: "daylight/controllers/toggle_class_controller.js"
+
 pin "@hotwired/turbo-rails", to: "turbo.min.js"
 pin "@hotwired/stimulus", to: "stimulus.min.js"
 pin "@hotwired/stimulus-loading", to: "stimulus-loading.js"

@@ -4,7 +4,7 @@
 
 <%= render "daylight/shared/period_select", period: @period %>
 
-<div class="grid grid--4" style="margin-block-start: var(--size-4)">
+<div class="dl-stat-grid">
   <%= render "daylight/shared/stat_card", label: "Total Queries", value: number_with_delimiter(@total_queries) %>
   <% avg_dur = @queries.any? ? (@queries.sum { |q| q[:avg_duration].to_f } / @queries.size).round(0) : 0 %>
   <%= render "daylight/shared/stat_card", label: "Avg Duration", value: "#{avg_dur}ms" %>

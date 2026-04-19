@@ -1,5 +1,35 @@
-<div class="bar-chart chart-container"
-     data-controller="chart"
-     data-chart-data-value="<%= (local_assigns[:data] || []).to_json %>"
-     style="block-size: <%= local_assigns[:height] || '10rem' %>">
+<%
+  series = local_assigns[:data] || []
+  chart_type = local_assigns[:type] || "bar"
+  chart_label = local_assigns[:label] || ""
+  chart_color = local_assigns[:color] || "#f59e0b"
+  height = local_assigns[:height] || "10rem"
+
+  chart_data = {
+    labels: series.map { |p| p[:t] },
+    datasets: [{
+      label: chart_label,
+      data: series.map { |p| p[:v] },
+      backgroundColor: chart_color,
+      borderRadius: 2,
+      borderSkipped: false
+    }]
+  }
+
+  chart_options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { display: false },
+      y: { display: false, beginAtZero: true }
+    }
+  }
+%>
+<div style="block-size: <%= height %>; position: relative;">
+  <canvas data-controller="chart"
+          data-chart-type-value="<%= chart_type %>"
+          data-chart-data-value="<%= chart_data.to_json %>"
+          data-chart-options-value="<%= chart_options.to_json %>">
+  </canvas>
 </div>

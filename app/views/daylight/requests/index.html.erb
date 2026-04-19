@@ -4,7 +4,7 @@
 
 <%= render "daylight/shared/period_select", period: @period %>
 
-<div class="grid grid--4" style="margin-block-start: var(--size-4)">
+<div class="dl-stat-grid">
   <%= render "daylight/shared/stat_card", label: "Total Requests", value: number_with_delimiter(@total_requests) %>
   <%= render "daylight/shared/stat_card", label: "Throughput", value: "#{@throughput_rpm.round(1)} rpm" %>
   <%= render "daylight/shared/stat_card", label: "APDEX", value: @apdex ? @apdex.round(2) : "N/A" %>

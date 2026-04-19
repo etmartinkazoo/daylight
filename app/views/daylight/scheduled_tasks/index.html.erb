@@ -4,7 +4,7 @@
 
 <%= render "daylight/shared/period_select", period: @period %>
 
-<div class="grid grid--stats">
+<div class="dl-stat-grid">
   <%= render "daylight/shared/stat_card", label: "Total", value: number_with_delimiter(@totals[:total]) %>
   <%= render "daylight/shared/stat_card", label: "Completed", value: number_with_delimiter(@totals[:completed]) %>
   <%= render "daylight/shared/stat_card", label: "Failed", value: number_with_delimiter(@totals[:failed]) %>

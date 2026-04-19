@@ -1,25 +1,27 @@
 import { Controller } from "@hotwired/stimulus"
+import { Chart, registerables } from "https://esm.sh/chart.js@4.5.1?standalone"
 
 export default class extends Controller {
-  static values = { data: Array }
+  static values = { type: { type: String, default: "line" }, data: Object, options: Object }
 
-  connect() {
-    this.#render()
+  initialize() {
+    Chart.register(...registerables)
+    Chart.defaults.backgroundColor = getComputedStyle(document.body).backgroundColor
+    Chart.defaults.borderColor = getComputedStyle(document.body).borderColor
+    Chart.defaults.color = getComputedStyle(document.body).color
+    Chart.defaults.font.family = getComputedStyle(document.body).fontFamily
+    Chart.defaults.font.size = 12
   }
 
-  #render() {
-    const data = this.dataValue
-    if (!data.length) return
+  connect() {
+    this.chart = new Chart(this.element, this.#settings)
+  }
 
-    const max = Math.max(...data.map(d => d.v), 1)
-    this.element.innerHTML = ""
+  disconnect() {
+    this.chart.destroy()
+  }
 
-    data.forEach(point => {
-      const bar = document.createElement("div")
-      bar.className = "bar-chart__bar"
-      bar.style.height = `${(point.v / max) * 100}%`
-      bar.title = `${point.t}: ${point.v}`
-      this.element.appendChild(bar)
-    })
+  get #settings() {
+    return { type: this.typeValue, data: this.dataValue, options: this.optionsValue }
   }
 }

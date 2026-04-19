@@ -1,2 +1,2 @@
 import "@hotwired/turbo-rails"
-import "daylight/controllers"
+import "daylight/controllers/index"

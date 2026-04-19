@@ -4,7 +4,7 @@
 
 <%= render "daylight/shared/period_select", period: @period %>
 
-<div class="grid grid--4" style="margin-block-start: var(--size-4)">
+<div class="dl-stat-grid">
   <%= render "daylight/shared/stat_card", label: "Total", value: number_with_delimiter(@totals[:total]) %>
   <%= render "daylight/shared/stat_card", label: "Completed", value: number_with_delimiter(@totals[:completed]) %>
   <%= render "daylight/shared/stat_card", label: "Failed", value: number_with_delimiter(@totals[:failed]) %>
@@ -92,7 +92,7 @@
   <div class="card" style="margin-block-start: var(--size-6)">
     <h2 class="card__title">SolidQueue Status</h2>
 
-    <div class="grid grid--4" style="margin-block-start: var(--size-2)">
+    <div class="dl-stat-grid">
       <% @solid_queue.each do |key, value| %>
         <%= render "daylight/shared/stat_card", label: key.to_s.humanize, value: number_with_delimiter(value) %>
       <% end %>
