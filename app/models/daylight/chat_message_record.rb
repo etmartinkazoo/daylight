@@ -4,18 +4,10 @@ module Daylight
   class ChatMessageRecord < Record
     self.table_name = "daylight_chat_messages"
 
-    acts_as_message chat: :chat,
-                    chat_class: "Daylight::ChatRecord",
-                    chat_foreign_key: :chat_id,
-                    tool_calls: :tool_calls,
-                    tool_call_class: "Daylight::ToolCallRecord",
-                    tool_calls_foreign_key: :chat_message_id,
-                    model: :model,
-                    model_class: "Daylight::ModelRecord"
+    belongs_to :chat, class_name: "Daylight::ChatRecord", foreign_key: :chat_id
 
     validates :role, presence: true
 
-    # Broadcast completed assistant messages for real-time chat updates
     after_create_commit :broadcast_message, if: -> { role == "assistant" && content.present? }
 
     private

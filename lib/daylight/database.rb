@@ -63,19 +63,7 @@ module Daylight
         raw.execute("PRAGMA busy_timeout=15000") rescue nil
 
         migrate!
-
-        # Clear the connection-level schema cache, then reset each model.
-        # In production, Rails' schema_cache.yml or eager loading can poison
-        # the cache before our tables exist.
-        begin
-          pool = Daylight::Record.connection_pool
-          pool.schema_reflection.clear!
-        rescue StandardError
-          # Fallback for older Rails or different pool implementations
-        end
-
         all_record_classes.each { |klass| klass.reset_column_information }
-
         @connected = true
       end
 
@@ -137,8 +125,7 @@ module Daylight
           Daylight::InvestigationQueueRecord,
           Daylight::ChatRecord,
           Daylight::ChatMessageRecord,
-          Daylight::ToolCallRecord,
-          Daylight::ModelRecord
+          Daylight::ToolCallRecord
         ]
       end
     end

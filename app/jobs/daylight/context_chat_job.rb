@@ -9,15 +9,12 @@ module Daylight
 
     def perform(chat_id)
       Database.ensure_connected!
-      Daylight::AI.configure!
-
       chat = Database::ChatRecord.find(chat_id)
 
       # Refresh system instructions with full context before every completion
       prompt = build_rich_context(chat)
       chat.with_instructions(prompt) if prompt.present?
 
-      # RubyLLM docs pattern: chat.complete
       chat.complete
     rescue StandardError => e
       Rails.logger.error("[Daylight] Context chat failed: #{e.message}") if defined?(Rails)
@@ -46,7 +43,6 @@ module Daylight
       error = Database::ErrorRecord.find_by(id: error_id)
       return parts unless error
 
-      # Basic error info
       parts << <<~CTX
         ## Error
         - Class: #{error.error_class}
@@ -58,10 +54,8 @@ module Daylight
         - Last seen: #{error.last_seen_at}
       CTX
 
-      # Full backtrace
       parts << "## Backtrace\n```\n#{error.backtrace_summary}\n```" if error.backtrace_summary.present?
 
-      # Recent occurrences with request context
       occurrences = Database::OccurrenceRecord
         .where(error_id: error.id)
         .order(occurred_at: :desc)
@@ -77,10 +71,8 @@ module Daylight
         parts << occ_text
       end
 
-      # AI investigation if available
       parts << "## AI Investigation\n#{error.ai_solution}" if error.ai_solution.present? && error.ai_solution != ""
 
-      # Source code from GitHub
       source = fetch_source_from_backtrace(error.backtrace_summary)
       parts << source if source.present?
 
@@ -108,7 +100,6 @@ module Daylight
 
       parts << "## AI Investigation\n#{incident.investigation}" if incident.investigation.present?
 
-      # Related error context
       if incident.related_error_id
         error = Database::ErrorRecord.find_by(id: incident.related_error_id)
         if error
@@ -131,7 +122,6 @@ module Daylight
       token = Database.get_setting("github_api_token")
       branch = Database.get_setting("github_default_branch").presence || "main"
 
-      # Extract app file paths from backtrace
       paths = backtrace_text.scan(%r{((?:app|lib|config)/\S+\.rb)(?::(\d+))?}).uniq
       return nil if paths.empty?
 
@@ -144,7 +134,6 @@ module Daylight
         content = fetch_file(owner, repo, path, branch, token)
         next unless content
 
-        # If we have a line number, show a window around it
         if line_num.to_i > 0
           lines = content.lines
           center = line_num.to_i

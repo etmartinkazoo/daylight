@@ -43,9 +43,8 @@ module Daylight
       )
       return existing if existing
 
-      # Follow RubyLLM docs: Chat.create!(model: 'model-name')
       chat = Database::ChatRecord.create!(
-        model: Daylight::AI.default_model,
+        model_id: Daylight::AI.default_model,
         context_type: params[:context_type],
         context_id: params[:context_id]
       )
