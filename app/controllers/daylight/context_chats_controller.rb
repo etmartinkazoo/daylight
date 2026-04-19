@@ -11,7 +11,7 @@ module Daylight
       content = params[:content].to_s.strip
       return redirect_back(fallback_location: root_path) if content.blank?
 
-      # Persist user message immediately (RubyLLM pattern)
+      # Persist user message immediately (RubyLLM docs pattern)
       chat.add_message(role: :user, content: content)
 
       # Process AI response in background
@@ -43,16 +43,15 @@ module Daylight
       )
       return existing if existing
 
-      model_name = Daylight::AI.default_model
+      # Follow RubyLLM docs: Chat.create!(model: 'model-name')
       chat = Database::ChatRecord.create!(
-        model: model_name,
+        model: Daylight::AI.default_model,
         context_type: params[:context_type],
         context_id: params[:context_id]
       )
 
-      # Set system instructions with error/incident context
-      system_prompt = build_system_prompt(chat)
-      chat.with_instructions(system_prompt) if system_prompt
+      # Set system instructions with error/incident context (RubyLLM docs pattern)
+      chat.with_instructions(build_system_prompt(chat))
 
       chat
     end

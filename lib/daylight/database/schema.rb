@@ -10,6 +10,13 @@ module Daylight
       def migrate!
         conn = ErrorRecord.connection
 
+        # Rebuild chat/model tables if they have the old schema
+        if conn.table_exists?(:daylight_chats) && conn.column_exists?(:daylight_chats, :provider)
+          conn.drop_table(:daylight_tool_calls) if conn.table_exists?(:daylight_tool_calls)
+          conn.drop_table(:daylight_chat_messages) if conn.table_exists?(:daylight_chat_messages)
+          conn.drop_table(:daylight_chats)
+        end
+
         create_table_once(conn, :daylight_errors) do |t|
           t.string   :fingerprint,       null: false
           t.string   :error_class,       null: false
@@ -264,35 +271,73 @@ module Daylight
           t.index :solution_id
         end
 
+        # Chat tables — follows ruby_llm generator schema
         create_table_once(conn, :daylight_chats) do |t|
           t.integer  :model_id
           t.string   :context_type
           t.integer  :context_id
           t.string   :context_url
           t.timestamps
-          t.index :model_id
         end
 
         create_table_once(conn, :daylight_chat_messages) do |t|
-          t.integer  :chat_id,       null: false
-          t.string   :role,          null: false
-          t.text     :content
+          t.integer  :chat_id
           t.integer  :model_id
           t.integer  :tool_call_id
+          t.string   :role,            null: false
+          t.text     :content
+          t.json     :content_raw
           t.integer  :input_tokens
           t.integer  :output_tokens
-          t.datetime :created_at,    null: false
+          t.integer  :cached_tokens
+          t.timestamps
           t.index :chat_id
-          t.index :model_id
+          t.index :role
         end
 
         create_table_once(conn, :daylight_tool_calls) do |t|
-          t.integer  :chat_message_id, null: false
+          t.integer  :chat_message_id
+          t.integer  :result_id
           t.string   :tool_call_id,    null: false
           t.string   :name,            null: false
-          t.text     :arguments
-          t.text     :result
+          t.json     :arguments, default: {}
+          t.timestamps
           t.index :chat_message_id
+          t.index :tool_call_id
+        end
+
+        create_table_once(conn, :daylight_models) do |t|
+          t.string   :model_id,          null: false
+          t.string   :name,              null: false
+          t.string   :provider,          null: false
+          t.string   :family
+          t.datetime :model_created_at
+          t.integer  :context_window
+          t.integer  :max_output_tokens
+          t.date     :knowledge_cutoff
+          t.json     :modalities,        default: {}
+          t.json     :capabilities,      default: []
+          t.json     :pricing,           default: {}
+          t.json     :metadata,          default: {}
+          t.timestamps
+          t.index [:provider, :model_id], unique: true
+          t.index :provider
+          t.index :family
+        end
+
+        create_table_once(conn, :daylight_investigation_queue) do |t|
+          t.string   :subject_type,  null: false
+          t.integer  :subject_id,    null: false
+          t.string   :status,        default: "pending", null: false
+          t.string   :title,         null: false
+          t.string   :priority,      default: "normal"
+          t.datetime :queued_at,     null: false
+          t.datetime :started_at
+          t.datetime :completed_at
+          t.text     :error_message
+          t.index :status
+          t.index :queued_at
+          t.index [:subject_type, :subject_id], unique: true
         end
 
         # Column additions for existing databases (idempotent)
@@ -317,41 +362,6 @@ module Daylight
         add_column_once(conn, :daylight_errors,        :threshold_exceeded_count, :integer, default: 0)
         add_column_once(conn, :daylight_solutions,    :incident_id,              :integer, index: true)
         add_column_once(conn, :daylight_errors,        :ai_solution,              :text)
-
-        create_table_once(conn, :daylight_models) do |t|
-          t.string   :model_id,          null: false
-          t.string   :name,              null: false
-          t.string   :provider,          null: false
-          t.string   :family
-          t.datetime :model_created_at
-          t.integer  :context_window
-          t.integer  :max_output_tokens
-          t.string   :knowledge_cutoff
-          t.text     :modalities                     # JSON
-          t.text     :capabilities                   # JSON array
-          t.text     :pricing                        # JSON
-          t.text     :metadata                       # JSON
-          t.timestamps
-          t.index [:model_id, :provider], unique: true
-        end
-
-        create_table_once(conn, :daylight_investigation_queue) do |t|
-          t.string   :subject_type,  null: false   # error, incident
-          t.integer  :subject_id,    null: false
-          t.string   :status,        default: "pending", null: false  # pending, investigating, completed, failed
-          t.string   :title,         null: false
-          t.string   :priority,      default: "normal"   # high, normal, low
-          t.datetime :queued_at,     null: false
-          t.datetime :started_at
-          t.datetime :completed_at
-          t.text     :error_message
-          t.index :status
-          t.index :queued_at
-          t.index [:subject_type, :subject_id], unique: true
-        end
-
-        # Chat schema migrations for existing databases
-        add_column_once(conn, :daylight_chat_messages, :tool_call_id, :integer, index: true)
       end
     end
   end
