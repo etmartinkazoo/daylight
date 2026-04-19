@@ -26,8 +26,7 @@ module Daylight
     # Build an RubyLLM::Chat instance with full conversation history
     def to_llm_chat
       Daylight::AI.configure!
-      model = model_id.presence || Daylight::AI.default_model
-      chat = Daylight::AI.chat(model: model)
+      chat = Daylight::AI.chat(model: Daylight::AI.default_model)
 
       # Load system instructions
       system_msg = messages.find_by(role: "system")
