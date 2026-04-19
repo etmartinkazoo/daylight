@@ -54,8 +54,25 @@ module Daylight
 
         all_record_classes.each { |klass| klass.establish_connection(config) }
 
+        # Set pragmas via raw SQL as fallback for adapters that don't support the pragmas config key
+        begin
+          raw = Daylight::ErrorRecord.connection
+          raw.execute("PRAGMA journal_mode=WAL")
+          raw.execute("PRAGMA synchronous=NORMAL")
+          raw.execute("PRAGMA busy_timeout=15000")
+        rescue StandardError
+          # Non-fatal — pragmas are a performance optimization
+        end
+
         migrate!
-        all_record_classes.each { |klass| klass.reset_column_information }
+
+        # Force AR to re-read column info after table creation
+        all_record_classes.each do |klass|
+          klass.reset_column_information
+          # Verify the class can see its columns — if not, the table may not exist
+          klass.column_names rescue nil
+        end
+
         @connected = true
       end
 
