@@ -4,16 +4,17 @@ module Daylight
   class ContextChatsController < BaseController
     before_action :ensure_connected
 
-    # POST /context_chats - send a message (creates chat if needed)
+    # POST /context_chats - send a message
     def create
+      Daylight::AI.configure!
       chat = find_or_create_chat
       content = params[:content].to_s.strip
       return redirect_back(fallback_location: root_path) if content.blank?
 
-      # Persist user message
-      chat.messages.create!(role: "user", content: content, created_at: Time.current)
+      # Persist user message immediately (RubyLLM pattern)
+      chat.add_message(role: :user, content: content)
 
-      # Run AI response in background
+      # Process AI response in background
       Daylight::ContextChatJob.perform_later(chat.id)
 
       redirect_back(fallback_location: root_path)
@@ -36,58 +37,50 @@ module Daylight
     private
 
     def find_or_create_chat
-      chat = Database::ChatRecord.find_by(
+      existing = Database::ChatRecord.find_by(
         context_type: params[:context_type],
         context_id: params[:context_id]
       )
+      return existing if existing
 
-      return chat if chat
-
-      model_id = Daylight::AI.default_model
-      chat = Database::ChatRecord.create!(
-        model_id: model_id,
+      model_name = Daylight::AI.default_model
+      chat = Database::ChatRecord.new(
         context_type: params[:context_type],
         context_id: params[:context_id]
       )
+      chat.model = model_name
+      chat.assume_model_exists = true
+      chat.save!
 
-      # Seed the chat with system context
-      seed_context(chat)
+      # Set system instructions with error/incident context
+      system_prompt = build_system_prompt(chat)
+      chat.with_instructions(system_prompt) if system_prompt
+
       chat
     end
 
-    def seed_context(chat)
-      context_text = build_context_text
-      return unless context_text.present?
+    def build_system_prompt(chat)
+      parts = ["You are an expert Ruby on Rails debugger. Be concise and specific. Reference file names and line numbers when possible."]
 
-      chat.messages.create!(
-        role: "user",
-        content: context_text,
-        created_at: Time.current
-      )
+      app_context = Database.get_setting("ai_context_notes")
+      parts << "App context: #{app_context}" if app_context.present?
 
-      # Get initial AI response with context
-      Daylight::ContextChatJob.perform_later(chat.id)
-    end
-
-    def build_context_text
-      case params[:context_type]
+      case chat.context_type
       when "error"
-        error = Database::ErrorRecord.find_by(id: params[:context_id])
-        return nil unless error
-
-        text = "I'm looking at this error in our application. Here's the context:\n\n"
-        text += error.ai_context
-        text += "\n\nPlease acknowledge you understand this error and are ready to help me debug it."
-        text
+        error = Database::ErrorRecord.find_by(id: chat.context_id)
+        if error
+          parts << "You are discussing this error:\n#{error.ai_context}"
+          parts << "AI Investigation:\n#{error.ai_solution}" if error.ai_solution.present?
+        end
       when "incident"
-        incident = Database::IncidentRecord.find_by(id: params[:context_id])
-        return nil unless incident
-
-        text = "I'm looking at this incident in our application. Here's the context:\n\n"
-        text += incident.ai_context
-        text += "\n\nPlease acknowledge you understand this incident and are ready to help me investigate it."
-        text
+        incident = Database::IncidentRecord.find_by(id: chat.context_id)
+        if incident
+          parts << "You are discussing this incident:\n#{incident.ai_context}"
+          parts << "AI Investigation:\n#{incident.investigation}" if incident.investigation.present?
+        end
       end
+
+      parts.join("\n\n")
     end
   end
 end

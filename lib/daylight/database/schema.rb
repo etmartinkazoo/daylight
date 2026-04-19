@@ -265,23 +265,25 @@ module Daylight
         end
 
         create_table_once(conn, :daylight_chats) do |t|
-          t.string   :model_id
-          t.string   :provider
+          t.integer  :model_id
           t.string   :context_type
           t.integer  :context_id
           t.string   :context_url
           t.timestamps
+          t.index :model_id
         end
 
         create_table_once(conn, :daylight_chat_messages) do |t|
           t.integer  :chat_id,       null: false
           t.string   :role,          null: false
           t.text     :content
-          t.string   :model_id
+          t.integer  :model_id
+          t.integer  :tool_call_id
           t.integer  :input_tokens
           t.integer  :output_tokens
           t.datetime :created_at,    null: false
           t.index :chat_id
+          t.index :model_id
         end
 
         create_table_once(conn, :daylight_tool_calls) do |t|
@@ -317,12 +319,20 @@ module Daylight
         add_column_once(conn, :daylight_errors,        :ai_solution,              :text)
 
         create_table_once(conn, :daylight_models) do |t|
-          t.string   :model_id,   null: false
-          t.string   :name
-          t.string   :provider
-          t.string   :model_family
-          t.datetime :created_at,  null: false
-          t.index :model_id, unique: true
+          t.string   :model_id,          null: false
+          t.string   :name,              null: false
+          t.string   :provider,          null: false
+          t.string   :family
+          t.datetime :model_created_at
+          t.integer  :context_window
+          t.integer  :max_output_tokens
+          t.string   :knowledge_cutoff
+          t.text     :modalities                     # JSON
+          t.text     :capabilities                   # JSON array
+          t.text     :pricing                        # JSON
+          t.text     :metadata                       # JSON
+          t.timestamps
+          t.index [:model_id, :provider], unique: true
         end
 
         create_table_once(conn, :daylight_investigation_queue) do |t|
@@ -339,6 +349,9 @@ module Daylight
           t.index :queued_at
           t.index [:subject_type, :subject_id], unique: true
         end
+
+        # Chat schema migrations for existing databases
+        add_column_once(conn, :daylight_chat_messages, :tool_call_id, :integer, index: true)
       end
     end
   end

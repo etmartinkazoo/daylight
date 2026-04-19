@@ -1,7 +1,7 @@
 <%# locals: (context_type:, context_id:, chat: nil) %>
 <% messages = chat&.messages&.order(:created_at) || [] %>
-<% has_pending = messages.any? && messages.last.role == "user" %>
-<% visible_messages = messages.reject { |m| m == messages.first && messages.size > 1 && m.role == "user" && m.content&.include?("acknowledge you understand") } %>
+<% visible_messages = messages.reject { |m| m.role == "system" } %>
+<% has_pending = visible_messages.any? && visible_messages.last.role == "user" %>
 
 <div class="dl-section">
   <div class="card" style="padding: 0; overflow: hidden;">
@@ -15,7 +15,11 @@
       </div>
     </div>
 
-    <div id="chat_messages_<%= context_type %>_<%= context_id %>"
+    <% if chat %>
+      <%= turbo_stream_from "daylight_chat_#{chat.id}" %>
+    <% end %>
+
+    <div id="<%= chat ? "chat_messages_#{chat.id}" : "chat_messages_new" %>"
       <% if has_pending %>
         data-controller="poll"
         data-poll-url-value="<%= messages_context_chats_path(context_type: context_type, context_id: context_id) %>"
@@ -26,23 +30,11 @@
 
       <% if visible_messages.any? %>
         <% visible_messages.each do |msg| %>
-          <div style="margin-block-end: var(--size-4);">
-            <div class="flex items-center gap-half" style="margin-block-end: var(--size-2);">
-              <% if msg.role == "user" %>
-                <span style="display: inline-flex; align-items: center; justify-content: center; width: 1.25rem; height: 1.25rem; border-radius: var(--rounded-full); background: var(--color-primary); color: white; font-size: 0.625rem; font-weight: 700;">Y</span>
-                <span class="text-xs font-medium">You</span>
-              <% else %>
-                <span style="display: inline-flex; align-items: center; justify-content: center; width: 1.25rem; height: 1.25rem; border-radius: var(--rounded-full); background: light-dark(#ede9fe, #1a0a2e); color: light-dark(#7c3aed, #a78bfa); font-size: 0.625rem; font-weight: 700;">AI</span>
-                <span class="text-xs font-medium">AI</span>
-              <% end %>
-              <span class="text-xs text-subtle"><%= time_ago_in_words(msg.created_at) %> ago</span>
-            </div>
-            <div style="font-size: 0.8125rem; line-height: 1.7; white-space: pre-wrap; padding-inline-start: 1.75rem;"><%= msg.content %></div>
-          </div>
+          <%= render "daylight/shared/chat_message", message: msg %>
         <% end %>
 
         <% if has_pending %>
-          <div style="padding-inline-start: 1.75rem;">
+          <div id="chat_thinking" style="padding-inline-start: 1.75rem;">
             <span class="badge badge--ai-pending">AI is thinking...</span>
           </div>
         <% end %>

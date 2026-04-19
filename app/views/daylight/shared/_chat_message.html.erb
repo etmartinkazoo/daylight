@@ -1,0 +1,17 @@
+<div id="message_<%= message.id %>" style="margin-block-end: var(--size-4);"
+  data-created-at="<%= message.created_at&.iso8601 %>">
+  <div class="flex items-center gap-half" style="margin-block-end: var(--size-2);">
+    <% if message.role == "user" %>
+      <span style="display: inline-flex; align-items: center; justify-content: center; width: 1.25rem; height: 1.25rem; border-radius: var(--rounded-full); background: var(--color-primary); color: white; font-size: 0.625rem; font-weight: 700;">Y</span>
+      <span class="text-xs font-medium">You</span>
+    <% elsif message.role == "system" %>
+      <span style="display: inline-flex; align-items: center; justify-content: center; width: 1.25rem; height: 1.25rem; border-radius: var(--rounded-full); background: var(--color-border); font-size: 0.625rem; font-weight: 700;">S</span>
+      <span class="text-xs font-medium text-subtle">System</span>
+    <% else %>
+      <span style="display: inline-flex; align-items: center; justify-content: center; width: 1.25rem; height: 1.25rem; border-radius: var(--rounded-full); background: light-dark(#ede9fe, #1a0a2e); color: light-dark(#7c3aed, #a78bfa); font-size: 0.625rem; font-weight: 700;">AI</span>
+      <span class="text-xs font-medium">AI</span>
+    <% end %>
+    <span class="text-xs text-subtle"><%= time_ago_in_words(message.created_at) %> ago</span>
+  </div>
+  <div style="font-size: 0.8125rem; line-height: 1.7; white-space: pre-wrap; padding-inline-start: 1.75rem;"><%= message.content %></div>
+</div>

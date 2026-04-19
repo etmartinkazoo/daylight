@@ -4,6 +4,7 @@ module Daylight
   class ChatRecord < Record
     self.table_name = "daylight_chats"
 
-    has_many :messages, class_name: "Daylight::ChatMessageRecord", foreign_key: :chat_id, dependent: :destroy
+    acts_as_chat message_class: "Daylight::ChatMessageRecord",
+                 model_class: "Daylight::ModelRecord"
   end
 end
