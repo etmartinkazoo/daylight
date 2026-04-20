@@ -13,6 +13,31 @@ module Daylight
   class Engine < ::Rails::Engine
     isolate_namespace Daylight
 
+    # Isolate Daylight's Zeitwerk inflection from the host app's acronyms.
+    # Without this, a host app registering inflect.acronym "AI" (or any gem
+    # that does) would change the expected constant names for Daylight's own
+    # autoloaded files. This wraps the Rails inflector so files inside the
+    # gem always use default snake_case → CamelCase, while host app files
+    # keep whatever conventions they've configured.
+    initializer "daylight.zeitwerk_inflector", before: :set_autoload_paths do
+      gem_root = root.to_s
+      original_inflector = Rails.autoloaders.main.inflector
+
+      Rails.autoloaders.main.inflector = Class.new do
+        define_method(:camelize) do |basename, abspath|
+          if abspath.start_with?(gem_root)
+            basename.split("_").each(&:capitalize!).join
+          else
+            original_inflector.camelize(basename, abspath)
+          end
+        end
+
+        define_method(:inflect) do |overrides|
+          original_inflector.inflect(overrides)
+        end
+      end.new
+    end
+
     initializer "daylight.alba" do
       Alba.backend = :active_support if defined?(Alba)
     end
