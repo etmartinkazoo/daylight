@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "alba"
 require "daylight/version"
 require "daylight/configuration"
 require "daylight/color"
