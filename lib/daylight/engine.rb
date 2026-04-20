@@ -14,7 +14,7 @@ module Daylight
     isolate_namespace Daylight
 
     initializer "daylight.alba" do
-      Alba.backend = :active_support
+      Alba.backend = :active_support if defined?(Alba)
     end
 
 
