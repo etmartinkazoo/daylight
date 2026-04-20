@@ -13,6 +13,12 @@ module Daylight
   class Engine < ::Rails::Engine
     isolate_namespace Daylight
 
+    initializer "daylight.inflections", before: :bootstrap_hook do
+      ActiveSupport::Inflector.inflections(:en) do |inflect|
+        inflect.acronym "AI"
+      end
+    end
+
     initializer "daylight.alba" do
       Alba.backend = :active_support if defined?(Alba)
     end
