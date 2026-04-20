@@ -25,7 +25,6 @@ module Daylight
 
     # Build an RubyLLM::Chat instance with full conversation history
     def to_llm_chat
-      Daylight::AI.configure!
       chat = Daylight::AI.chat(model: Daylight::AI.default_model)
 
       # Load system instructions

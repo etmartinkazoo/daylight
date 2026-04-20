@@ -6,7 +6,6 @@ module Daylight
 
     # POST /context_chats - send a message
     def create
-      Daylight::AI.configure!
       chat = find_or_create_chat
       content = params[:content].to_s.strip
       return redirect_to(params[:redirect_url] || request.referer || root_path) if content.blank?

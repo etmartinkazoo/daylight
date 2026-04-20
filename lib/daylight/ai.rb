@@ -27,12 +27,12 @@ module Daylight
     PROVIDERS = %w[gemini anthropic openai].freeze
 
     class << self
-      # Configure RubyLLM with all available API keys and return a chat
-      # instance for the given model (or the default model from settings).
+      # Return a scoped RubyLLM chat instance configured with Daylight's
+      # own API keys. Uses RubyLLM.context so the host app's global
+      # RubyLLM configuration is never touched.
       def chat(model: nil)
-        configure!
         model_id = model || default_model
-        RubyLLM.chat(model: model_id)
+        daylight_context.chat(model: model_id)
       end
 
       def default_model
@@ -54,7 +54,6 @@ module Daylight
 
       # Returns only models whose provider has a configured API key
       def available_models
-        configure!
         MODELS.select { |m| provider_configured?(m[:provider]) }
       end
 
@@ -65,20 +64,22 @@ module Daylight
           Database.get_setting("openai_api_key").present?
       end
 
-      def configure!
+      private
+
+      # Build an isolated RubyLLM context with Daylight's own API keys.
+      # This never mutates the global RubyLLM.config.
+      def daylight_context
         Database.ensure_connected!
         gemini_key    = Database.get_setting("gemini_api_key")
         anthropic_key = Database.get_setting("anthropic_api_key")
         openai_key    = Database.get_setting("openai_api_key")
 
-        RubyLLM.configure do |c|
+        RubyLLM.context do |c|
           c.gemini_api_key    = gemini_key    if gemini_key.present?
           c.anthropic_api_key = anthropic_key if anthropic_key.present?
           c.openai_api_key    = openai_key    if openai_key.present?
         end
       end
-
-      private
 
       def provider_configured?(provider)
         case provider

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Daylight
-  module AI
+  module Ai
     class MessagesController < Daylight::BaseController
       skip_before_action :verify_authenticity_token
       before_action :ensure_connected
