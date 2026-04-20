@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Daylight
-  class AIChatChannel < ActionCable::Channel::Base
+  class AiChatChannel < ActionCable::Channel::Base
     def subscribed
       stream_from "daylight:ai_chat:#{current_user_id}"
     end

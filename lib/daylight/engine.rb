@@ -88,7 +88,7 @@ module Daylight
     initializer "daylight.bullet_middleware", after: "daylight.bullet" do |app|
       next unless defined?(Bullet) && Bullet.enable?
 
-      require "daylight/bullet_collector"
+      require "daylight/bullet_middleware"
       app.middleware.use Daylight::BulletMiddleware
     end
   end
