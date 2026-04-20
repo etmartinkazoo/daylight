@@ -95,24 +95,14 @@
       </table>
     </div>
 
-    <%# Bulk actions bar %>
-    <div data-bulk-select-target="bar" hidden
-         class="flex items-center gap-half"
-         style="position: sticky; bottom: var(--size-4); margin-block-start: var(--size-4);
-                background: var(--color-surface); border: 1px solid var(--color-border);
-                border-radius: var(--rounded-xl); padding: var(--size-3) var(--size-5); box-shadow: 0 4px 12px rgba(0,0,0,.1);">
-      <span class="text-sm"><span data-bulk-select-target="count">0</span> selected</span>
-      <div class="flex gap-half" style="margin-inline-start: auto;">
-        <%= form_with url: error_batch_path, method: :post, data: { turbo_action: "replace" } do |f| %>
-          <input type="hidden" name="ids" value="" data-bulk-select-target="ids">
-          <input type="hidden" name="return_status" value="<%= @status %>">
-          <button type="submit" name="action_type" value="resolve" class="btn btn--sm btn--outline">Resolve</button>
-          <button type="submit" name="action_type" value="ignore" class="btn btn--sm btn--outline">Ignore</button>
-          <button type="submit" name="action_type" value="delete" class="btn btn--sm btn--negative"
-                  data-turbo-confirm="Delete selected errors?">Delete</button>
-        <% end %>
-      </div>
-    </div>
+    <%= render "daylight/shared/bulk_actions",
+         url: error_batch_path,
+         hidden_fields: { return_status: @status },
+         actions: [
+           { label: "Resolve", value: "resolve" },
+           { label: "Ignore",  value: "ignore" },
+           { label: "Delete",  value: "delete", confirm: "Delete selected errors?", destructive: true }
+         ] %>
 
     <%= render "daylight/shared/pagination", pagination: @pagination %>
   </div>

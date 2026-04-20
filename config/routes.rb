@@ -19,6 +19,7 @@ Daylight::Engine.routes.draw do
   resources :scheduled_tasks, only: [:index]
   resources :mail_events, only: [:index]
   resources :logs, only: [:index]
+  post "logs/batch", to: "log_batches#create", as: :log_batch
   resources :deploys, only: [:index, :create]
   resources :http_requests, only: [:index]
   resources :cache, only: [:index]
@@ -28,6 +29,7 @@ Daylight::Engine.routes.draw do
   end
 
   resources :investigation_queue, only: [:index]
+  post "investigation_queue/batch", to: "investigation_queue_batches#create", as: :investigation_queue_batch
   resources :solutions, only: [:index, :show, :update]
   namespace :solutions do
     resource :generation, only: [:create]

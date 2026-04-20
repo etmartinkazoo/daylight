@@ -21,42 +21,58 @@
 <%= render "daylight/shared/bar_chart", data: @volume_series %>
 
 <% if @logs.any? %>
-  <div class="card">
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Level</th>
-          <th>Message</th>
-          <th>Controller / Action</th>
-          <th>Path</th>
-          <th>Time</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @logs.each do |log| %>
+  <div data-controller="bulk-select">
+    <div class="card card--flush">
+      <table class="table">
+        <thead>
           <tr>
-            <td>
-              <%
-                level_class = case log.level.to_s
-                  when "info" then "badge--blue"
-                  when "warn" then "badge--yellow"
-                  when "error", "fatal" then "badge--red"
-                  else "badge--default"
-                end
-              %>
-              <span class="badge <%= level_class %>"><%= log.level %></span>
-            </td>
-            <td><%= truncate(log.message, length: 60) %></td>
-            <td class="dl-mono"><%= log.controller_action %></td>
-            <td class="dl-mono"><%= log.request_path %></td>
-            <td class="text-subtle"><%= log.occurred_at %></td>
+            <th style="width: 2rem">
+              <input type="checkbox" data-bulk-select-target="selectAll" data-action="bulk-select#toggleAll">
+            </th>
+            <th>Level</th>
+            <th>Message</th>
+            <th>Controller / Action</th>
+            <th>Path</th>
+            <th>Time</th>
           </tr>
-        <% end %>
-      </tbody>
-    </table>
-  </div>
+        </thead>
+        <tbody>
+          <% @logs.each do |log| %>
+            <tr>
+              <td>
+                <input type="checkbox" value="<%= log.id %>"
+                       data-bulk-select-target="checkbox" data-action="bulk-select#toggle">
+              </td>
+              <td>
+                <%
+                  level_class = case log.level.to_s
+                    when "info" then "badge--blue"
+                    when "warn" then "badge--yellow"
+                    when "error", "fatal" then "badge--red"
+                    else "badge--default"
+                  end
+                %>
+                <span class="badge <%= level_class %>"><%= log.level %></span>
+              </td>
+              <td><%= truncate(log.message, length: 60) %></td>
+              <td class="dl-mono"><%= log.controller_action %></td>
+              <td class="dl-mono"><%= log.request_path %></td>
+              <td class="text-subtle"><%= log.occurred_at %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
 
-  <%= render "daylight/shared/pagination", pagination: @pagination %>
+    <%= render "daylight/shared/bulk_actions",
+         url: log_batch_path,
+         hidden_fields: { return_level: @level, return_period: @period },
+         actions: [
+           { label: "Delete", value: "delete", confirm: "Delete selected logs?", destructive: true }
+         ] %>
+
+    <%= render "daylight/shared/pagination", pagination: @pagination %>
+  </div>
 <% else %>
   <%= render "daylight/shared/empty_state", message: "No logs found for the selected period." %>
 <% end %>

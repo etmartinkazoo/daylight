@@ -1,0 +1,42 @@
+<%#
+  Reusable bulk-action bar for index pages that use the bulk-select Stimulus
+  controller. Hidden by default; becomes visible when at least one checkbox is
+  selected.
+
+  Must live inside a <div data-controller="bulk-select"> that also contains:
+    - <input type="checkbox" data-bulk-select-target="selectAll" ...>   (thead)
+    - <input type="checkbox" data-bulk-select-target="checkbox" ...>    (per row)
+
+  Locals:
+    url:     form submission URL (e.g. log_batch_path)
+    actions: Array of hashes, each with:
+      label:       button text
+      value:       action_type value sent to the server
+      confirm:     turbo_confirm prompt text (optional)
+      destructive: (optional) true → uses btn--negative class
+    hidden_fields: (optional) hash of extra hidden fields { name => value }
+%>
+<% hidden_fields = local_assigns[:hidden_fields] || {} %>
+
+<div data-bulk-select-target="bar" hidden
+     class="flex items-center gap-half"
+     style="position: sticky; bottom: var(--size-4); margin-block-start: var(--size-4);
+            background: var(--color-surface); border: 1px solid var(--color-border);
+            border-radius: var(--rounded-xl); padding: var(--size-3) var(--size-5); box-shadow: 0 4px 12px rgba(0,0,0,.1);">
+  <span class="text-sm"><span data-bulk-select-target="count">0</span> selected</span>
+  <div class="flex gap-half" style="margin-inline-start: auto;">
+    <%= form_with url: url, method: :post, data: { turbo_action: "replace" } do |f| %>
+      <input type="hidden" name="ids" value="" data-bulk-select-target="ids">
+      <% hidden_fields.each do |name, value| %>
+        <%= f.hidden_field name, value: value %>
+      <% end %>
+      <% actions.each do |action| %>
+        <button type="submit" name="action_type" value="<%= action[:value] %>"
+                class="btn btn--sm <%= action[:destructive] ? 'btn--negative' : 'btn--outline' %>"
+                <%= %Q(data-turbo-confirm="#{action[:confirm]}").html_safe if action[:confirm] %>>
+          <%= action[:label] %>
+        </button>
+      <% end %>
+    <% end %>
+  </div>
+</div>

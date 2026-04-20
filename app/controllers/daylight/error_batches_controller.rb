@@ -7,7 +7,7 @@ module Daylight
     before_action :ensure_connected
 
     def create
-      ids = Array(params[:ids]).map(&:to_i)
+      ids = Array(params[:ids]).flat_map { |v| v.split(",") }.map(&:to_i)
 
       case params[:action_type]
       when "resolve" then Database::ErrorRecord.where(id: ids).update_all(status: "resolved")
