@@ -17,4 +17,5 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ruby_llm", ">= 1.12"
   spec.add_dependency "alba"
   spec.add_dependency "brakeman"
+  spec.add_dependency "propshaft"
 end
