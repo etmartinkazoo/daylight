@@ -1,6 +1,12 @@
 # frozen_string_literal: true
 
 require "alba"
+require "bullet"
+require "css-zero"
+require "importmap-rails"
+require "propshaft"
+require "stimulus-rails"
+require "turbo-rails"
 require "daylight/version"
 require "daylight/configuration"
 require "daylight/color"
