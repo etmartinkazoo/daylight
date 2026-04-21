@@ -24,7 +24,7 @@
     <%= stylesheet_link_tag "daylight/application", "data-turbo-track": "reload" %>
     <%= stylesheet_link_tag "css-zero/utilities", "data-turbo-track": "reload" %>
     <%= render "layouts/daylight/branding_styles" %>
-    <%= javascript_importmap_tags "daylight/application" %>
+    <%= javascript_importmap_tags "daylight/application" if defined?(Importmap) %>
   </head>
 
   <body>

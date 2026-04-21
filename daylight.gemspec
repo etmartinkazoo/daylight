@@ -17,9 +17,4 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ruby_llm", ">= 1.12"
   spec.add_dependency "alba"
   spec.add_dependency "brakeman"
-  spec.add_dependency "bullet"
-  spec.add_dependency "turbo-rails"
-  spec.add_dependency "stimulus-rails"
-  spec.add_dependency "importmap-rails"
-  spec.add_dependency "propshaft"
 end

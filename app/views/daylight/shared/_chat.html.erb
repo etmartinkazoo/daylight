@@ -16,7 +16,7 @@
     </div>
 
     <% if chat %>
-      <%= turbo_stream_from "daylight_chat_#{chat.id}" %>
+      <%= turbo_stream_from "daylight_chat_#{chat.id}" if defined?(Turbo::StreamsChannel) %>
     <% end %>
 
     <div id="<%= chat ? "chat_messages_#{chat.id}" : "chat_messages_new" %>"
